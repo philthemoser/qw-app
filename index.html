@@ -17,6 +17,15 @@
   <div id="root"></div>
   <div id="err" style="color:#ff6b6b;font-family:monospace;padding:20px;font-size:11px;white-space:pre-wrap;display:none;"></div>
 
+  <!--
+    iOS audio session trick: a silent looping audio element forces iOS to use
+    the 'playback' audio category instead of 'ambient', enabling sound through
+    the phone speaker and correct routing regardless of silent switch.
+  -->
+  <audio id="iosAudio" loop playsinline preload="auto"
+    src="data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAABAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD/////////////////////////////////////////////////////////////////AAAAAFM9dGltZQAAAAMAAAADAAAABgAAABgAAAAMAAAAGAAAABgAAAAMAAAAGAAAABgAAAAMAAAAGAAAABgAAAAMAAAAGAAAAA==">
+  </audio>
+
   <script>
     window.onerror=function(msg,src,line,col,err){
       var d=document.getElementById('err');
@@ -35,12 +44,16 @@
     var useEffect=React.useEffect;
     var useCallback=React.useCallback;
 
-    // iOS Web Audio unlock — primes AudioContext on first touch
+    // iOS Web Audio unlock on first touch
     var _iosUnlocked=false;
     function _unlockAudio(){
       if(_iosUnlocked)return;
       _iosUnlocked=true;
       try{
+        // Play the silent audio element to set playback audio session
+        var a=document.getElementById('iosAudio');
+        if(a){a.volume=0.001;a.play().catch(function(){});}
+        // Also unlock Web Audio context
         var ctx=Tone.getContext().rawContext;
         var buf=ctx.createBuffer(1,1,22050);
         var src=ctx.createBufferSource();
@@ -1244,8 +1257,9 @@ function App() {
         return;
       }
       const step = ps.step % tsInfo.steps;
+      // Pulse on every quarter note — every 2 eighth-note ticks
       const pulseTicks = ts === "6/8" ? 1 : 2;
-      if (ps.step % pulseTicks === 0) {
+      if (ps.b % pulseTicks === 0) {
         setBeatPulse(true);
         clearTimeout(pulseTimer.current);
         pulseTimer.current = setTimeout(() => setBeatPulse(false), 100);
@@ -1329,7 +1343,8 @@ function App() {
       }
       ps.b++;
       ps.step++;
-      if (ps.b >= ch.beats) {
+      // ch.beats is in quarter notes; scheduler ticks in 8th notes so multiply by 2
+      if (ps.b >= ch.beats * 2) {
         ps.b = 0;
         ps.c++;
         if (ps.c >= sec.chords.length) {
