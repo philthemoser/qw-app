@@ -21,24 +21,43 @@
     window.onerror=function(msg,src,line,col,err){
       var d=document.getElementById('err');
       d.style.display='block';
-      d.textContent='JS Error: '+msg+'\nLine: '+line+'\n'+(err?err.stack:'');
+      d.textContent='Error: '+msg+'\nLine: '+line+'\n'+(err?err.stack:'');
     };
   </script>
 
-  <!-- Dependencies -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 
   <script>
-    // Make React hooks available as globals (compiled code expects them)
     var useState=React.useState;
     var useRef=React.useRef;
     var useEffect=React.useEffect;
     var useCallback=React.useCallback;
+
+    // iOS Web Audio unlock — primes AudioContext on first touch
+    var _iosUnlocked=false;
+    function _unlockAudio(){
+      if(_iosUnlocked)return;
+      _iosUnlocked=true;
+      try{
+        var ctx=Tone.getContext().rawContext;
+        var buf=ctx.createBuffer(1,1,22050);
+        var src=ctx.createBufferSource();
+        src.buffer=buf;
+        src.connect(ctx.destination);
+        src.start(0);
+        if(ctx.state==='suspended')ctx.resume();
+      }catch(e){}
+      document.removeEventListener('touchstart',_unlockAudio);
+      document.removeEventListener('touchend',_unlockAudio);
+      document.removeEventListener('click',_unlockAudio);
+    }
+    document.addEventListener('touchstart',_unlockAudio,{passive:true});
+    document.addEventListener('touchend',_unlockAudio,{passive:true});
+    document.addEventListener('click',_unlockAudio);
   </script>
 
-  <!-- Pre-compiled App (no Babel needed) -->
   <script>
 // ─── Music Theory ─────────────────────────────────────────────────────────────
 const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
@@ -682,7 +701,7 @@ function App() {
     if (e.tambPlayer) e.tambPlayer.volume.value = db(m.tamb, -8);
   }, [mix]);
 
-  // Palette rebuild
+  // Palette rebuild + remap section chords to new key
   const prevKS = useRef({
     key: "C",
     scale: "major"
@@ -698,7 +717,39 @@ function App() {
       const ex = EXTRA_DEGREES.find(e => e.label === l);
       return ex ? buildExtra(key, ex, ei) : null;
     }).filter(Boolean);
-    setPalette([...dia, ...ext]);
+    const newPalette = [...dia, ...ext];
+    setPalette(newPalette);
+    // Remap every chord in every section to the new key
+    setSections(secs => secs.map(sec => ({
+      ...sec,
+      chords: sec.chords.map(ch => {
+        if (ch.degIdx >= 0) {
+          // Diatonic chord — look up new root from new palette
+          const match = newPalette.find(p => p.degIdx === ch.degIdx);
+          if (match) return {
+            ...ch,
+            root: match.root,
+            label: match.label,
+            third: match.third,
+            fifth: match.fifth
+          };
+        } else {
+          // Extra chord — pitch-shift by same semitone interval
+          const ex = EXTRA_DEGREES.find(e => e.label === ch.roman);
+          if (ex) {
+            const rebuilt = buildExtra(key, ex, ch.extraIdx || 0);
+            return {
+              ...ch,
+              root: rebuilt.root,
+              label: rebuilt.label,
+              third: rebuilt.third,
+              fifth: rebuilt.fifth
+            };
+          }
+        }
+        return ch;
+      })
+    })));
   }, [key, scale, extraOn]);
 
   // Time sig change — resize steps
@@ -1232,35 +1283,47 @@ function App() {
           // Use root note to trigger sampler — it pitch-shifts from nearest sample
           const pianoNote = ch.root + "4";
           const pianoNoteHi = ch.root + "5";
+          const pianoDur = `${ch.beats}n`; // hold for full chord duration
           if (dyn.pianoOctave) {
             try {
-              pianoSampler.triggerAttackRelease([pianoNote, pianoNoteHi], "2n", time);
+              pianoSampler.triggerAttackRelease([pianoNote, pianoNoteHi], pianoDur, time);
             } catch (e) {}
           } else {
             try {
-              pianoSampler.triggerAttackRelease(pianoNote, "2n", time);
+              pianoSampler.triggerAttackRelease(pianoNote, pianoDur, time);
             } catch (e) {}
           }
           if (dyn.pianoMode === "quarter" && tsInfo.beatsPerBar >= 4) {
-            Tone.getTransport().schedule(t2 => {
+            const beatSec2 = 60 / Tone.getTransport().bpm.value;
+            const t2 = time + 3 * beatSec2; // beat 4 = 3 quarter notes later
+            Tone.getTransport().schedule(tt => {
               if (instRef.current.piano && !liveMuteRef.current.piano) {
                 try {
-                  pianoSampler.triggerAttackRelease(dyn.pianoOctave ? [pianoNote, pianoNoteHi] : pianoNote, "2n", t2);
+                  pianoSampler.triggerAttackRelease(dyn.pianoOctave ? [pianoNote, pianoNoteHi] : pianoNote, "4n", tt);
                 } catch (e) {}
               }
-            }, Tone.Time(time) + Tone.Time("3n"));
+            }, t2);
           }
         }
         if (active("bass") && !dyn.bassMuted) {
           const bF = getBassFreq(ch);
-          if (dyn.bassMode === "full") bassSynth.triggerAttackRelease(bF, `${ch.beats * .85}n`, time);else if (dyn.bassMode === "quarter") {
-            for (let b = 0; b < ch.beats; b++) Tone.getTransport().schedule(t2 => {
-              if (instRef.current.bass && !liveMuteRef.current.bass) bassSynth.triggerAttackRelease(bF, "4n", t2);
-            }, Tone.Time(time) + Tone.Time(`${b}n`));
+          const beatSec = 60 / Tone.getTransport().bpm.value; // seconds per quarter note
+          if (dyn.bassMode === "full") {
+            bassSynth.triggerAttackRelease(bF, `${ch.beats * .85}n`, time);
+          } else if (dyn.bassMode === "quarter") {
+            for (let b = 0; b < ch.beats; b++) {
+              const t2 = time + b * beatSec;
+              Tone.getTransport().schedule(tt => {
+                if (instRef.current.bass && !liveMuteRef.current.bass) bassSynth.triggerAttackRelease(bF, "4n", tt);
+              }, t2);
+            }
           } else {
-            for (let b = 0; b < ch.beats * 2; b++) Tone.getTransport().schedule(t2 => {
-              if (instRef.current.bass && !liveMuteRef.current.bass) bassSynth.triggerAttackRelease(bF, "8n", t2);
-            }, Tone.Time(time) + Tone.Time(`${b}*8n`));
+            for (let b = 0; b < ch.beats * 2; b++) {
+              const t2 = time + b * (beatSec / 2);
+              Tone.getTransport().schedule(tt => {
+                if (instRef.current.bass && !liveMuteRef.current.bass) bassSynth.triggerAttackRelease(bF, "8n", tt);
+              }, t2);
+            }
           }
         }
       }
