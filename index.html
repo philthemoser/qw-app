@@ -21,8 +21,7 @@
   </audio>
   <script>
     window.onerror=function(msg,src,line,col,err){
-      var d=document.getElementById('err');
-      d.style.display='block';
+      var d=document.getElementById('err');d.style.display='block';
       d.textContent='Error: '+msg+'\nLine: '+line+'\n'+(err?err.stack:'');
     };
   </script>
@@ -670,17 +669,14 @@ function App() {
     tsRef.current = timeSig;
   }, [timeSig]);
 
-  // Pad player responds to live mute immediately
+  // Pad player responds to live mute via volume (synced player can't use start/stop)
   useEffect(() => {
     if (!engRef.current?.padPlayer) return;
     if (liveMute.pad) {
-      try {
-        engRef.current.padPlayer.stop();
-      } catch (e) {}
-    } else if (playing && instruments.pad) {
-      try {
-        if (engRef.current.padPlayer.state === "stopped") engRef.current.padPlayer.start();
-      } catch (e) {}
+      engRef.current.padPlayer.volume.value = -Infinity;
+    } else {
+      const db = (v, b) => Tone.gainToDb(Math.max(0.001, v / 100)) + b;
+      engRef.current.padPlayer.volume.value = db(mixRef.current.pad, -10);
     }
   }, [liveMute.pad]);
   useEffect(() => {
@@ -1081,7 +1077,10 @@ function App() {
     Tone.getTransport().cancel();
     if (engRef.current) {
       try {
-        if (engRef.current.padPlayer && engRef.current.padPlayer.state === "started") engRef.current.padPlayer.stop();
+        if (engRef.current.padPlayer) {
+          engRef.current.padPlayer.unsync();
+          engRef.current.padPlayer.stop();
+        }
       } catch (e) {}
       Object.values(engRef.current).forEach(n => {
         try {
@@ -1364,20 +1363,16 @@ function App() {
         }
       }
     }, tsInfo.stepNote);
-    Tone.getTransport().start();
-    // Start pad loop immediately — it runs continuously, filter updates per section
-    _dbg("[PAD] instruments.pad =", instRef.current.pad, "liveMute.pad =", liveMuteRef.current.pad);
-    _dbg("[PAD] padPlayer exists =", !!padPlayer, "buffer loaded =", padPlayer?.loaded, "state =", padPlayer?.state);
+    // Sync pad to transport — starts at position 0 when transport begins
     if (instRef.current.pad && !liveMuteRef.current.pad) {
       try {
-        padPlayer.start();
-        _dbg("[PAD] .start() called, new state =", padPlayer.state);
+        padPlayer.sync().start(0);
+        _dbg("[PAD] synced to transport, will start at position 0");
       } catch (e) {
-        _dbg("[PAD] ERROR: start failed:", e.message);
+        _dbg("[PAD] sync failed: " + e.message);
       }
-    } else {
-      _dbg("[PAD] skipped — pad disabled or muted");
     }
+    Tone.getTransport().start();
     setPlaying(true);
     setOpenSecId(null);
   }, [bpm, timeSig]);
