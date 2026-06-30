@@ -17,11 +17,7 @@
   <div id="root"></div>
   <div id="err" style="color:#ff6b6b;font-family:monospace;padding:20px;font-size:11px;white-space:pre-wrap;display:none;"></div>
 
-  <!--
-    iOS audio session trick: a silent looping audio element forces iOS to use
-    the 'playback' audio category instead of 'ambient', enabling sound through
-    the phone speaker and correct routing regardless of silent switch.
-  -->
+  <!-- iOS audio session unlock: silent looping audio forces 'playback' category -->
   <audio id="iosAudio" loop playsinline preload="auto"
     src="data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAABAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD/////////////////////////////////////////////////////////////////AAAAAFM9dGltZQAAAAMAAAADAAAABgAAABgAAAAMAAAAGAAAABgAAAAMAAAAGAAAABgAAAAMAAAAGAAAABgAAAAMAAAAGAAAAA==">
   </audio>
@@ -44,16 +40,13 @@
     var useEffect=React.useEffect;
     var useCallback=React.useCallback;
 
-    // iOS Web Audio unlock on first touch
     var _iosUnlocked=false;
     function _unlockAudio(){
       if(_iosUnlocked)return;
       _iosUnlocked=true;
       try{
-        // Play the silent audio element to set playback audio session
         var a=document.getElementById('iosAudio');
         if(a){a.volume=0.001;a.play().catch(function(){});}
-        // Also unlock Web Audio context
         var ctx=Tone.getContext().rawContext;
         var buf=ctx.createBuffer(1,1,22050);
         var src=ctx.createBufferSource();
@@ -651,6 +644,7 @@ function App() {
 
   // playback
   const [playing, setPlaying] = useState(false);
+  const [samplesLoading, setSamplesLoading] = useState(false);
   const [curSec, setCurSec] = useState(0);
   const [curChord, setCurChord] = useState(0);
   const [beatPulse, setBeatPulse] = useState(false);
@@ -1114,6 +1108,7 @@ function App() {
     setBeatPulse(false);
     setQueued(null);
     setLooping(false);
+    setSamplesLoading(false);
     setLiveMute({
       pad: false,
       piano: false,
@@ -1225,6 +1220,21 @@ function App() {
       shakerPlayer,
       tambPlayer
     };
+
+    // CRITICAL: wait for all samples (piano, pad, percussion) to finish downloading
+    // and decoding before scheduling playback. Without this, triggerAttackRelease/start
+    // calls on not-yet-loaded buffers fail silently — this is what caused no sound
+    // on slower mobile connections even though it worked fine on a fast laptop/cache.
+    setSamplesLoading(true);
+    try {
+      await Tone.loaded();
+    } catch (e) {
+      console.warn("Sample loading error", e);
+    }
+    setSamplesLoading(false);
+
+    // If user stopped playback while samples were still loading, bail out
+    if (!engRef.current) return;
     Tone.getTransport().bpm.value = bpm;
     const ts = tsRef.current,
       tsInfo = TIME_SIGS[ts];
@@ -1288,9 +1298,6 @@ function App() {
           const hpFreq = Math.max(60, 300 - dyn.padFilter * 2.5);
           padFilt.frequency.rampTo(lpFreq, 0.1);
           padHPF.frequency.rampTo(hpFreq, 0.1);
-          try {
-            if (!padPlayer.state || padPlayer.state === "stopped") padPlayer.start(time);
-          } catch (e) {}
         }
         if (active("piano") && !dyn.pianoMuted) {
           pianoLPF.frequency.rampTo(dyn.pianoSoft ? 1800 : 10000, 0.05);
@@ -1369,6 +1376,12 @@ function App() {
       }
     }, tsInfo.stepNote);
     Tone.getTransport().start();
+    // Start pad loop immediately — it runs continuously, filter updates per section
+    if (instRef.current.pad && !liveMuteRef.current.pad) {
+      try {
+        padPlayer.start();
+      } catch (e) {}
+    }
     setPlaying(true);
     setOpenSecId(null);
   }, [bpm, timeSig]);
@@ -1545,8 +1558,13 @@ function App() {
     className: "bar-chord-sub"
   }, scale, " · ", timeSig))), /*#__PURE__*/React.createElement("button", {
     className: `pbtn${playing ? "" : " idle"}`,
-    onClick: playing ? stopPlayback : startPlayback
-  }, playing ? "■" : "▶"), /*#__PURE__*/React.createElement("div", {
+    onClick: samplesLoading ? undefined : playing ? stopPlayback : startPlayback,
+    disabled: samplesLoading,
+    style: samplesLoading ? {
+      opacity: .6,
+      cursor: "wait"
+    } : undefined
+  }, samplesLoading ? "⋯" : playing ? "■" : "▶"), /*#__PURE__*/React.createElement("div", {
     className: "bar-right",
     onClick: () => !playing && setSettingsOpen(o => !o)
   }, settingsOpen && !playing ? /*#__PURE__*/React.createElement("div", {
