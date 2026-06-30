@@ -4,7 +4,6 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <title>Chord &amp; Groove</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -15,13 +14,11 @@
 </head>
 <body>
   <div id="root"></div>
+  <div id="dbg" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#000c;color:#0f0;font-family:monospace;font-size:10px;padding:8px 12px;max-height:40vh;overflow-y:auto;white-space:pre-wrap;pointer-events:none;"></div>
   <div id="err" style="color:#ff6b6b;font-family:monospace;padding:20px;font-size:11px;white-space:pre-wrap;display:none;"></div>
-
-  <!-- iOS audio session unlock: silent looping audio forces 'playback' category -->
   <audio id="iosAudio" loop playsinline preload="auto"
     src="data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAABAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD/////////////////////////////////////////////////////////////////AAAAAFM9dGltZQAAAAMAAAADAAAABgAAABgAAAAMAAAAGAAAABgAAAAMAAAAGAAAABgAAAAMAAAAGAAAABgAAAAMAAAAGAAAAA==">
   </audio>
-
   <script>
     window.onerror=function(msg,src,line,col,err){
       var d=document.getElementById('err');
@@ -29,42 +26,33 @@
       d.textContent='Error: '+msg+'\nLine: '+line+'\n'+(err?err.stack:'');
     };
   </script>
-
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-
   <script>
-    var useState=React.useState;
-    var useRef=React.useRef;
-    var useEffect=React.useEffect;
-    var useCallback=React.useCallback;
-
+    var useState=React.useState;var useRef=React.useRef;var useEffect=React.useEffect;var useCallback=React.useCallback;
     var _iosUnlocked=false;
     function _unlockAudio(){
-      if(_iosUnlocked)return;
-      _iosUnlocked=true;
-      try{
-        var a=document.getElementById('iosAudio');
-        if(a){a.volume=0.001;a.play().catch(function(){});}
-        var ctx=Tone.getContext().rawContext;
-        var buf=ctx.createBuffer(1,1,22050);
-        var src=ctx.createBufferSource();
-        src.buffer=buf;
-        src.connect(ctx.destination);
-        src.start(0);
-        if(ctx.state==='suspended')ctx.resume();
-      }catch(e){}
-      document.removeEventListener('touchstart',_unlockAudio);
-      document.removeEventListener('touchend',_unlockAudio);
-      document.removeEventListener('click',_unlockAudio);
+      if(_iosUnlocked)return;_iosUnlocked=true;
+      try{var a=document.getElementById('iosAudio');if(a){a.volume=0.001;a.play().catch(function(){});}
+      var ctx=Tone.getContext().rawContext;var buf=ctx.createBuffer(1,1,22050);var src=ctx.createBufferSource();src.buffer=buf;src.connect(ctx.destination);src.start(0);if(ctx.state==='suspended')ctx.resume();}catch(e){}
+      document.removeEventListener('touchstart',_unlockAudio);document.removeEventListener('touchend',_unlockAudio);document.removeEventListener('click',_unlockAudio);
     }
-    document.addEventListener('touchstart',_unlockAudio,{passive:true});
-    document.addEventListener('touchend',_unlockAudio,{passive:true});
-    document.addEventListener('click',_unlockAudio);
+    document.addEventListener('touchstart',_unlockAudio,{passive:true});document.addEventListener('touchend',_unlockAudio,{passive:true});document.addEventListener('click',_unlockAudio);
   </script>
-
   <script>
+// ─── On-screen debug log ──────────────────────────────────────────────────────
+function _dbg(msg) {
+  console.log(msg);
+  try {
+    var d = document.getElementById('dbg');
+    if (d) {
+      d.style.display = 'block';
+      d.textContent += '\n' + msg;
+    }
+  } catch (e) {}
+}
+
 // ─── Music Theory ─────────────────────────────────────────────────────────────
 const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const SCALE_INTERVALS = {
@@ -1228,6 +1216,7 @@ function App() {
     setSamplesLoading(true);
     try {
       await Tone.loaded();
+      _dbg("[LOAD] Tone.loaded() resolved — all buffers ready");
     } catch (e) {
       console.warn("Sample loading error", e);
     }
@@ -1304,7 +1293,7 @@ function App() {
           // Use root note to trigger sampler — it pitch-shifts from nearest sample
           const pianoNote = ch.root + "4";
           const pianoNoteHi = ch.root + "5";
-          const pianoDur = `${ch.beats}` * (60 / bpm); // hold for full chord duration
+          const pianoDur = `${ch.beats}n`; // hold for full chord duration
           if (dyn.pianoOctave) {
             try {
               pianoSampler.triggerAttackRelease([pianoNote, pianoNoteHi], pianoDur, time);
@@ -1377,10 +1366,17 @@ function App() {
     }, tsInfo.stepNote);
     Tone.getTransport().start();
     // Start pad loop immediately — it runs continuously, filter updates per section
+    _dbg("[PAD] instruments.pad =", instRef.current.pad, "liveMute.pad =", liveMuteRef.current.pad);
+    _dbg("[PAD] padPlayer exists =", !!padPlayer, "buffer loaded =", padPlayer?.loaded, "state =", padPlayer?.state);
     if (instRef.current.pad && !liveMuteRef.current.pad) {
       try {
         padPlayer.start();
-      } catch (e) {}
+        _dbg("[PAD] .start() called, new state =", padPlayer.state);
+      } catch (e) {
+        _dbg("[PAD] ERROR: start failed:", e.message);
+      }
+    } else {
+      _dbg("[PAD] skipped — pad disabled or muted");
     }
     setPlaying(true);
     setOpenSecId(null);
