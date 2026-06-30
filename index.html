@@ -1304,7 +1304,7 @@ function App() {
           // Use root note to trigger sampler — it pitch-shifts from nearest sample
           const pianoNote = ch.root + "4";
           const pianoNoteHi = ch.root + "5";
-          const pianoDur = `${ch.beats}n`; // hold for full chord duration
+          const pianoDur = ch.beats * (60 / bpm); // hold for full chord duration
           if (dyn.pianoOctave) {
             try {
               pianoSampler.triggerAttackRelease([pianoNote, pianoNoteHi], pianoDur, time);
