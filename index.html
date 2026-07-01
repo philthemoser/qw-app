@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <title>Chord &amp; Groove</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -14,16 +15,9 @@
 </head>
 <body>
   <div id="root"></div>
-  <div id="err" style="color:#ff6b6b;font-family:monospace;padding:20px;font-size:11px;white-space:pre-wrap;display:none;"></div>
   <audio id="iosAudio" loop playsinline preload="auto"
     src="data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAABAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD/////////////////////////////////////////////////////////////////AAAAAFM9dGltZQAAAAMAAAADAAAABgAAABgAAAAMAAAAGAAAABgAAAAMAAAAGAAAABgAAAAMAAAAGAAAABgAAAAMAAAAGAAAAA==">
   </audio>
-  <script>
-    window.onerror=function(msg,src,line,col,err){
-      var d=document.getElementById('err');d.style.display='block';
-      d.textContent='Error: '+msg+'\nLine: '+line+'\n'+(err?err.stack:'');
-    };
-  </script>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -39,18 +33,6 @@
     document.addEventListener('touchstart',_unlockAudio,{passive:true});document.addEventListener('touchend',_unlockAudio,{passive:true});document.addEventListener('click',_unlockAudio);
   </script>
   <script>
-// ─── On-screen debug log ──────────────────────────────────────────────────────
-function _dbg(msg) {
-  console.log(msg);
-  try {
-    var d = document.getElementById('dbg');
-    if (d) {
-      d.style.display = 'block';
-      d.textContent += '\n' + msg;
-    }
-  } catch (e) {}
-}
-
 // ─── Music Theory ─────────────────────────────────────────────────────────────
 const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const SCALE_INTERVALS = {
@@ -277,9 +259,8 @@ function applyIntensity(dyn, intensity, ts = "4/4") {
   return {
     ...dyn,
     padFilter: Math.round(20 + t * 80),
-    pianoMode: t >= 0.5 ? "quarter" : "full",
-    pianoOctave: t >= 0.75,
-    bassMode: t < 0.33 ? "full" : t < 0.66 ? "quarter" : "eighth",
+    pianoFilter: Math.round(20 + t * 80),
+    bassSteps: Math.max(1, Math.round(t * (n * 0.4)) + 1) > 0 ? euclidean(n, Math.max(1, Math.round(t * (n * 0.4)) + 1)) : euclidean(n, 1),
     kickSteps: euclidean(n, Math.max(1, Math.round(t * (n * 0.6)) + 1)),
     shakerSteps: Math.round(t * (n * 0.5)) > 0 ? euclidean(n, Math.round(t * (n * 0.5))) : Array(n).fill(0),
     tambSteps: Math.round(t * (n * 0.4)) > 0 ? euclidean(n, Math.round(t * (n * 0.4))) : Array(n).fill(0)
@@ -314,11 +295,9 @@ const defaultDyn = (ts = "4/4") => {
     padMuted: false,
     padFilter: 44,
     pianoMuted: false,
-    pianoOctave: false,
-    pianoSoft: false,
-    pianoMode: "full",
+    pianoFilter: 44,
     bassMuted: false,
-    bassMode: "full",
+    bassSteps: euclidean(n, 1),
     kickMuted: false,
     kickSteps: euclidean(n, 2),
     shakerMuted: false,
@@ -627,6 +606,7 @@ function App() {
   const [saveFlash, setSaveFlash] = useState(false);
   const [ctxMenu, setCtxMenu] = useState(null);
   const [selChord, setSelChord] = useState(null);
+  const startFromRef = useRef(0); // which section to start playback from
 
   // playback
   const [playing, setPlaying] = useState(false);
@@ -752,6 +732,7 @@ function App() {
       ...x,
       dyn: {
         ...x.dyn,
+        bassSteps: resize(x.dyn.bassSteps || [], n),
         kickSteps: resize(x.dyn.kickSteps, n),
         shakerSteps: resize(x.dyn.shakerSteps, n),
         tambSteps: resize(x.dyn.tambSteps, n)
@@ -1214,7 +1195,6 @@ function App() {
     setSamplesLoading(true);
     try {
       await Tone.loaded();
-      _dbg("[LOAD] Tone.loaded() resolved — all buffers ready");
     } catch (e) {
       console.warn("Sample loading error", e);
     }
@@ -1226,12 +1206,13 @@ function App() {
     const ts = tsRef.current,
       tsInfo = TIME_SIGS[ts];
     const ps = psRef.current;
-    ps.s = 0;
+    ps.s = startFromRef.current;
     ps.c = 0;
     ps.b = 0;
     ps.rep = 0;
     ps.step = 0;
-    while (ps.s < S.length && !S[ps.s].chords.length) ps.s++;
+    startFromRef.current = 0; // reset for next time
+    while (ps.s < S.length && !S[ps.s].chords.length) ps.s = (ps.s + 1) % S.length;
     setCurSec(ps.s);
     setCurChord(0);
     Tone.getTransport().scheduleRepeat(time => {
@@ -1287,53 +1268,23 @@ function App() {
           padHPF.frequency.rampTo(hpFreq, 0.1);
         }
         if (active("piano") && !dyn.pianoMuted) {
-          pianoLPF.frequency.rampTo(dyn.pianoSoft ? 1800 : 10000, 0.05);
-          // Use root note to trigger sampler — it pitch-shifts from nearest sample
+          // pianoFilter 0-100: low=warm/soft, high=bright/percussive
+          const pf = (dyn.pianoFilter || 50) / 100;
+          pianoLPF.frequency.rampTo(800 + pf * 9200, 0.05); // 800Hz → 10kHz
+          pianoSampler.attack = 0.3 - pf * 0.28; // 0.3s → 0.02s
           const pianoNote = ch.root + "4";
-          const pianoNoteHi = ch.root + "5";
-          const pianoDur = `${ch.beats}` * (60 / bpm); // hold for full chord duration
-          if (dyn.pianoOctave) {
-            try {
-              pianoSampler.triggerAttackRelease([pianoNote, pianoNoteHi], pianoDur, time);
-            } catch (e) {}
-          } else {
-            try {
-              pianoSampler.triggerAttackRelease(pianoNote, pianoDur, time);
-            } catch (e) {}
-          }
-          if (dyn.pianoMode === "quarter" && tsInfo.beatsPerBar >= 4) {
-            const beatSec2 = 60 / Tone.getTransport().bpm.value;
-            const t2 = time + 3 * beatSec2; // beat 4 = 3 quarter notes later
-            Tone.getTransport().schedule(tt => {
-              if (instRef.current.piano && !liveMuteRef.current.piano) {
-                try {
-                  pianoSampler.triggerAttackRelease(dyn.pianoOctave ? [pianoNote, pianoNoteHi] : pianoNote, "4n", tt);
-                } catch (e) {}
-              }
-            }, t2);
-          }
+          const pianoDur = ch.beats * (60 / Tone.getTransport().bpm.value); // seconds
+          try {
+            pianoSampler.triggerAttackRelease(pianoNote, pianoDur, time);
+          } catch (e) {}
         }
-        if (active("bass") && !dyn.bassMuted) {
-          const bF = getBassFreq(ch);
-          const beatSec = 60 / Tone.getTransport().bpm.value; // seconds per quarter note
-          if (dyn.bassMode === "full") {
-            bassSynth.triggerAttackRelease(bF, `${ch.beats * .85}n`, time);
-          } else if (dyn.bassMode === "quarter") {
-            for (let b = 0; b < ch.beats; b++) {
-              const t2 = time + b * beatSec;
-              Tone.getTransport().schedule(tt => {
-                if (instRef.current.bass && !liveMuteRef.current.bass) bassSynth.triggerAttackRelease(bF, "4n", tt);
-              }, t2);
-            }
-          } else {
-            for (let b = 0; b < ch.beats * 2; b++) {
-              const t2 = time + b * (beatSec / 2);
-              Tone.getTransport().schedule(tt => {
-                if (instRef.current.bass && !liveMuteRef.current.bass) bassSynth.triggerAttackRelease(bF, "8n", tt);
-              }, t2);
-            }
-          }
-        }
+      }
+      // Bass step sequencer — triggers on active steps like percussion
+      if (active("bass") && !dyn.bassMuted && dyn.bassSteps && dyn.bassSteps[step]) {
+        const bF = getBassFreq(sec.chords[ps.c] || ch);
+        try {
+          bassSynth.triggerAttackRelease(bF, "8n", time);
+        } catch (e) {}
       }
       ps.b++;
       ps.step++;
@@ -1366,16 +1317,17 @@ function App() {
     if (instRef.current.pad && !liveMuteRef.current.pad) {
       try {
         padPlayer.sync().start(0);
-        _dbg("[PAD] synced to transport, will start at position 0");
-      } catch (e) {
-        _dbg("[PAD] sync failed: " + e.message);
-      }
+      } catch (e) {}
     }
     Tone.getTransport().start();
     setPlaying(true);
     setOpenSecId(null);
   }, [bpm, timeSig]);
   useEffect(() => () => stopPlayback(), []);
+  const playFromSection = idx => {
+    startFromRef.current = idx;
+    startPlayback();
+  };
   const onSecClick = idx => {
     if (!playing) return;
     const ps = psRef.current;
@@ -1480,6 +1432,13 @@ function App() {
     disabled: si === 0,
     onClick: () => moveSec(sec.id, -1)
   }, "↑"), /*#__PURE__*/React.createElement("button", {
+    className: "reorder-btn",
+    style: {
+      color: C.acc,
+      borderColor: C.acc + "66"
+    },
+    onClick: () => playFromSection(si)
+  }, "▶"), /*#__PURE__*/React.createElement("button", {
     className: "reorder-btn",
     disabled: si >= sections.length - 1,
     onClick: () => moveSec(sec.id, 1)
@@ -2372,30 +2331,44 @@ function DynPanel({
   };
   const safeTs = TIME_SIGS[timeSig] ? timeSig : "4/4";
   const grpSize = safeTs === "6/8" ? 3 : 2;
-  const Mute = ({
-    on,
-    tog
+
+  // Instrument name as mute toggle — solid gold = active, gold outline = muted
+  const NameToggle = ({
+    label,
+    muted,
+    onTog
   }) => /*#__PURE__*/React.createElement("button", {
-    className: `btn sm${on ? " muted" : ""}`,
-    onClick: tog,
     style: {
-      flexShrink: 0
-    }
-  }, on ? "muted" : "mute");
+      background: muted ? "none" : C.acc,
+      border: "1px solid " + C.acc,
+      color: muted ? C.acc : "#0A0D12",
+      fontWeight: 700,
+      fontFamily: "sans-serif",
+      fontSize: 11,
+      padding: "4px 10px",
+      borderRadius: 4,
+      cursor: "pointer",
+      width: 60,
+      flexShrink: 0,
+      textAlign: "center",
+      transition: "all .15s",
+      letterSpacing: ".04em"
+    },
+    onClick: onTog
+  }, label);
   return /*#__PURE__*/React.createElement("div", {
     style: {
       paddingTop: 12,
-      borderTop: `1px solid ${C.border}`
+      borderTop: "1px solid " + C.border
     }
   }, /*#__PURE__*/React.createElement("div", {
     className: "card-title"
   }, "Fine-tune dynamics"), inst.pad && /*#__PURE__*/React.createElement("div", {
     className: "dyn-row"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "dyn-lbl"
-  }, "Pad"), /*#__PURE__*/React.createElement(Mute, {
-    on: dyn.padMuted,
-    tog: () => onUpd({
+  }, /*#__PURE__*/React.createElement(NameToggle, {
+    label: "Pad",
+    muted: dyn.padMuted,
+    onTog: () => onUpd({
       padMuted: !dyn.padMuted
     })
   }), /*#__PURE__*/React.createElement("div", {
@@ -2423,71 +2396,65 @@ function DynPanel({
       fontSize: 9,
       color: C.textDim
     }
-  }, "hi-mid"), /*#__PURE__*/React.createElement("span", {
+  }, "subtle"), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: "sans-serif",
       fontSize: 9,
       color: C.textDim
     }
-  }, "full range")))), inst.piano && /*#__PURE__*/React.createElement("div", {
+  }, "full")))), inst.piano && /*#__PURE__*/React.createElement("div", {
     className: "dyn-row"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "dyn-lbl"
-  }, "Piano"), /*#__PURE__*/React.createElement(Mute, {
-    on: dyn.pianoMuted,
-    tog: () => onUpd({
+  }, /*#__PURE__*/React.createElement(NameToggle, {
+    label: "Piano",
+    muted: dyn.pianoMuted,
+    onTog: () => onUpd({
       pianoMuted: !dyn.pianoMuted
     })
-  }), /*#__PURE__*/React.createElement("button", {
-    className: `btn sm${dyn.pianoOctave ? " on" : ""}`,
-    onClick: () => onUpd({
-      pianoOctave: !dyn.pianoOctave
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "range",
+    className: "slider",
+    min: "0",
+    max: "100",
+    value: dyn.pianoFilter || 50,
+    onChange: e => onUpd({
+      pianoFilter: Number(e.target.value)
     })
-  }, "octave"), /*#__PURE__*/React.createElement("button", {
-    className: `btn sm${dyn.pianoSoft ? " on" : ""}`,
-    onClick: () => onUpd({
-      pianoSoft: !dyn.pianoSoft
-    })
-  }, "soft"), /*#__PURE__*/React.createElement("button", {
-    className: `btn sm${dyn.pianoMode === "full" ? " on" : ""}`,
-    onClick: () => onUpd({
-      pianoMode: "full"
-    })
-  }, "beat 1"), safeTs === "4/4" && /*#__PURE__*/React.createElement("button", {
-    className: `btn sm${dyn.pianoMode === "quarter" ? " on" : ""}`,
-    onClick: () => onUpd({
-      pianoMode: "quarter"
-    })
-  }, "1+4")), inst.bass && /*#__PURE__*/React.createElement("div", {
-    className: "dyn-row"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "dyn-lbl"
-  }, "Bass"), /*#__PURE__*/React.createElement(Mute, {
-    on: dyn.bassMuted,
-    tog: () => onUpd({
-      bassMuted: !dyn.bassMuted
-    })
-  }), ["full", "quarter", "eighth"].map(m => /*#__PURE__*/React.createElement("button", {
-    key: m,
-    className: `btn sm${dyn.bassMode === m ? " on" : ""}`,
-    onClick: () => onUpd({
-      bassMode: m
-    })
-  }, m === "full" ? "full" : m === "quarter" ? "\u00bc" : "\u215b"))), [["Kick", "kickMuted", "kickSteps", "kick"], ["Shaker", "shakerMuted", "shakerSteps", "shaker"], ["Tamb", "tambMuted", "tambSteps", "tamb"]].map(([lbl, mk, sk, ik]) => inst[ik] ? /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      marginTop: 3
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: "sans-serif",
+      fontSize: 9,
+      color: C.textDim
+    }
+  }, "warm"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: "sans-serif",
+      fontSize: 9,
+      color: C.textDim
+    }
+  }, "bright")))), [["Bass", "bassMuted", "bassSteps", "bass"], ["Kick", "kickMuted", "kickSteps", "kick"], ["Shaker", "shakerMuted", "shakerSteps", "shaker"], ["Tamb", "tambMuted", "tambSteps", "tamb"]].map(([lbl, mk, sk, ik]) => inst[ik] ? /*#__PURE__*/React.createElement("div", {
     key: sk,
     className: "dyn-row"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "dyn-lbl"
-  }, lbl), /*#__PURE__*/React.createElement(Mute, {
-    on: dyn[mk],
-    tog: () => onUpd({
+  }, /*#__PURE__*/React.createElement(NameToggle, {
+    label: lbl,
+    muted: dyn[mk],
+    onTog: () => onUpd({
       [mk]: !dyn[mk]
     })
   }), /*#__PURE__*/React.createElement("div", {
     className: "steps"
   }, (dyn[sk] || []).map((on, i) => /*#__PURE__*/React.createElement("button", {
     key: i,
-    className: `step${on ? " on" : ""}${i > 0 && i % grpSize === 0 ? " grp-sep" : ""}`,
+    className: "step" + (on ? " on" : "") + (i > 0 && i % grpSize === 0 ? " grp-sep" : ""),
     onClick: () => onTogStep(sk, i)
   })))) : null));
 }
