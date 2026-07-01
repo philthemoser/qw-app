@@ -1159,7 +1159,7 @@ function App() {
       frequency: 200
     }).connect(padFilt);
     const padPlayer = new Tone.Player({
-      url: `${BASE}loop-C.mp3`,
+      url: `${BASE}LoopinC.mp3`,
       loop: true,
       autostart: false
     }).connect(padHPF);
@@ -1292,7 +1292,7 @@ function App() {
           // Use root note to trigger sampler — it pitch-shifts from nearest sample
           const pianoNote = ch.root + "4";
           const pianoNoteHi = ch.root + "5";
-          const pianoDur = `${ch.beats}n`; // hold for full chord duration
+          const pianoDur = `${ch.beats}` * (60 / bpm); // hold for full chord duration
           if (dyn.pianoOctave) {
             try {
               pianoSampler.triggerAttackRelease([pianoNote, pianoNoteHi], pianoDur, time);
