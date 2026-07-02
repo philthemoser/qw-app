@@ -39,10 +39,6 @@ const SCALE_INTERVALS = {
   major: [0, 2, 4, 5, 7, 9, 11],
   minor: [0, 2, 3, 5, 7, 8, 10]
 };
-const CHORD_INTERVALS = {
-  major: [0, 4, 7],
-  minor: [0, 3, 7]
-};
 const DEGREE_QUALITY = {
   major: ["major", "minor", "minor", "major", "major", "minor", "minor"],
   minor: ["minor", "minor", "major", "minor", "minor", "major", "major"]
@@ -69,7 +65,6 @@ const EXTRA_DEGREES = [{
   label: "vii°",
   semis: 11
 }];
-const WORSHIP_TEMPOS = [68, 72, 76, 80, 84, 92, 100];
 const INVERSIONS = ["root", "3rd", "5th"];
 
 // ─── Time signatures ──────────────────────────────────────────────────────────
@@ -168,9 +163,6 @@ function midiFreq(m) {
 function noteToMidi(n, oct) {
   return noteIdx(n) + (oct + 1) * 12;
 }
-function getChordFreqs(root, quality, oct = 3) {
-  return CHORD_INTERVALS[quality].map(i => midiFreq(noteToMidi(root, oct) + i));
-}
 function getBassFreq(ch, oct = 2) {
   const m = {
     root: ch.root,
@@ -268,12 +260,12 @@ function applyIntensity(dyn, intensity, ts = "4/4") {
 }
 const uid = () => Math.random().toString(36).slice(2, 8);
 const DEFAULT_MIX = {
-  pad: 55,
+  pad: 75,
   piano: 70,
-  bass: 65,
-  kick: 40,
-  shaker: 25,
-  tamb: 30
+  bass: 75,
+  kick: 80,
+  shaker: 65,
+  tamb: 60
 };
 const LS_KEY = "qw_v1";
 function loadLibrary() {
@@ -604,7 +596,6 @@ function App() {
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [library, setLibrary] = useState(() => loadLibrary());
   const [saveFlash, setSaveFlash] = useState(false);
-  const [ctxMenu, setCtxMenu] = useState(null);
   const [selChord, setSelChord] = useState(null);
   const startFromRef = useRef(0); // which section to start playback from
 
@@ -664,7 +655,8 @@ function App() {
       m = mix;
     const db = (v, b) => Tone.gainToDb(Math.max(0.001, v / 100)) + b;
     if (e.padPlayer) e.padPlayer.volume.value = db(m.pad, -10);
-    if (e.pianoSampler) e.pianoSampler.volume.value = db(m.piano, -6);
+    if (e.pianoMajor) e.pianoMajor.volume.value = db(m.piano, -6);
+    if (e.pianoMinor) e.pianoMinor.volume.value = db(m.piano, -6);
     if (e.bassSynth) e.bassSynth.volume.value = db(m.bass, -8);
     if (e.kickPlayer) e.kickPlayer.volume.value = db(m.kick, -2);
     if (e.shakerPlayer) e.shakerPlayer.volume.value = db(m.shaker, -6);
@@ -799,7 +791,15 @@ function App() {
       ...DEFAULT_MIX
     });
     setInstruments(s.instruments);
-    setSections(s.sections);
+    // Migrate: merge saved dyn over fresh defaults so songs saved before
+    // bassSteps/pianoFilter existed still play correctly
+    setSections((s.sections || []).map(sec => ({
+      ...sec,
+      dyn: {
+        ...defaultDyn(s.timeSig || "4/4"),
+        ...(sec.dyn || {})
+      }
+    })));
     setLiveMute({
       pad: false,
       piano: false,
@@ -1096,8 +1096,10 @@ function App() {
     };
   }, []);
   const startPlayback = useCallback(async () => {
+    if (engRef.current) return; // already playing or loading — prevent double engine
     const S = secRef.current;
     if (!S.length || !S.some(s => s.chords.length)) return;
+    engRef.current = {}; // sentinel: claims the engine slot across the awaits below
     await Tone.start();
     Tone.getTransport().stop();
     Tone.getTransport().cancel();
@@ -1105,29 +1107,30 @@ function App() {
     const db = (v, b) => Tone.gainToDb(Math.max(0.001, v / 100)) + b;
     const BASE = "https://philthemoser.github.io/qw-samples/";
 
-    // ── Piano sampler — C major chords, pitch-shifted for other keys
+    // ── Piano — two samplers split by chord quality, so pitch-shifting
+    //    always uses a same-quality source (fixes wrong-quality chords in new keys)
     const pianoLPF = new Tone.Filter({
       type: "lowpass",
       frequency: 10000
     }).toDestination();
-    const pianoBPF = new Tone.Filter({
-      type: "bandpass",
-      frequency: 800,
-      Q: 0.5
-    }).connect(pianoLPF);
-    const pianoSampler = new Tone.Sampler({
+    const pianoMajor = new Tone.Sampler({
       urls: {
         "C4": `${BASE}C.mp3`,
+        "F4": `${BASE}F.mp3`,
+        "G4": `${BASE}G.mp3`
+      },
+      release: 2
+    }).connect(pianoLPF);
+    const pianoMinor = new Tone.Sampler({
+      urls: {
         "D4": `${BASE}Dm.mp3`,
         "E4": `${BASE}Em.mp3`,
-        "F4": `${BASE}F.mp3`,
-        "G4": `${BASE}G.mp3`,
         "A4": `${BASE}Am.mp3`
       },
-      release: 2,
-      onload: () => console.log("piano loaded")
+      release: 2
     }).connect(pianoLPF);
-    pianoSampler.volume.value = db(m.piano, -6);
+    pianoMajor.volume.value = db(m.piano, -6);
+    pianoMinor.volume.value = db(m.piano, -6);
 
     // ── Pad — looping atmospheric sample with filter
     const padFilt = new Tone.Filter({
@@ -1180,8 +1183,8 @@ function App() {
       padHPF,
       padPlayer,
       pianoLPF,
-      pianoBPF,
-      pianoSampler,
+      pianoMajor,
+      pianoMinor,
       bassSynth,
       kickPlayer,
       shakerPlayer,
@@ -1212,7 +1215,12 @@ function App() {
     ps.rep = 0;
     ps.step = 0;
     startFromRef.current = 0; // reset for next time
-    while (ps.s < S.length && !S[ps.s].chords.length) ps.s = (ps.s + 1) % S.length;
+    let g = 0; // guard: sections may have changed during the await above
+    while (g++ < S.length && !S[ps.s]?.chords.length) ps.s = (ps.s + 1) % S.length;
+    if (!S[ps.s]?.chords.length) {
+      stopPlayback();
+      return;
+    }
     setCurSec(ps.s);
     setCurChord(0);
     Tone.getTransport().scheduleRepeat(time => {
@@ -1244,16 +1252,19 @@ function App() {
       }
       if (active("kick") && !dyn.kickMuted && dyn.kickSteps[step]) {
         try {
+          if (kickPlayer.state === "started") kickPlayer.stop(time);
           kickPlayer.start(time);
         } catch (e) {}
       }
       if (active("shaker") && !dyn.shakerMuted && dyn.shakerSteps[step]) {
         try {
+          if (shakerPlayer.state === "started") shakerPlayer.stop(time);
           shakerPlayer.start(time);
         } catch (e) {}
       }
       if (active("tamb") && !dyn.tambMuted && dyn.tambSteps[step]) {
         try {
+          if (tambPlayer.state === "started") tambPlayer.stop(time);
           tambPlayer.start(time);
         } catch (e) {}
       }
@@ -1271,19 +1282,31 @@ function App() {
           // pianoFilter 0-100: low=warm/soft, high=bright/percussive
           const pf = (dyn.pianoFilter || 50) / 100;
           pianoLPF.frequency.rampTo(800 + pf * 9200, 0.05); // 800Hz → 10kHz
-          pianoSampler.attack = 0.3 - pf * 0.28; // 0.3s → 0.02s
-          const pianoNote = ch.root + "4";
+          const att = 0.3 - pf * 0.28; // 0.3s → 0.02s
+          pianoMajor.attack = att;
+          pianoMinor.attack = att;
+          // Pick sampler by chord quality — pitch shift stays quality-correct
+          const smp = ch.quality === "minor" ? pianoMinor : pianoMajor;
           const pianoDur = ch.beats * (60 / Tone.getTransport().bpm.value); // seconds
           try {
-            pianoSampler.triggerAttackRelease(pianoNote, pianoDur, time);
+            smp.triggerAttackRelease(ch.root + "4", pianoDur, time);
           } catch (e) {}
         }
       }
-      // Bass step sequencer — triggers on active steps like percussion
+      // Bass step sequencer — legato: each note sustains until the next active
+      // step (wrapping the bar), capped at the chord boundary. Sparse pattern
+      // = long notes (1 hit = whole note), dense pattern = rhythmic 8ths.
       if (active("bass") && !dyn.bassMuted && dyn.bassSteps && dyn.bassSteps[step]) {
-        const bF = getBassFreq(sec.chords[ps.c] || ch);
+        const bF = getBassFreq(ch);
+        const n = tsInfo.steps;
+        let d = 1;
+        while (d < n && !dyn.bassSteps[(step + d) % n]) d++;
+        const remainingTicks = ch.beats * 2 - ps.b; // ticks left in this chord
+        const ticks = Math.max(1, Math.min(d, remainingTicks));
+        const eighthSec = 60 / Tone.getTransport().bpm.value / 2;
+        const durSec = Math.max(0.05, ticks * eighthSec * 0.95); // small gap for articulation
         try {
-          bassSynth.triggerAttackRelease(bF, "8n", time);
+          bassSynth.triggerAttackRelease(bF, durSec, time);
         } catch (e) {}
       }
       ps.b++;
