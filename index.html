@@ -4,7 +4,6 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <title>Chord &amp; Groove</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -15,6 +14,7 @@
 </head>
 <body>
   <div id="root"></div>
+  <div id="dbg2" style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#000d;color:#0f0;font-family:monospace;font-size:11px;padding:6px 10px;pointer-events:none;"></div>
   <audio id="iosAudio" loop playsinline preload="auto"
     src="data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAABAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD/////////////////////////////////////////////////////////////////AAAAAFM9dGltZQAAAAMAAAADAAAABgAAABgAAAAMAAAAGAAAABgAAAAMAAAAGAAAABgAAAAMAAAAGAAAABgAAAAMAAAAGAAAAA==">
   </audio>
@@ -1288,6 +1288,9 @@ function App() {
           // Pick sampler by chord quality — pitch shift stays quality-correct
           const smp = ch.quality === "minor" ? pianoMinor : pianoMajor;
           const pianoDur = ch.beats * (60 / Tone.getTransport().bpm.value); // seconds
+          try {
+            document.getElementById("dbg2") && (document.getElementById("dbg2").textContent = "beats=" + ch.beats + " bpm=" + Tone.getTransport().bpm.value.toFixed(1) + " dur=" + pianoDur.toFixed(2) + "s note=" + ch.root + " q=" + ch.quality);
+          } catch (e) {}
           try {
             smp.triggerAttackRelease(ch.root + "4", pianoDur, time);
           } catch (e) {}
