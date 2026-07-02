@@ -1135,45 +1135,51 @@ function App() {
     // ── Piano — samples are the app "in C". Changing key pitch-shifts from the
     //    C-key sample of the same chord role, so the whole set transposes together.
     //    Split by quality so a chord always shifts from a same-quality source.
-    //    Extra (chromatic) samples point at the same folder; when a file isn't
-    //    there yet the sampler simply falls back to the nearest loaded sample.
+    //    IMPORTANT: only declare samples that actually exist. Tone.Sampler
+    //    repitches from its loaded buffers to cover every other note — but a
+    //    URL pointing at a missing (404) file leaves a dead slot that plays
+    //    silence instead of shifting. Add extra-chord lines here only once the
+    //    corresponding file has been recorded and uploaded.
     const pianoLPF = new Tone.Filter({
       type: "lowpass",
       frequency: 10000
     }).toDestination();
-    // Major bank: diatonic I/IV/V (C,F,G) + chromatic major extras
+    // Major bank: diatonic I/IV/V (C,F,G) — repitched to cover all major roots.
+    // TOMORROW: when the extra chord samples are uploaded, add them here in
+    // OCTAVE 5 so they address their own pitches (the trigger code already sends
+    // extras to octave 5). Add only files that exist to avoid silent slots:
+    //   "Db5":`${BASE}Db.mp3`, // bII
+    //   "D5" :`${BASE}D.mp3`,  // II
+    //   "Eb5":`${BASE}Eb.mp3`, // bIII
+    //   "E5" :`${BASE}E.mp3`,  // III
+    //   "Ab5":`${BASE}Ab.mp3`, // bVI
+    //   "Bb5":`${BASE}Bb.mp3`, // bVII
     const pianoMajor = new Tone.Sampler({
       urls: {
         "C4": `${BASE}C.mp3`,
         "F4": `${BASE}F.mp3`,
-        "G4": `${BASE}G.mp3`,
-        "C#4": `${BASE}Db.mp3`,
-        "D4": `${BASE}D.mp3`,
-        "D#4": `${BASE}Eb.mp3`,
-        "E4": `${BASE}E.mp3`,
-        "G#4": `${BASE}Ab.mp3`,
-        "A#4": `${BASE}Bb.mp3`
+        "G4": `${BASE}G.mp3`
       },
-      release: 2,
-      onerror: () => {} // missing extra samples are fine — nearest sample is used
+      release: 2
     }).connect(pianoLPF);
-    // Minor bank: diatonic ii/iii/vi (Dm,Em,Am)
+    // Minor bank: diatonic ii/iii/vi (Dm,Em,Am) — repitched to cover all minor roots
     const pianoMinor = new Tone.Sampler({
       urls: {
         "D4": `${BASE}Dm.mp3`,
         "E4": `${BASE}Em.mp3`,
         "A4": `${BASE}Am.mp3`
       },
-      release: 2,
-      onerror: () => {}
+      release: 2
     }).connect(pianoLPF);
-    // Diminished bank: vii° (Bdim)
+    // Diminished bank: falls back to minor bank until Bdim.mp3 exists.
+    // TOMORROW: add "B5":`${BASE}Bdim.mp3` (vii° in octave 5) when uploaded.
     const pianoDim = new Tone.Sampler({
       urls: {
-        "B4": `${BASE}Bdim.mp3`
+        "D4": `${BASE}Dm.mp3`,
+        "E4": `${BASE}Em.mp3`,
+        "A4": `${BASE}Am.mp3`
       },
-      release: 2,
-      onerror: () => {}
+      release: 2
     }).connect(pianoLPF);
     pianoMajor.volume.value = db(m.piano, -6);
     pianoMinor.volume.value = db(m.piano, -6);
@@ -1338,13 +1344,16 @@ function App() {
           const att = 0.3 - pf * 0.28; // 0.3s → 0.02s
           pianoMajor.attack = att;
           pianoMinor.attack = att;
-          // Pick bank by chord quality so the pitch-shift source is same-quality.
-          // Samples are in C; the sampler shifts by the interval from the C-key
-          // sample to this chord's root — i.e. the whole set transposes with the key.
+          // Diatonic chords live in octave 4 (C4,D4,E4,F4,G4,A4). Chromatic
+          // extras live in octave 5 (D5=II, Eb5=bIII, E5=III, Ab5=bVI, Bb5=bVII,
+          // Db5=bII, B5=vii°) so they never collide with a diatonic note name.
+          // Triggering the exact octave addresses that chord's own sample; a key
+          // change shifts every note by the same offset, so the set capos together.
           const smp = ch.quality === "dim" ? pianoDim : ch.quality === "minor" ? pianoMinor : pianoMajor;
+          const oct = ch.degIdx === -1 ? "5" : "4"; // extras in 5, diatonic in 4
           const pianoDur = ch.beats * (60 / Tone.getTransport().bpm.value); // seconds
           try {
-            smp.triggerAttackRelease(ch.root + "4", pianoDur, time);
+            smp.triggerAttackRelease(ch.root + oct, pianoDur, time);
           } catch (e) {}
         }
       }
