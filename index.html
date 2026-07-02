@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <title>Chord &amp; Groove</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -14,7 +15,6 @@
 </head>
 <body>
   <div id="root"></div>
-  <div id="dbg2" style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#000d;color:#0f0;font-family:monospace;font-size:11px;padding:6px 10px;pointer-events:none;"></div>
   <audio id="iosAudio" loop playsinline preload="auto"
     src="data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU2LjM2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAABAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD/////////////////////////////////////////////////////////////////AAAAAFM9dGltZQAAAAMAAAADAAAABgAAABgAAAAMAAAAGAAAABgAAAAMAAAAGAAAABgAAAAMAAAAGAAAABgAAAAMAAAAGAAAAA==">
   </audio>
@@ -35,6 +35,22 @@
   <script>
 // ─── Music Theory ─────────────────────────────────────────────────────────────
 const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+// Pad loop filenames per key — flat spelling for black keys to match the files
+const PAD_FILE = {
+  "C": "LoopinC",
+  "C#": "LoopinDb",
+  "D": "LoopinD",
+  "D#": "LoopinEb",
+  "E": "LoopinE",
+  "F": "LoopinF",
+  "F#": "LoopinGb",
+  "G": "LoopinG",
+  "G#": "LoopinAb",
+  "A": "LoopinA",
+  "A#": "LoopinBb",
+  "B": "LoopinB"
+};
+const padUrl = (key, base) => `${base}${PAD_FILE[key] || "LoopinC"}.mp3`;
 const SCALE_INTERVALS = {
   major: [0, 2, 4, 5, 7, 9, 11],
   minor: [0, 2, 3, 5, 7, 8, 10]
@@ -63,7 +79,8 @@ const EXTRA_DEGREES = [{
   semis: 4
 }, {
   label: "vii°",
-  semis: 11
+  semis: 11,
+  quality: "dim"
 }];
 const INVERSIONS = ["root", "3rd", "5th"];
 
@@ -191,13 +208,16 @@ function buildDegree(key, scale, i) {
 }
 function buildExtra(key, ex, extraIdx) {
   const root = NOTES[(noteIdx(key) + ex.semis) % 12];
-  const third = NOTES[(noteIdx(root) + 4) % 12];
-  const fifth = NOTES[(noteIdx(root) + 7) % 12];
+  const q = ex.quality || "major";
+  const thirdInt = q === "minor" || q === "dim" ? 3 : 4;
+  const fifthInt = q === "dim" ? 6 : 7;
+  const third = NOTES[(noteIdx(root) + thirdInt) % 12];
+  const fifth = NOTES[(noteIdx(root) + fifthInt) % 12];
   return {
     id: `x-${ex.label}`,
     root,
-    quality: "major",
-    label: root,
+    quality: q,
+    label: chordLabel(root, q),
     roman: ex.label,
     third,
     fifth,
@@ -622,6 +642,7 @@ function App() {
   const mixRef = useRef(mix);
   const liveMuteRef = useRef(liveMute);
   const tsRef = useRef(timeSig);
+  const keyRef = useRef(key);
   const pulseTimer = useRef(null);
   useEffect(() => {
     secRef.current = sections;
@@ -638,6 +659,9 @@ function App() {
   useEffect(() => {
     tsRef.current = timeSig;
   }, [timeSig]);
+  useEffect(() => {
+    keyRef.current = key;
+  }, [key]);
 
   // Pad player responds to live mute via volume (synced player can't use start/stop)
   useEffect(() => {
@@ -657,6 +681,7 @@ function App() {
     if (e.padPlayer) e.padPlayer.volume.value = db(m.pad, -10);
     if (e.pianoMajor) e.pianoMajor.volume.value = db(m.piano, -6);
     if (e.pianoMinor) e.pianoMinor.volume.value = db(m.piano, -6);
+    if (e.pianoDim) e.pianoDim.volume.value = db(m.piano, -6);
     if (e.bassSynth) e.bassSynth.volume.value = db(m.bass, -8);
     if (e.kickPlayer) e.kickPlayer.volume.value = db(m.kick, -2);
     if (e.shakerPlayer) e.shakerPlayer.volume.value = db(m.shaker, -6);
@@ -1107,30 +1132,52 @@ function App() {
     const db = (v, b) => Tone.gainToDb(Math.max(0.001, v / 100)) + b;
     const BASE = "https://philthemoser.github.io/qw-samples/";
 
-    // ── Piano — two samplers split by chord quality, so pitch-shifting
-    //    always uses a same-quality source (fixes wrong-quality chords in new keys)
+    // ── Piano — samples are the app "in C". Changing key pitch-shifts from the
+    //    C-key sample of the same chord role, so the whole set transposes together.
+    //    Split by quality so a chord always shifts from a same-quality source.
+    //    Extra (chromatic) samples point at the same folder; when a file isn't
+    //    there yet the sampler simply falls back to the nearest loaded sample.
     const pianoLPF = new Tone.Filter({
       type: "lowpass",
       frequency: 10000
     }).toDestination();
+    // Major bank: diatonic I/IV/V (C,F,G) + chromatic major extras
     const pianoMajor = new Tone.Sampler({
       urls: {
         "C4": `${BASE}C.mp3`,
         "F4": `${BASE}F.mp3`,
-        "G4": `${BASE}G.mp3`
+        "G4": `${BASE}G.mp3`,
+        "C#4": `${BASE}Db.mp3`,
+        "D4": `${BASE}D.mp3`,
+        "D#4": `${BASE}Eb.mp3`,
+        "E4": `${BASE}E.mp3`,
+        "G#4": `${BASE}Ab.mp3`,
+        "A#4": `${BASE}Bb.mp3`
       },
-      release: 2
+      release: 2,
+      onerror: () => {} // missing extra samples are fine — nearest sample is used
     }).connect(pianoLPF);
+    // Minor bank: diatonic ii/iii/vi (Dm,Em,Am)
     const pianoMinor = new Tone.Sampler({
       urls: {
         "D4": `${BASE}Dm.mp3`,
         "E4": `${BASE}Em.mp3`,
         "A4": `${BASE}Am.mp3`
       },
-      release: 2
+      release: 2,
+      onerror: () => {}
+    }).connect(pianoLPF);
+    // Diminished bank: vii° (Bdim)
+    const pianoDim = new Tone.Sampler({
+      urls: {
+        "B4": `${BASE}Bdim.mp3`
+      },
+      release: 2,
+      onerror: () => {}
     }).connect(pianoLPF);
     pianoMajor.volume.value = db(m.piano, -6);
     pianoMinor.volume.value = db(m.piano, -6);
+    pianoDim.volume.value = db(m.piano, -6);
 
     // ── Pad — looping atmospheric sample with filter
     const padFilt = new Tone.Filter({
@@ -1142,7 +1189,7 @@ function App() {
       frequency: 200
     }).connect(padFilt);
     const padPlayer = new Tone.Player({
-      url: `${BASE}LoopinC.mp3`,
+      url: padUrl(keyRef.current, BASE),
       loop: true,
       autostart: false
     }).connect(padHPF);
@@ -1185,6 +1232,7 @@ function App() {
       pianoLPF,
       pianoMajor,
       pianoMinor,
+      pianoDim,
       bassSynth,
       kickPlayer,
       shakerPlayer,
@@ -1243,12 +1291,17 @@ function App() {
         return;
       }
       const step = ps.step % tsInfo.steps;
-      // Pulse on every quarter note — every 2 eighth-note ticks
+      // Pulse on every quarter note. Use Tone.Draw so the visual toggle is
+      // aligned to the audio clock via requestAnimationFrame, instead of firing
+      // React state + setTimeout inside the audio callback (which jitters when
+      // the callback is busy with lots of percussion hits).
       const pulseTicks = ts === "6/8" ? 1 : 2;
       if (ps.b % pulseTicks === 0) {
-        setBeatPulse(true);
-        clearTimeout(pulseTimer.current);
-        pulseTimer.current = setTimeout(() => setBeatPulse(false), 100);
+        Tone.Draw.schedule(() => {
+          setBeatPulse(true);
+          clearTimeout(pulseTimer.current);
+          pulseTimer.current = setTimeout(() => setBeatPulse(false), 90);
+        }, time);
       }
       if (active("kick") && !dyn.kickMuted && dyn.kickSteps[step]) {
         try {
@@ -1285,12 +1338,11 @@ function App() {
           const att = 0.3 - pf * 0.28; // 0.3s → 0.02s
           pianoMajor.attack = att;
           pianoMinor.attack = att;
-          // Pick sampler by chord quality — pitch shift stays quality-correct
-          const smp = ch.quality === "minor" ? pianoMinor : pianoMajor;
+          // Pick bank by chord quality so the pitch-shift source is same-quality.
+          // Samples are in C; the sampler shifts by the interval from the C-key
+          // sample to this chord's root — i.e. the whole set transposes with the key.
+          const smp = ch.quality === "dim" ? pianoDim : ch.quality === "minor" ? pianoMinor : pianoMajor;
           const pianoDur = ch.beats * (60 / Tone.getTransport().bpm.value); // seconds
-          try {
-            document.getElementById("dbg2") && (document.getElementById("dbg2").textContent = "beats=" + ch.beats + " bpm=" + Tone.getTransport().bpm.value.toFixed(1) + " dur=" + pianoDur.toFixed(2) + "s note=" + ch.root + " q=" + ch.quality);
-          } catch (e) {}
           try {
             smp.triggerAttackRelease(ch.root + "4", pianoDur, time);
           } catch (e) {}
