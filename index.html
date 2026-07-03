@@ -51,22 +51,26 @@ const PAD_FILE = {
   "B": "LoopinB"
 };
 const padUrl = (key, base) => `${base}${PAD_FILE[key] || "LoopinC"}.mp3`;
-// Semitone offset of a key from C, shortest direction (-5..+6) so shifts stay small.
-function keyOffset(key) {
-  let s = NOTES.indexOf(key) % 12;
+// Normalize a note name to the sharp spelling used in NOTES (Bb→A#, Eb→D#, etc.)
+const FLAT_TO_SHARP = {
+  "Db": "C#",
+  "Eb": "D#",
+  "Gb": "F#",
+  "Ab": "G#",
+  "Bb": "A#",
+  "Cb": "B",
+  "Fb": "E"
+};
+function normNote(n) {
+  return FLAT_TO_SHARP[n] || n;
+}
+// Semitone shift of a key from C, shortest direction (-5..+6) so shifts stay small.
+function keyShift(key) {
+  let s = NOTES.indexOf(normNote(key));
+  if (s < 0) s = 0;
+  s %= 12;
   if (s > 6) s -= 12;
   return s;
-}
-// Transpose a scientific-pitch note (e.g. "D4") by N semitones, returning a new note.
-function transposeNote(note, semis) {
-  const m = note.match(/^([A-G]#?)(\d)$/);
-  if (!m) return note;
-  const idx = NOTES.indexOf(m[1]);
-  if (idx < 0) return note;
-  const abs = idx + (parseInt(m[2], 10) + 1) * 12 + semis; // MIDI-ish absolute
-  const pc = (abs % 12 + 12) % 12;
-  const oct = Math.floor(abs / 12) - 1;
-  return NOTES[pc] + oct;
 }
 const SCALE_INTERVALS = {
   major: [0, 2, 4, 5, 7, 9, 11],
@@ -213,7 +217,7 @@ function buildDegree(key, scale, i) {
   const roman = (scale === "major" ? ["I", "ii", "iii", "IV", "V", "vi", "vii°"] : ["i", "ii°", "bIII", "iv", "v", "bVI", "bVII"])[i];
   // sampleNote: the C-key sample this degree always plays (samples are in C).
   // Diatonic degrees map to C major roots C,D,E,F,G,A in octave 4. The global
-  // key offset (applied as sampler detune) transposes it to the actual pitch.
+  // key is applied by the PitchShift on the piano bus, not here.
   const C_MAJOR_ROOTS = ["C", "D", "E", "F", "G", "A", "B"];
   const sampleNote = C_MAJOR_ROOTS[i] + "4";
   return {
@@ -686,6 +690,12 @@ function App() {
   }, [timeSig]);
   useEffect(() => {
     keyRef.current = key;
+    // Live capo: update the piano bus PitchShift when the key changes.
+    if (engRef.current?.pianoShift) {
+      try {
+        engRef.current.pianoShift.pitch = keyShift(key);
+      } catch (e) {}
+    }
   }, [key]);
 
   // Pad player responds to live mute via volume (synced player can't use start/stop)
@@ -1159,24 +1169,20 @@ function App() {
     //    C-key sample of the same chord role, so the whole set transposes together.
     //    Split by quality so a chord always shifts from a same-quality source.
     //    IMPORTANT: only declare samples that actually exist. Tone.Sampler
-    //    repitches from its loaded buffers to cover every other note — but a
-    //    URL pointing at a missing (404) file leaves a dead slot that plays
-    //    silence instead of shifting. Add extra-chord lines here only once the
-    //    corresponding file has been recorded and uploaded.
+    // ── Piano — ONE sampler, samples always play at their HOME notes (C4=I,
+    //    D4=ii, E4=iii, F4=IV, G4=V, A4=vi) so each chord plays its own exact
+    //    recording untouched. The song KEY is applied as a single PitchShift on
+    //    the whole piano output (a capo on the bus), not per-note — this avoids
+    //    transposed notes colliding with other degrees' sample slots.
     const pianoLPF = new Tone.Filter({
       type: "lowpass",
       frequency: 10000
     }).toDestination();
-    // ── Piano — ONE sampler holding the C-key samples at their degree pitches.
-    //    Diatonic chords sit in octave 4 (C,Dm,Em,F,G,Am at C4,D4,E4,F4,G4,A4),
-    //    chromatic extras in octave 5. Each chord triggers its degree's own C-key
-    //    sample note, so quality is always correct. The song key is expressed as a
-    //    single global detune on the sampler — one number transposes everything,
-    //    exactly like a capo. Extra-chord samples get added in octave 5 once
-    //    recorded (only add files that exist, to avoid silent slots):
-    //      "Db5":`${BASE}Db.mp3`, "D5":`${BASE}D.mp3`,  "Eb5":`${BASE}Eb.mp3`,
-    //      "E5" :`${BASE}E.mp3`,  "Ab5":`${BASE}Ab.mp3`, "Bb5":`${BASE}Bb.mp3`,
-    //      "B5" :`${BASE}Bdim.mp3`,
+    // PitchShift capos the entire piano output by the key's semitone offset.
+    const pianoShift = new Tone.PitchShift({
+      pitch: keyShift(keyRef.current),
+      windowSize: 0.1
+    }).connect(pianoLPF);
     const piano = new Tone.Sampler({
       urls: {
         "C4": `${BASE}C.mp3`,
@@ -1187,7 +1193,7 @@ function App() {
         "A4": `${BASE}Am.mp3`
       },
       release: 2
-    }).connect(pianoLPF);
+    }).connect(pianoShift);
     piano.volume.value = db(m.piano, -6);
 
     // ── Pad — looping atmospheric sample with filter
@@ -1241,6 +1247,7 @@ function App() {
       padHPF,
       padPlayer,
       pianoLPF,
+      pianoShift,
       piano,
       bassSynth,
       kickPlayer,
@@ -1345,11 +1352,10 @@ function App() {
           const pf = (dyn.pianoFilter || 50) / 100;
           pianoLPF.frequency.rampTo(800 + pf * 9200, 0.05); // 800Hz → 10kHz
           piano.attack = 0.3 - pf * 0.28; // 0.3s → 0.02s
-          // Trigger this chord's degree sample (recorded in C), transposed by the
-          // key's semitone offset from C. Same sample set for every key — the shift
-          // capos the whole thing, and each degree keeps its correct quality.
-          const baseNote = ch.sampleNote || ch.root + "4";
-          const note = transposeNote(baseNote, keyOffset(keyRef.current));
+          // Trigger this chord's HOME sample note (its degree's C-key recording).
+          // The key is applied by the PitchShift on the piano bus, so we never
+          // transpose the note here — each sample plays exactly as recorded.
+          const note = ch.sampleNote || ch.root + "4";
           const pianoDur = ch.beats * (60 / Tone.getTransport().bpm.value); // seconds
           try {
             piano.triggerAttackRelease(note, pianoDur, time);
