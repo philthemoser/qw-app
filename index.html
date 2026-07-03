@@ -51,6 +51,13 @@ const PAD_FILE = {
   "B": "LoopinB"
 };
 const padUrl = (key, base) => `${base}${PAD_FILE[key] || "LoopinC"}.mp3`;
+// Semitone offset of a key from C, chosen as the SHORTEST direction (±6),
+// so shifts never exceed a tritone. Returned in cents for sampler.detune.
+function keyOffsetCents(key) {
+  let s = noteIdx(key) % 12; // 0..11 up from C
+  if (s > 6) s -= 12; // fold to -5..+6 (shortest path)
+  return s * 100;
+}
 const SCALE_INTERVALS = {
   major: [0, 2, 4, 5, 7, 9, 11],
   minor: [0, 2, 3, 5, 7, 8, 10]
@@ -194,6 +201,11 @@ function buildDegree(key, scale, i) {
   const third = NOTES[(noteIdx(root) + (quality === "major" ? 4 : 3)) % 12];
   const fifth = NOTES[(noteIdx(root) + 7) % 12];
   const roman = (scale === "major" ? ["I", "ii", "iii", "IV", "V", "vi", "vii°"] : ["i", "ii°", "bIII", "iv", "v", "bVI", "bVII"])[i];
+  // sampleNote: the C-key sample this degree always plays (samples are in C).
+  // Diatonic degrees map to C major roots C,D,E,F,G,A in octave 4. The global
+  // key offset (applied as sampler detune) transposes it to the actual pitch.
+  const C_MAJOR_ROOTS = ["C", "D", "E", "F", "G", "A", "B"];
+  const sampleNote = C_MAJOR_ROOTS[i] + "4";
   return {
     id: `d-${key}-${scale}-${i}`,
     root,
@@ -203,7 +215,8 @@ function buildDegree(key, scale, i) {
     third,
     fifth,
     degIdx: i,
-    extraIdx: 0
+    extraIdx: 0,
+    sampleNote
   };
 }
 function buildExtra(key, ex, extraIdx) {
@@ -222,7 +235,9 @@ function buildExtra(key, ex, extraIdx) {
     third,
     fifth,
     degIdx: -1,
-    extraIdx
+    extraIdx,
+    semis: ex.semis,
+    sampleNote: NOTES[ex.semis] + "5"
   };
 }
 function buildDefaultPalette(key, scale) {
@@ -661,6 +676,12 @@ function App() {
   }, [timeSig]);
   useEffect(() => {
     keyRef.current = key;
+    // Live capo: update the piano sampler's global detune when the key changes.
+    if (engRef.current?.piano) {
+      try {
+        engRef.current.piano.detune.value = keyOffsetCents(key);
+      } catch (e) {}
+    }
   }, [key]);
 
   // Pad player responds to live mute via volume (synced player can't use start/stop)
@@ -679,9 +700,7 @@ function App() {
       m = mix;
     const db = (v, b) => Tone.gainToDb(Math.max(0.001, v / 100)) + b;
     if (e.padPlayer) e.padPlayer.volume.value = db(m.pad, -10);
-    if (e.pianoMajor) e.pianoMajor.volume.value = db(m.piano, -6);
-    if (e.pianoMinor) e.pianoMinor.volume.value = db(m.piano, -6);
-    if (e.pianoDim) e.pianoDim.volume.value = db(m.piano, -6);
+    if (e.piano) e.piano.volume.value = db(m.piano, -6);
     if (e.bassSynth) e.bassSynth.volume.value = db(m.bass, -8);
     if (e.kickPlayer) e.kickPlayer.volume.value = db(m.kick, -2);
     if (e.shakerPlayer) e.shakerPlayer.volume.value = db(m.shaker, -6);
@@ -807,7 +826,7 @@ function App() {
     setSongId(s.id);
     setTitle(s.title);
     setKey(s.key);
-    setScale(s.scale);
+    setScale("major");
     setBpm(s.bpm);
     setTimeSig(s.timeSig);
     setPalette(s.palette);
@@ -835,7 +854,7 @@ function App() {
     });
     prevKS.current = {
       key: s.key,
-      scale: s.scale
+      scale: "major"
     };
     prevTS.current = s.timeSig;
     setLibraryOpen(false);
@@ -1144,46 +1163,30 @@ function App() {
       type: "lowpass",
       frequency: 10000
     }).toDestination();
-    // Major bank: diatonic I/IV/V (C,F,G) — repitched to cover all major roots.
-    // TOMORROW: when the extra chord samples are uploaded, add them here in
-    // OCTAVE 5 so they address their own pitches (the trigger code already sends
-    // extras to octave 5). Add only files that exist to avoid silent slots:
-    //   "Db5":`${BASE}Db.mp3`, // bII
-    //   "D5" :`${BASE}D.mp3`,  // II
-    //   "Eb5":`${BASE}Eb.mp3`, // bIII
-    //   "E5" :`${BASE}E.mp3`,  // III
-    //   "Ab5":`${BASE}Ab.mp3`, // bVI
-    //   "Bb5":`${BASE}Bb.mp3`, // bVII
-    const pianoMajor = new Tone.Sampler({
+    // ── Piano — ONE sampler holding the C-key samples at their degree pitches.
+    //    Diatonic chords sit in octave 4 (C,Dm,Em,F,G,Am at C4,D4,E4,F4,G4,A4),
+    //    chromatic extras in octave 5. Each chord triggers its degree's own C-key
+    //    sample note, so quality is always correct. The song key is expressed as a
+    //    single global detune on the sampler — one number transposes everything,
+    //    exactly like a capo. Extra-chord samples get added in octave 5 once
+    //    recorded (only add files that exist, to avoid silent slots):
+    //      "Db5":`${BASE}Db.mp3`, "D5":`${BASE}D.mp3`,  "Eb5":`${BASE}Eb.mp3`,
+    //      "E5" :`${BASE}E.mp3`,  "Ab5":`${BASE}Ab.mp3`, "Bb5":`${BASE}Bb.mp3`,
+    //      "B5" :`${BASE}Bdim.mp3`,
+    const piano = new Tone.Sampler({
       urls: {
         "C4": `${BASE}C.mp3`,
+        "D4": `${BASE}Dm.mp3`,
+        "E4": `${BASE}Em.mp3`,
         "F4": `${BASE}F.mp3`,
-        "G4": `${BASE}G.mp3`
-      },
-      release: 2
-    }).connect(pianoLPF);
-    // Minor bank: diatonic ii/iii/vi (Dm,Em,Am) — repitched to cover all minor roots
-    const pianoMinor = new Tone.Sampler({
-      urls: {
-        "D4": `${BASE}Dm.mp3`,
-        "E4": `${BASE}Em.mp3`,
+        "G4": `${BASE}G.mp3`,
         "A4": `${BASE}Am.mp3`
       },
       release: 2
     }).connect(pianoLPF);
-    // Diminished bank: falls back to minor bank until Bdim.mp3 exists.
-    // TOMORROW: add "B5":`${BASE}Bdim.mp3` (vii° in octave 5) when uploaded.
-    const pianoDim = new Tone.Sampler({
-      urls: {
-        "D4": `${BASE}Dm.mp3`,
-        "E4": `${BASE}Em.mp3`,
-        "A4": `${BASE}Am.mp3`
-      },
-      release: 2
-    }).connect(pianoLPF);
-    pianoMajor.volume.value = db(m.piano, -6);
-    pianoMinor.volume.value = db(m.piano, -6);
-    pianoDim.volume.value = db(m.piano, -6);
+    piano.volume.value = db(m.piano, -6);
+    // Global key offset as detune (cents). C=0, so default is no shift.
+    piano.detune.value = keyOffsetCents(keyRef.current);
 
     // ── Pad — looping atmospheric sample with filter
     const padFilt = new Tone.Filter({
@@ -1236,9 +1239,7 @@ function App() {
       padHPF,
       padPlayer,
       pianoLPF,
-      pianoMajor,
-      pianoMinor,
-      pianoDim,
+      piano,
       bassSynth,
       kickPlayer,
       shakerPlayer,
@@ -1341,19 +1342,14 @@ function App() {
           // pianoFilter 0-100: low=warm/soft, high=bright/percussive
           const pf = (dyn.pianoFilter || 50) / 100;
           pianoLPF.frequency.rampTo(800 + pf * 9200, 0.05); // 800Hz → 10kHz
-          const att = 0.3 - pf * 0.28; // 0.3s → 0.02s
-          pianoMajor.attack = att;
-          pianoMinor.attack = att;
-          // Diatonic chords live in octave 4 (C4,D4,E4,F4,G4,A4). Chromatic
-          // extras live in octave 5 (D5=II, Eb5=bIII, E5=III, Ab5=bVI, Bb5=bVII,
-          // Db5=bII, B5=vii°) so they never collide with a diatonic note name.
-          // Triggering the exact octave addresses that chord's own sample; a key
-          // change shifts every note by the same offset, so the set capos together.
-          const smp = ch.quality === "dim" ? pianoDim : ch.quality === "minor" ? pianoMinor : pianoMajor;
-          const oct = ch.degIdx === -1 ? "5" : "4"; // extras in 5, diatonic in 4
+          piano.attack = 0.3 - pf * 0.28; // 0.3s → 0.02s
+          // Trigger this chord's degree sample (in C). The sampler's global
+          // detune (set from the song key) transposes it to the real pitch —
+          // so every chord plays its own correct-quality sample, capoed by key.
+          const note = ch.sampleNote || ch.root + "4";
           const pianoDur = ch.beats * (60 / Tone.getTransport().bpm.value); // seconds
           try {
-            smp.triggerAttackRelease(ch.root + oct, pianoDur, time);
+            piano.triggerAttackRelease(note, pianoDur, time);
           } catch (e) {}
         }
       }
@@ -1592,7 +1588,7 @@ function App() {
     className: "bar-chord-name"
   }, key), /*#__PURE__*/React.createElement("div", {
     className: "bar-chord-sub"
-  }, scale, " · ", timeSig))), /*#__PURE__*/React.createElement("button", {
+  }, timeSig))), /*#__PURE__*/React.createElement("button", {
     className: `pbtn${playing ? "" : " idle"}`,
     onClick: samplesLoading ? undefined : playing ? stopPlayback : startPlayback,
     disabled: samplesLoading,
@@ -1777,7 +1773,7 @@ function SettingsSheet({
     className: "card"
   }, /*#__PURE__*/React.createElement("div", {
     className: "card-title"
-  }, "Key & Scale"), /*#__PURE__*/React.createElement("div", {
+  }, "Key"), /*#__PURE__*/React.createElement("div", {
     className: "bpm-big",
     style: {
       marginBottom: 8
@@ -1803,18 +1799,15 @@ function SettingsSheet({
       background: C.surf,
       fontSize: 16
     }
-  }, n)))), /*#__PURE__*/React.createElement("select", {
-    className: "sel",
-    value: scale,
-    onChange: e => setScale(e.target.value),
+  }, n)))), /*#__PURE__*/React.createElement("div", {
     style: {
-      width: "100%"
+      fontFamily: "sans-serif",
+      fontSize: 10,
+      color: C.textDim,
+      letterSpacing: ".1em",
+      textAlign: "center"
     }
-  }, /*#__PURE__*/React.createElement("option", {
-    value: "major"
-  }, "Major"), /*#__PURE__*/React.createElement("option", {
-    value: "minor"
-  }, "Minor"))), /*#__PURE__*/React.createElement("div", {
+  }, "MAJOR · for a minor song pick its relative major")), /*#__PURE__*/React.createElement("div", {
     className: "card"
   }, /*#__PURE__*/React.createElement("div", {
     className: "card-title"
