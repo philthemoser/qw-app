@@ -317,6 +317,7 @@ const DEFAULT_MIX = {
   tamb: 60
 };
 const LS_KEY = "qw_v1";
+const LS_SETLIST = "qw_setlist_v1";
 function loadLibrary() {
   try {
     return JSON.parse(localStorage.getItem(LS_KEY) || "[]");
@@ -327,6 +328,18 @@ function loadLibrary() {
 function saveLibrary(lib) {
   try {
     localStorage.setItem(LS_KEY, JSON.stringify(lib));
+  } catch (e) {}
+}
+function loadSetlist() {
+  try {
+    return JSON.parse(localStorage.getItem(LS_SETLIST) || "[]");
+  } catch (e) {
+    return [];
+  }
+}
+function saveSetlist(ids) {
+  try {
+    localStorage.setItem(LS_SETLIST, JSON.stringify(ids));
   } catch (e) {}
 }
 const defaultDyn = (ts = "4/4") => {
@@ -517,6 +530,10 @@ input,select,button{font-family:inherit;}
 .bpm-big{font-size:48px;color:${C.acc};line-height:1;}
 .slider{-webkit-appearance:none;width:100%;height:3px;border-radius:2px;background:${C.border};outline:none;cursor:pointer;}
 .slider::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:${C.acc};cursor:pointer;}
+/* Vertical mixer fader */
+.vfader{-webkit-appearance:none;appearance:none;writing-mode:vertical-lr;direction:rtl;width:10px;height:140px;border-radius:5px;background:${C.border};outline:none;cursor:pointer;}
+.vfader::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:18px;border-radius:3px;background:${C.acc};cursor:pointer;border:1px solid #0A0D12;}
+.vfader::-moz-range-thumb{width:28px;height:18px;border-radius:3px;background:${C.acc};cursor:pointer;border:1px solid #0A0D12;}
 .steps{display:flex;gap:4px;flex-wrap:wrap;}
 .step{width:30px;height:30px;border-radius:3px;border:1px solid ${C.border};background:${C.surf2};cursor:pointer;transition:all .12s;}
 .step.on{background:${C.acc};border-color:${C.acc};}
@@ -642,8 +659,13 @@ function App() {
   const [openSecId, setOpenSecId] = useState(null);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [liveKeyOpen, setLiveKeyOpen] = useState(false); // key list during playback
+  const [liveTempoOpen, setLiveTempoOpen] = useState(false); // tempo nudge during playback
+  const [liveMixerOpen, setLiveMixerOpen] = useState(false); // mixer faders during playback
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [library, setLibrary] = useState(() => loadLibrary());
+  const [setlistIds, setSetlistIds] = useState(() => loadSetlist());
+  const [libView, setLibView] = useState("library"); // "library" | "setlist"
   const [saveFlash, setSaveFlash] = useState(false);
   const [selChord, setSelChord] = useState(null);
   const startFromRef = useRef(0); // which section to start playback from
@@ -750,6 +772,22 @@ function App() {
     if (e.shakerPlayer) e.shakerPlayer.volume.value = db(m.shaker, -6);
     if (e.tambPlayer) e.tambPlayer.volume.value = db(m.tamb, -8);
   }, [mix]);
+
+  // Live tempo: nudging BPM updates the running transport immediately.
+  useEffect(() => {
+    if (engRef.current) {
+      try {
+        Tone.getTransport().bpm.rampTo(bpm, 0.1);
+      } catch (e) {}
+    }
+  }, [bpm]);
+
+  // Live nudge helpers for the playing-mode controls
+  const nudgeMix = (k, delta) => setMix(m => ({
+    ...m,
+    [k]: Math.max(0, Math.min(100, (m[k] ?? 70) + delta))
+  }));
+  const nudgeBpm = delta => setBpm(b => Math.max(40, Math.min(240, b + delta)));
 
   // Palette rebuild + remap section chords to new key
   const prevKS = useRef({
@@ -904,9 +942,30 @@ function App() {
     setLibraryOpen(false);
     setOpenSecId(null);
   };
-  const deleteSong = id => setLibrary(lib => {
-    const n = lib.filter(s => s.id !== id);
-    saveLibrary(n);
+  const deleteSong = id => {
+    setLibrary(lib => {
+      const n = lib.filter(s => s.id !== id);
+      saveLibrary(n);
+      return n;
+    });
+    setSetlistIds(ids => {
+      const n = ids.filter(x => x !== id);
+      saveSetlist(n);
+      return n;
+    }); // also drop from setlist
+  };
+  const toggleSetlist = id => setSetlistIds(ids => {
+    const n = ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id];
+    saveSetlist(n);
+    return n;
+  });
+  const moveInSetlist = (id, dir) => setSetlistIds(ids => {
+    const i = ids.indexOf(id),
+      j = i + dir;
+    if (i < 0 || j < 0 || j >= ids.length) return ids;
+    const n = [...ids];
+    [n[i], n[j]] = [n[j], n[i]];
+    saveSetlist(n);
     return n;
   });
 
@@ -1227,6 +1286,9 @@ function App() {
     setBeatPulse(false);
     setQueued(null);
     setLooping(false);
+    setLiveKeyOpen(false);
+    setLiveTempoOpen(false);
+    setLiveMixerOpen(false);
     setSamplesLoading(false);
     setLiveMute({
       pad: false,
@@ -1646,8 +1708,45 @@ function App() {
     className: "bar"
   }, /*#__PURE__*/React.createElement("div", {
     className: "mute-section"
+  }, playing && /*#__PURE__*/React.createElement("div", {
+    onClick: () => {
+      setLiveMixerOpen(o => !o);
+      setLiveKeyOpen(false);
+      setLiveTempoOpen(false);
+    },
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      cursor: "pointer",
+      margin: "0 0 8px",
+      userSelect: "none"
+    }
   }, /*#__PURE__*/React.createElement("div", {
-    className: "mute-label"
+    style: {
+      flex: 1,
+      height: 1,
+      background: C.border
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "sans-serif",
+      fontSize: 10,
+      letterSpacing: ".14em",
+      color: C.textMid,
+      textTransform: "uppercase"
+    }
+  }, "Mixer ", liveMixerOpen ? "▾" : "▴"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      height: 1,
+      background: C.border
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "mute-label",
+    style: playing ? {
+      display: "none"
+    } : undefined
   }, "Mute"), /*#__PURE__*/React.createElement("div", {
     className: "mute-btns"
   }, INST_LABELS.filter(({
@@ -1672,12 +1771,12 @@ function App() {
     className: "bar-main"
   }, /*#__PURE__*/React.createElement("div", {
     className: "bar-left",
-    onClick: () => !playing && setSettingsOpen(o => !o)
+    onClick: () => playing ? (setLiveKeyOpen(o => !o), setLiveMixerOpen(false), setLiveTempoOpen(false)) : setSettingsOpen(o => !o)
   }, playing ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "bar-chord-name"
   }, curChordObj ? chordDisplay(curChordObj) : "—"), /*#__PURE__*/React.createElement("div", {
     className: "bar-chord-sub"
-  }, curSecObj?.name, looping ? " · loop" : queued !== null ? ` · next: ${sections[queued]?.name}` : "")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, key, " · ", curSecObj?.name, looping ? " · loop" : queued !== null ? ` · next: ${sections[queued]?.name}` : "")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "bar-chord-name"
   }, key), /*#__PURE__*/React.createElement("div", {
     className: "bar-chord-sub"
@@ -1691,7 +1790,7 @@ function App() {
     } : undefined
   }, samplesLoading ? "⋯" : playing ? "■" : "▶"), /*#__PURE__*/React.createElement("div", {
     className: "bar-right",
-    onClick: () => !playing && setSettingsOpen(o => !o)
+    onClick: () => playing ? (setLiveTempoOpen(o => !o), setLiveMixerOpen(false), setLiveKeyOpen(false)) : setSettingsOpen(o => !o)
   }, settingsOpen && !playing ? /*#__PURE__*/React.createElement("div", {
     style: {
       textAlign: "right"
@@ -1716,7 +1815,187 @@ function App() {
     className: "bar-bpm-num"
   }, bpm), /*#__PURE__*/React.createElement("div", {
     className: "bar-bpm-lbl"
-  }, "bpm"))))), /*#__PURE__*/React.createElement("div", {
+  }, "bpm"))))), playing && liveKeyOpen && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "fixed",
+      left: 12,
+      bottom: 158,
+      zIndex: 46,
+      width: 220,
+      pointerEvents: "auto"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.surf2,
+      border: `1px solid ${C.borderHi}`,
+      borderRadius: 10,
+      padding: 8,
+      boxShadow: "0 10px 34px #000b"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "sans-serif",
+      fontSize: 9,
+      letterSpacing: ".14em",
+      color: C.textDim,
+      textTransform: "uppercase",
+      textAlign: "center",
+      marginBottom: 6
+    }
+  }, "Key"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "repeat(3,1fr)",
+      gap: 5
+    }
+  }, NOTES.map(n => /*#__PURE__*/React.createElement("button", {
+    key: n,
+    style: {
+      background: n === key ? C.acc : "none",
+      border: `1px solid ${n === key ? C.acc : C.border}`,
+      color: n === key ? "#0A0D12" : C.text,
+      fontWeight: n === key ? 700 : 400,
+      padding: "12px 0",
+      borderRadius: 6,
+      cursor: "pointer",
+      fontSize: 15,
+      fontFamily: "'Georgia',serif"
+    },
+    onClick: () => setKey(n)
+  }, n))))), playing && liveTempoOpen && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "fixed",
+      right: 12,
+      bottom: 158,
+      zIndex: 46,
+      width: 84,
+      pointerEvents: "auto"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.surf2,
+      border: `1px solid ${C.borderHi}`,
+      borderRadius: 10,
+      padding: 10,
+      boxShadow: "0 10px 34px #000b",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    style: {
+      background: "none",
+      border: `1px solid ${C.border}`,
+      color: C.text,
+      borderRadius: 6,
+      width: 58,
+      height: 44,
+      fontSize: 24,
+      cursor: "pointer"
+    },
+    onClick: () => nudgeBpm(1)
+  }, "+"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 28,
+      color: C.acc,
+      fontFamily: "'Georgia',serif",
+      lineHeight: 1
+    }
+  }, bpm), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "sans-serif",
+      fontSize: 8,
+      color: C.textDim,
+      letterSpacing: ".14em"
+    }
+  }, "BPM")), /*#__PURE__*/React.createElement("button", {
+    style: {
+      background: "none",
+      border: `1px solid ${C.border}`,
+      color: C.text,
+      borderRadius: 6,
+      width: 58,
+      height: 44,
+      fontSize: 24,
+      cursor: "pointer"
+    },
+    onClick: () => nudgeBpm(-1)
+  }, "−"))), playing && liveMixerOpen && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "fixed",
+      left: 12,
+      right: 12,
+      bottom: 158,
+      zIndex: 46,
+      pointerEvents: "auto"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.surf2,
+      border: `1px solid ${C.borderHi}`,
+      borderRadius: 10,
+      padding: "12px 10px",
+      boxShadow: "0 10px 34px #000b"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "sans-serif",
+      fontSize: 9,
+      letterSpacing: ".14em",
+      color: C.textDim,
+      textTransform: "uppercase",
+      textAlign: "center",
+      marginBottom: 10
+    }
+  }, "Mixer"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-around",
+      alignItems: "flex-end",
+      gap: 6
+    }
+  }, INST_LABELS.filter(({
+    k
+  }) => instruments[k]).map(({
+    k,
+    lbl
+  }) => /*#__PURE__*/React.createElement("div", {
+    key: k,
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: 6,
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "sans-serif",
+      fontSize: 10,
+      color: C.textMid
+    }
+  }, mix[k] ?? 70), /*#__PURE__*/React.createElement("input", {
+    type: "range",
+    min: "0",
+    max: "100",
+    value: mix[k] ?? 70,
+    onChange: e => setMix(m => ({
+      ...m,
+      [k]: Number(e.target.value)
+    })),
+    className: "vfader"
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "sans-serif",
+      fontSize: 10,
+      color: C.textDim
+    }
+  }, lbl)))))), /*#__PURE__*/React.createElement("div", {
     className: `backdrop${settingsOpen ? " open" : ""}`,
     onClick: () => setSettingsOpen(false)
   }), /*#__PURE__*/React.createElement("div", {
@@ -1760,11 +2039,26 @@ function App() {
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 17,
-      letterSpacing: ".04em",
-      color: C.text
+      display: "flex",
+      gap: 6
     }
-  }, "Setlist"), /*#__PURE__*/React.createElement("button", {
+  }, ["setlist", "library"].map(v => /*#__PURE__*/React.createElement("button", {
+    key: v,
+    style: {
+      background: libView === v ? C.acc : "none",
+      border: `1px solid ${libView === v ? C.acc : C.border}`,
+      color: libView === v ? "#0A0D12" : C.textMid,
+      fontWeight: libView === v ? 700 : 400,
+      padding: "6px 14px",
+      borderRadius: 5,
+      cursor: "pointer",
+      fontSize: 12,
+      fontFamily: "sans-serif",
+      letterSpacing: ".04em",
+      textTransform: "capitalize"
+    },
+    onClick: () => setLibView(v)
+  }, v))), /*#__PURE__*/React.createElement("button", {
     style: {
       background: "none",
       border: `1px solid ${C.acc}66`,
@@ -1791,80 +2085,143 @@ function App() {
       maxHeight: 120,
       overflow: "auto"
     }
-  }, importMsg), library.length === 0 ? /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: "sans-serif",
-      fontSize: 13,
-      color: C.textDim,
-      textAlign: "center",
-      padding: "32px 0"
+  }, importMsg), (() => {
+    // Build the list for the current view
+    const inSet = id => setlistIds.includes(id);
+    let rows;
+    if (libView === "setlist") {
+      rows = setlistIds.map(id => library.find(s => s.id === id)).filter(Boolean);
+    } else {
+      rows = [...library].sort((a, b) => (a.title || "").localeCompare(b.title || ""));
     }
-  }, "No songs in your setlist yet.", /*#__PURE__*/React.createElement("br", null), "Build something and tap Save, or Import one.") : library.map(s => /*#__PURE__*/React.createElement("div", {
-    key: s.id,
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 8,
-      padding: "12px 14px",
-      background: C.surf2,
-      border: `1px solid ${C.border}`,
-      borderRadius: 5,
-      marginBottom: 7
+    if (rows.length === 0) {
+      return /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontFamily: "sans-serif",
+          fontSize: 13,
+          color: C.textDim,
+          textAlign: "center",
+          padding: "32px 0"
+        }
+      }, libView === "setlist" ? /*#__PURE__*/React.createElement(React.Fragment, null, "Your setlist is empty.", /*#__PURE__*/React.createElement("br", null), "Switch to Library and tap + to add songs.") : /*#__PURE__*/React.createElement(React.Fragment, null, "No songs yet.", /*#__PURE__*/React.createElement("br", null), "Build one and tap Save, or Import."));
     }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      flex: 1,
-      minWidth: 0,
-      cursor: "pointer"
-    },
-    onClick: () => loadSong(s)
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 15,
-      color: C.text,
-      whiteSpace: "nowrap",
-      overflow: "hidden",
-      textOverflow: "ellipsis"
-    }
-  }, s.title || "Untitled"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: "sans-serif",
-      fontSize: 11,
-      color: C.textDim,
-      marginTop: 2
-    }
-  }, s.key, " · ", s.timeSig, " · ", s.bpm, " bpm · ", s.sections?.length || 0, " sections")), /*#__PURE__*/React.createElement("button", {
-    style: {
-      background: copiedId === s.id ? C.acc : "none",
-      border: `1px solid ${C.acc}66`,
-      color: copiedId === s.id ? "#0A0D12" : C.acc,
-      padding: "5px 10px",
-      borderRadius: 3,
-      cursor: "pointer",
-      fontSize: 11,
-      fontFamily: "sans-serif",
-      fontWeight: copiedId === s.id ? 700 : 400,
-      flexShrink: 0,
-      transition: "all .15s"
-    },
-    onClick: () => exportSong(s)
-  }, copiedId === s.id ? "Copied" : "Export"), /*#__PURE__*/React.createElement("button", {
-    style: {
-      background: "none",
-      border: `1px solid ${C.border}`,
-      color: C.textDim,
-      padding: "5px 9px",
-      borderRadius: 3,
-      cursor: "pointer",
-      fontSize: 11,
-      fontFamily: "sans-serif",
-      flexShrink: 0
-    },
-    onClick: e => {
-      e.stopPropagation();
-      deleteSong(s.id);
-    }
-  }, "✕"))))));
+    return rows.map((s, idx) => /*#__PURE__*/React.createElement("div", {
+      key: s.id,
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "12px 14px",
+        background: C.surf2,
+        border: `1px solid ${C.border}`,
+        borderRadius: 5,
+        marginBottom: 7
+      }
+    }, libView === "setlist" && /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+        flexShrink: 0
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      style: {
+        background: "none",
+        border: `1px solid ${C.border}`,
+        color: C.textDim,
+        width: 24,
+        height: 20,
+        borderRadius: 3,
+        cursor: "pointer",
+        fontSize: 11,
+        opacity: idx === 0 ? .3 : 1
+      },
+      disabled: idx === 0,
+      onClick: () => moveInSetlist(s.id, -1)
+    }, "↑"), /*#__PURE__*/React.createElement("button", {
+      style: {
+        background: "none",
+        border: `1px solid ${C.border}`,
+        color: C.textDim,
+        width: 24,
+        height: 20,
+        borderRadius: 3,
+        cursor: "pointer",
+        fontSize: 11,
+        opacity: idx === rows.length - 1 ? .3 : 1
+      },
+      disabled: idx === rows.length - 1,
+      onClick: () => moveInSetlist(s.id, 1)
+    }, "↓")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0,
+        cursor: "pointer"
+      },
+      onClick: () => loadSong(s)
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 15,
+        color: C.text,
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis"
+      }
+    }, s.title || "Untitled"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: "sans-serif",
+        fontSize: 11,
+        color: C.textDim,
+        marginTop: 2
+      }
+    }, s.key, " · ", s.timeSig, " · ", s.bpm, " bpm · ", s.sections?.length || 0, " sections")), /*#__PURE__*/React.createElement("button", {
+      style: {
+        background: inSet(s.id) ? C.acc : "none",
+        border: `1px solid ${C.acc}`,
+        color: inSet(s.id) ? "#0A0D12" : C.acc,
+        width: 30,
+        height: 30,
+        borderRadius: 4,
+        cursor: "pointer",
+        fontSize: 16,
+        fontWeight: 700,
+        flexShrink: 0,
+        lineHeight: 1
+      },
+      onClick: () => toggleSetlist(s.id)
+    }, inSet(s.id) ? "−" : "+"), /*#__PURE__*/React.createElement("button", {
+      style: {
+        background: copiedId === s.id ? C.acc : "none",
+        border: `1px solid ${C.acc}66`,
+        color: copiedId === s.id ? "#0A0D12" : C.acc,
+        padding: "5px 10px",
+        borderRadius: 3,
+        cursor: "pointer",
+        fontSize: 11,
+        fontFamily: "sans-serif",
+        fontWeight: copiedId === s.id ? 700 : 400,
+        flexShrink: 0,
+        transition: "all .15s"
+      },
+      onClick: () => exportSong(s)
+    }, copiedId === s.id ? "Copied" : "Export"), /*#__PURE__*/React.createElement("button", {
+      style: {
+        background: "none",
+        border: `1px solid ${C.border}`,
+        color: C.textDim,
+        padding: "5px 9px",
+        borderRadius: 3,
+        cursor: "pointer",
+        fontSize: 11,
+        fontFamily: "sans-serif",
+        flexShrink: 0
+      },
+      onClick: e => {
+        e.stopPropagation();
+        deleteSong(s.id);
+      }
+    }, "✕")));
+  })())));
 }
 
 // ─── Settings sheet ───────────────────────────────────────────────────────────
