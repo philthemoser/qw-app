@@ -698,6 +698,36 @@ function App() {
     }
   }, [key]);
 
+  // Live filter response: apply the CURRENT section's pad & piano filter values
+  // straight to the filter nodes whenever they change (or the section changes),
+  // so dragging the sliders is heard immediately — not only at the next chord.
+  const curDyn = playing ? sections[curSec]?.dyn : null;
+  useEffect(() => {
+    const e = engRef.current;
+    if (!e || !curDyn) return;
+    // Exponential map so the whole slider travel is audible (hearing is log).
+    const expMap = (t, lo, hi) => lo * Math.pow(hi / lo, Math.max(0, Math.min(1, t)));
+    // Pad — continuous loop. Lowpass sweeps 350Hz (dark) → 18kHz (open) so
+    // closing it genuinely darkens the body of the pad, not just faint air.
+    if (e.padFilt) {
+      const t = (curDyn.padFilter ?? 44) / 100;
+      const lpFreq = expMap(t, 350, 18000);
+      try {
+        e.padFilt.frequency.rampTo(lpFreq, 0.08);
+      } catch (_) {}
+    }
+    // Piano — lowpass sweeps 500Hz (warm) → 12kHz (bright); attack softens too.
+    if (e.pianoLPF) {
+      const pf = (curDyn.pianoFilter ?? 50) / 100;
+      try {
+        e.pianoLPF.frequency.rampTo(expMap(pf, 500, 12000), 0.08);
+      } catch (_) {}
+      try {
+        e.piano.attack = 0.3 - pf * 0.28;
+      } catch (_) {}
+    }
+  }, [curDyn?.padFilter, curDyn?.pianoFilter, curSec, playing]);
+
   // Pad player responds to live mute via volume (synced player can't use start/stop)
   useEffect(() => {
     if (!engRef.current?.padPlayer) return;
@@ -879,14 +909,87 @@ function App() {
     saveLibrary(n);
     return n;
   });
+
+  // Export a song to the clipboard as pretty-printed JSON
+  const [copiedId, setCopiedId] = useState(null);
+  const [importMsg, setImportMsg] = useState("");
+  const exportSong = async s => {
+    const json = JSON.stringify(s, null, 2);
+    try {
+      await navigator.clipboard.writeText(json);
+      setCopiedId(s.id);
+      setTimeout(() => setCopiedId(null), 1600);
+    } catch (e) {
+      // Fallback: put it in the import box area as selectable text
+      setImportMsg("Clipboard blocked — copy manually:\n\n" + json);
+    }
+  };
+  // Import a song from the clipboard; validate, assign fresh id, fill defaults
+  const importSong = async () => {
+    let text = "";
+    try {
+      text = await navigator.clipboard.readText();
+    } catch (e) {
+      setImportMsg("Couldn't read clipboard. Paste permission may be blocked.");
+      return;
+    }
+    if (!text || !text.trim()) {
+      setImportMsg("Clipboard is empty.");
+      return;
+    }
+    let obj;
+    try {
+      obj = JSON.parse(text);
+    } catch (e) {
+      setImportMsg("That doesn't look like a valid song (JSON parse failed).");
+      return;
+    }
+    if (!obj || !obj.title || !Array.isArray(obj.sections) || !Array.isArray(obj.palette)) {
+      setImportMsg("Missing required fields (title, sections, palette).");
+      return;
+    }
+    // Fresh id so it never overwrites; fill missing fields from defaults
+    const migrated = {
+      id: uid(),
+      title: obj.title,
+      key: obj.key || "C",
+      scale: "major",
+      bpm: obj.bpm || 76,
+      timeSig: TIME_SIGS[obj.timeSig] ? obj.timeSig : "4/4",
+      palette: obj.palette,
+      extraOn: obj.extraOn || [],
+      mix: {
+        ...DEFAULT_MIX,
+        ...(obj.mix || {})
+      },
+      instruments: {
+        pad: true,
+        piano: true,
+        bass: true,
+        kick: true,
+        shaker: true,
+        tamb: true,
+        ...(obj.instruments || {})
+      },
+      sections: obj.sections.map(sec => ({
+        ...sec,
+        dyn: {
+          ...defaultDyn(obj.timeSig || "4/4"),
+          ...(sec.dyn || {})
+        }
+      })),
+      savedAt: Date.now()
+    };
+    setLibrary(lib => {
+      const n = [migrated, ...lib];
+      saveLibrary(n);
+      return n;
+    });
+    setImportMsg(`Imported "${migrated.title}".`);
+    setTimeout(() => setImportMsg(""), 2200);
+  };
   const newSong = () => {
     const pal = buildDefaultPalette("C", "major");
-    const d = i => ({
-      ...pal[i],
-      id: uid(),
-      beats: 4,
-      inversion: "root"
-    });
     setSongId(uid());
     setTitle("NEW SONG");
     setKey("C");
@@ -914,22 +1017,13 @@ function App() {
       shaker: false,
       tamb: false
     });
+    // Blank canvas: one empty "Intro" section, no chords
     setSections([{
       id: uid(),
-      name: "Verse",
+      name: "Intro",
       repeats: 2,
-      chords: [d(0), d(3), d(0), d(4)],
+      chords: [],
       dyn: defaultDyn("4/4")
-    }, {
-      id: uid(),
-      name: "Chorus",
-      repeats: 2,
-      chords: [d(0), d(4), d(5), d(3)],
-      dyn: {
-        ...defaultDyn("4/4"),
-        intensity: 60,
-        ...applyIntensity(defaultDyn("4/4"), 60, "4/4")
-      }
     }]);
     prevKS.current = {
       key: "C",
@@ -1340,18 +1434,8 @@ function App() {
       if (ps.b === 0) {
         setCurSec(ps.s);
         setCurChord(ps.c);
-        if (active("pad") && !dyn.padMuted) {
-          // Filter: padFilter 0-100 opens spectrum
-          const lpFreq = 400 + dyn.padFilter * 160;
-          const hpFreq = Math.max(60, 300 - dyn.padFilter * 2.5);
-          padFilt.frequency.rampTo(lpFreq, 0.1);
-          padHPF.frequency.rampTo(hpFreq, 0.1);
-        }
         if (active("piano") && !dyn.pianoMuted) {
-          // pianoFilter 0-100: low=warm/soft, high=bright/percussive
-          const pf = (dyn.pianoFilter || 50) / 100;
-          pianoLPF.frequency.rampTo(800 + pf * 9200, 0.05); // 800Hz → 10kHz
-          piano.attack = 0.3 - pf * 0.28; // 0.3s → 0.02s
+          // Filter & attack are applied live by the reactive effect; just trigger.
           // Trigger this chord's HOME sample note (its degree's C-key recording).
           // The key is applied by the PitchShift on the piano bus, so we never
           // transpose the note here — each sample plays exactly as recorded.
@@ -1482,7 +1566,7 @@ function App() {
   }, saveFlash ? "Saved ✓" : "Save"), /*#__PURE__*/React.createElement("button", {
     className: "hdr-btn",
     onClick: () => setLibraryOpen(true)
-  }, "Open"))), sections.map((sec, si) => /*#__PURE__*/React.createElement("div", {
+  }, "Setlist"))), sections.map((sec, si) => /*#__PURE__*/React.createElement("div", {
     key: sec.id,
     className: "sec-wrap"
   }, /*#__PURE__*/React.createElement(SecCard, {
@@ -1669,12 +1753,45 @@ function App() {
     className: "sheet-inner"
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 17,
-      letterSpacing: ".04em",
-      color: C.text,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
       marginBottom: 14
     }
-  }, "Library"), library.length === 0 ? /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 17,
+      letterSpacing: ".04em",
+      color: C.text
+    }
+  }, "Setlist"), /*#__PURE__*/React.createElement("button", {
+    style: {
+      background: "none",
+      border: `1px solid ${C.acc}66`,
+      color: C.acc,
+      padding: "6px 14px",
+      borderRadius: 4,
+      cursor: "pointer",
+      fontSize: 12,
+      fontFamily: "sans-serif",
+      letterSpacing: ".05em"
+    },
+    onClick: importSong
+  }, "Import")), importMsg && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "monospace",
+      fontSize: 11,
+      color: importMsg.startsWith("Imported") ? C.green : C.textMid,
+      background: C.surf2,
+      border: `1px solid ${C.border}`,
+      borderRadius: 5,
+      padding: "8px 10px",
+      marginBottom: 10,
+      whiteSpace: "pre-wrap",
+      maxHeight: 120,
+      overflow: "auto"
+    }
+  }, importMsg), library.length === 0 ? /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "sans-serif",
       fontSize: 13,
@@ -1682,25 +1799,25 @@ function App() {
       textAlign: "center",
       padding: "32px 0"
     }
-  }, "No saved songs yet.", /*#__PURE__*/React.createElement("br", null), "Build something and tap Save.") : library.map(s => /*#__PURE__*/React.createElement("div", {
+  }, "No songs in your setlist yet.", /*#__PURE__*/React.createElement("br", null), "Build something and tap Save, or Import one.") : library.map(s => /*#__PURE__*/React.createElement("div", {
     key: s.id,
     style: {
       display: "flex",
       alignItems: "center",
-      gap: 10,
+      gap: 8,
       padding: "12px 14px",
       background: C.surf2,
       border: `1px solid ${C.border}`,
       borderRadius: 5,
-      marginBottom: 7,
-      cursor: "pointer"
-    },
-    onClick: () => loadSong(s)
+      marginBottom: 7
+    }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
-      minWidth: 0
-    }
+      minWidth: 0,
+      cursor: "pointer"
+    },
+    onClick: () => loadSong(s)
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 15,
@@ -1716,7 +1833,22 @@ function App() {
       color: C.textDim,
       marginTop: 2
     }
-  }, s.key, " ", s.scale, " · ", s.timeSig, " · ", s.bpm, " bpm · ", s.sections?.length || 0, " sections")), /*#__PURE__*/React.createElement("button", {
+  }, s.key, " · ", s.timeSig, " · ", s.bpm, " bpm · ", s.sections?.length || 0, " sections")), /*#__PURE__*/React.createElement("button", {
+    style: {
+      background: copiedId === s.id ? C.acc : "none",
+      border: `1px solid ${C.acc}66`,
+      color: copiedId === s.id ? "#0A0D12" : C.acc,
+      padding: "5px 10px",
+      borderRadius: 3,
+      cursor: "pointer",
+      fontSize: 11,
+      fontFamily: "sans-serif",
+      fontWeight: copiedId === s.id ? 700 : 400,
+      flexShrink: 0,
+      transition: "all .15s"
+    },
+    onClick: () => exportSong(s)
+  }, copiedId === s.id ? "Copied" : "Export"), /*#__PURE__*/React.createElement("button", {
     style: {
       background: "none",
       border: `1px solid ${C.border}`,
@@ -1725,7 +1857,8 @@ function App() {
       borderRadius: 3,
       cursor: "pointer",
       fontSize: 11,
-      fontFamily: "sans-serif"
+      fontFamily: "sans-serif",
+      flexShrink: 0
     },
     onClick: e => {
       e.stopPropagation();
