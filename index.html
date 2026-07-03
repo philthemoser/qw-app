@@ -51,12 +51,22 @@ const PAD_FILE = {
   "B": "LoopinB"
 };
 const padUrl = (key, base) => `${base}${PAD_FILE[key] || "LoopinC"}.mp3`;
-// Semitone offset of a key from C, chosen as the SHORTEST direction (±6),
-// so shifts never exceed a tritone. Returned in cents for sampler.detune.
-function keyOffsetCents(key) {
-  let s = noteIdx(key) % 12; // 0..11 up from C
-  if (s > 6) s -= 12; // fold to -5..+6 (shortest path)
-  return s * 100;
+// Semitone offset of a key from C, shortest direction (-5..+6) so shifts stay small.
+function keyOffset(key) {
+  let s = NOTES.indexOf(key) % 12;
+  if (s > 6) s -= 12;
+  return s;
+}
+// Transpose a scientific-pitch note (e.g. "D4") by N semitones, returning a new note.
+function transposeNote(note, semis) {
+  const m = note.match(/^([A-G]#?)(\d)$/);
+  if (!m) return note;
+  const idx = NOTES.indexOf(m[1]);
+  if (idx < 0) return note;
+  const abs = idx + (parseInt(m[2], 10) + 1) * 12 + semis; // MIDI-ish absolute
+  const pc = (abs % 12 + 12) % 12;
+  const oct = Math.floor(abs / 12) - 1;
+  return NOTES[pc] + oct;
 }
 const SCALE_INTERVALS = {
   major: [0, 2, 4, 5, 7, 9, 11],
@@ -676,12 +686,6 @@ function App() {
   }, [timeSig]);
   useEffect(() => {
     keyRef.current = key;
-    // Live capo: update the piano sampler's global detune when the key changes.
-    if (engRef.current?.piano) {
-      try {
-        engRef.current.piano.detune.value = keyOffsetCents(key);
-      } catch (e) {}
-    }
   }, [key]);
 
   // Pad player responds to live mute via volume (synced player can't use start/stop)
@@ -1185,8 +1189,6 @@ function App() {
       release: 2
     }).connect(pianoLPF);
     piano.volume.value = db(m.piano, -6);
-    // Global key offset as detune (cents). C=0, so default is no shift.
-    piano.detune.value = keyOffsetCents(keyRef.current);
 
     // ── Pad — looping atmospheric sample with filter
     const padFilt = new Tone.Filter({
@@ -1343,10 +1345,11 @@ function App() {
           const pf = (dyn.pianoFilter || 50) / 100;
           pianoLPF.frequency.rampTo(800 + pf * 9200, 0.05); // 800Hz → 10kHz
           piano.attack = 0.3 - pf * 0.28; // 0.3s → 0.02s
-          // Trigger this chord's degree sample (in C). The sampler's global
-          // detune (set from the song key) transposes it to the real pitch —
-          // so every chord plays its own correct-quality sample, capoed by key.
-          const note = ch.sampleNote || ch.root + "4";
+          // Trigger this chord's degree sample (recorded in C), transposed by the
+          // key's semitone offset from C. Same sample set for every key — the shift
+          // capos the whole thing, and each degree keeps its correct quality.
+          const baseNote = ch.sampleNote || ch.root + "4";
+          const note = transposeNote(baseNote, keyOffset(keyRef.current));
           const pianoDur = ch.beats * (60 / Tone.getTransport().bpm.value); // seconds
           try {
             piano.triggerAttackRelease(note, pianoDur, time);
