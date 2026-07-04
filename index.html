@@ -1145,7 +1145,8 @@ function App() {
           beats: defaultBeats,
           inversion: "root",
           degIdx: palCh.degIdx,
-          extraIdx: palCh.extraIdx || 0
+          extraIdx: palCh.extraIdx || 0,
+          sampleNote: palCh.sampleNote
         }]
       };
     }));
@@ -1501,7 +1502,10 @@ function App() {
           // Trigger this chord's HOME sample note (its degree's C-key recording).
           // The key is applied by the PitchShift on the piano bus, so we never
           // transpose the note here — each sample plays exactly as recorded.
-          const note = ch.sampleNote || ch.root + "4";
+          // Fallback derives the home note from the degree (NOT ch.root, which
+          // would double-transpose against the bus) for any chord missing it.
+          const homeByDeg = ch.degIdx >= 0 ? ["C4", "D4", "E4", "F4", "G4", "A4"][ch.degIdx] : null;
+          const note = ch.sampleNote || homeByDeg || "C4";
           const pianoDur = ch.beats * (60 / Tone.getTransport().bpm.value); // seconds
           try {
             piano.triggerAttackRelease(note, pianoDur, time);
