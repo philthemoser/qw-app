@@ -316,6 +316,725 @@ const DEFAULT_MIX = {
   shaker: 65,
   tamb: 60
 };
+const DEMO_SONG = {
+  "title": "Holy forever",
+  "key": "C",
+  "scale": "major",
+  "bpm": 70,
+  "timeSig": "4/4",
+  "palette": [{
+    "id": "d-C-major-0",
+    "root": "C",
+    "quality": "major",
+    "label": "C",
+    "roman": "I",
+    "third": "E",
+    "fifth": "G",
+    "degIdx": 0,
+    "extraIdx": 0,
+    "sampleNote": "C4"
+  }, {
+    "id": "d-C-major-1",
+    "root": "D",
+    "quality": "minor",
+    "label": "Dm",
+    "roman": "ii",
+    "third": "F",
+    "fifth": "A",
+    "degIdx": 1,
+    "extraIdx": 0,
+    "sampleNote": "D4"
+  }, {
+    "id": "d-C-major-2",
+    "root": "E",
+    "quality": "minor",
+    "label": "Em",
+    "roman": "iii",
+    "third": "G",
+    "fifth": "B",
+    "degIdx": 2,
+    "extraIdx": 0,
+    "sampleNote": "E4"
+  }, {
+    "id": "d-C-major-3",
+    "root": "F",
+    "quality": "major",
+    "label": "F",
+    "roman": "IV",
+    "third": "A",
+    "fifth": "C",
+    "degIdx": 3,
+    "extraIdx": 0,
+    "sampleNote": "F4"
+  }, {
+    "id": "d-C-major-4",
+    "root": "G",
+    "quality": "major",
+    "label": "G",
+    "roman": "V",
+    "third": "B",
+    "fifth": "D",
+    "degIdx": 4,
+    "extraIdx": 0,
+    "sampleNote": "G4"
+  }, {
+    "id": "d-C-major-5",
+    "root": "A",
+    "quality": "minor",
+    "label": "Am",
+    "roman": "vi",
+    "third": "C",
+    "fifth": "E",
+    "degIdx": 5,
+    "extraIdx": 0,
+    "sampleNote": "A4"
+  }],
+  "extraOn": [],
+  "mix": {
+    "pad": 37,
+    "piano": 70,
+    "bass": 75,
+    "kick": 32,
+    "shaker": 7,
+    "tamb": 31
+  },
+  "instruments": {
+    "pad": true,
+    "piano": true,
+    "bass": true,
+    "kick": true,
+    "shaker": true,
+    "tamb": true
+  },
+  "sections": [{
+    "id": "cwzv3y",
+    "name": "Intro",
+    "repeats": 1,
+    "chords": [{
+      "id": "brvn0t",
+      "label": "C",
+      "roman": "I",
+      "root": "C",
+      "quality": "major",
+      "third": "E",
+      "fifth": "G",
+      "beats": 4,
+      "inversion": "root",
+      "degIdx": 0,
+      "extraIdx": 0,
+      "sampleNote": "C4"
+    }],
+    "dyn": {
+      "intensity": 30,
+      "padMuted": false,
+      "padFilter": 33,
+      "pianoMuted": true,
+      "pianoFilter": 44,
+      "bassMuted": true,
+      "bassSteps": [0, 0, 0, 0, 0, 0, 0, 0],
+      "kickMuted": true,
+      "kickSteps": [0, 0, 0, 0, 0, 0, 0, 0],
+      "shakerMuted": true,
+      "shakerSteps": [0, 0, 0, 0, 0, 0, 0, 0],
+      "tambMuted": true,
+      "tambSteps": [0, 0, 0, 0, 0, 0, 0, 0]
+    }
+  }, {
+    "id": "1igx7v",
+    "name": "Verse",
+    "repeats": 2,
+    "chords": [{
+      "id": "0rkatp",
+      "root": "C",
+      "quality": "major",
+      "label": "C",
+      "roman": "I",
+      "third": "E",
+      "fifth": "G",
+      "degIdx": 0,
+      "extraIdx": 0,
+      "sampleNote": "C4",
+      "beats": 4,
+      "inversion": "root"
+    }, {
+      "id": "z6doph",
+      "root": "F",
+      "quality": "major",
+      "label": "F",
+      "roman": "IV",
+      "third": "A",
+      "fifth": "C",
+      "degIdx": 3,
+      "extraIdx": 0,
+      "sampleNote": "F4",
+      "beats": 2,
+      "inversion": "root"
+    }, {
+      "id": "lbsm38",
+      "root": "C",
+      "quality": "major",
+      "label": "C",
+      "roman": "I",
+      "third": "E",
+      "fifth": "G",
+      "degIdx": 0,
+      "extraIdx": 0,
+      "sampleNote": "C4",
+      "beats": 2,
+      "inversion": "root"
+    }, {
+      "id": "yg6ceo",
+      "label": "Am",
+      "roman": "vi",
+      "root": "A",
+      "quality": "minor",
+      "third": "C",
+      "fifth": "E",
+      "beats": 2,
+      "inversion": "root",
+      "degIdx": 5,
+      "extraIdx": 0,
+      "sampleNote": "A4"
+    }, {
+      "id": "ljfoh0",
+      "root": "G",
+      "quality": "major",
+      "label": "G",
+      "roman": "V",
+      "third": "B",
+      "fifth": "D",
+      "degIdx": 4,
+      "extraIdx": 0,
+      "sampleNote": "G4",
+      "beats": 2,
+      "inversion": "root"
+    }, {
+      "id": "iemdin",
+      "label": "F",
+      "roman": "IV",
+      "root": "F",
+      "quality": "major",
+      "third": "A",
+      "fifth": "C",
+      "beats": 4,
+      "inversion": "root",
+      "degIdx": 3,
+      "extraIdx": 0,
+      "sampleNote": "F4"
+    }],
+    "dyn": {
+      "intensity": 30,
+      "padMuted": false,
+      "padFilter": 44,
+      "pianoMuted": false,
+      "pianoFilter": 44,
+      "bassMuted": false,
+      "bassSteps": [1, 0, 0, 0, 0, 0, 0, 1],
+      "kickMuted": false,
+      "kickSteps": [1, 0, 0, 0, 0, 0, 0, 0],
+      "shakerMuted": false,
+      "shakerSteps": [0, 0, 0, 0, 0, 0, 0, 0],
+      "tambMuted": false,
+      "tambSteps": [0, 0, 0, 0, 0, 0, 0, 0]
+    }
+  }, {
+    "id": "ip9iaq",
+    "name": "Pre-Chorus",
+    "repeats": 1,
+    "chords": [{
+      "id": "8qe294",
+      "label": "F",
+      "roman": "IV",
+      "root": "F",
+      "quality": "major",
+      "third": "A",
+      "fifth": "C",
+      "beats": 3,
+      "inversion": "root",
+      "degIdx": 3,
+      "extraIdx": 0,
+      "sampleNote": "F4"
+    }, {
+      "id": "e4vmjn",
+      "label": "Am",
+      "roman": "vi",
+      "root": "A",
+      "quality": "minor",
+      "third": "C",
+      "fifth": "E",
+      "beats": 1,
+      "inversion": "root",
+      "degIdx": 5,
+      "extraIdx": 0,
+      "sampleNote": "A4"
+    }, {
+      "id": "my8vd2",
+      "label": "G",
+      "roman": "V",
+      "root": "G",
+      "quality": "major",
+      "third": "B",
+      "fifth": "D",
+      "beats": 4,
+      "inversion": "root",
+      "degIdx": 4,
+      "extraIdx": 0,
+      "sampleNote": "G4"
+    }, {
+      "id": "q01wjd",
+      "label": "Am",
+      "roman": "vi",
+      "root": "A",
+      "quality": "minor",
+      "third": "C",
+      "fifth": "E",
+      "beats": 4,
+      "inversion": "root",
+      "degIdx": 5,
+      "extraIdx": 0,
+      "sampleNote": "A4"
+    }, {
+      "id": "2sk17n",
+      "label": "F",
+      "roman": "IV",
+      "root": "F",
+      "quality": "major",
+      "third": "A",
+      "fifth": "C",
+      "beats": 4,
+      "inversion": "root",
+      "degIdx": 3,
+      "extraIdx": 0,
+      "sampleNote": "F4"
+    }, {
+      "id": "s6wf72",
+      "label": "F",
+      "roman": "IV",
+      "root": "F",
+      "quality": "major",
+      "third": "A",
+      "fifth": "C",
+      "beats": 3,
+      "inversion": "root",
+      "degIdx": 3,
+      "extraIdx": 0,
+      "sampleNote": "F4"
+    }, {
+      "id": "051y39",
+      "label": "Am",
+      "roman": "vi",
+      "root": "A",
+      "quality": "minor",
+      "third": "C",
+      "fifth": "E",
+      "beats": 1,
+      "inversion": "root",
+      "degIdx": 5,
+      "extraIdx": 0,
+      "sampleNote": "A4"
+    }, {
+      "id": "s5h3tj",
+      "label": "G",
+      "roman": "V",
+      "root": "G",
+      "quality": "major",
+      "third": "B",
+      "fifth": "D",
+      "beats": 4,
+      "inversion": "root",
+      "degIdx": 4,
+      "extraIdx": 0,
+      "sampleNote": "G4"
+    }, {
+      "id": "a8q6o0",
+      "label": "Am",
+      "roman": "vi",
+      "root": "A",
+      "quality": "minor",
+      "third": "C",
+      "fifth": "E",
+      "beats": 4,
+      "inversion": "root",
+      "degIdx": 5,
+      "extraIdx": 0,
+      "sampleNote": "A4"
+    }, {
+      "id": "h3ci6z",
+      "label": "Dm",
+      "roman": "ii",
+      "root": "D",
+      "quality": "minor",
+      "third": "F",
+      "fifth": "A",
+      "beats": 4,
+      "inversion": "root",
+      "degIdx": 1,
+      "extraIdx": 0,
+      "sampleNote": "D4"
+    }],
+    "dyn": {
+      "intensity": 30,
+      "padMuted": false,
+      "padFilter": 44,
+      "pianoMuted": false,
+      "pianoFilter": 44,
+      "bassMuted": false,
+      "bassSteps": [1, 0, 0, 1, 0, 0, 1, 0],
+      "kickMuted": false,
+      "kickSteps": [1, 0, 0, 0, 1, 0, 0, 0],
+      "shakerMuted": false,
+      "shakerSteps": [0, 0, 0, 0, 0, 0, 0, 0],
+      "tambMuted": false,
+      "tambSteps": [0, 0, 0, 0, 1, 0, 0, 0]
+    }
+  }, {
+    "id": "44od4n",
+    "name": "Chorus",
+    "repeats": 2,
+    "chords": [{
+      "id": "mv27c8",
+      "root": "F",
+      "quality": "major",
+      "label": "F",
+      "roman": "IV",
+      "third": "A",
+      "fifth": "C",
+      "degIdx": 3,
+      "extraIdx": 0,
+      "sampleNote": "F4",
+      "beats": 4,
+      "inversion": "root"
+    }, {
+      "id": "ef5n52",
+      "root": "G",
+      "quality": "major",
+      "label": "G",
+      "roman": "V",
+      "third": "B",
+      "fifth": "D",
+      "degIdx": 4,
+      "extraIdx": 0,
+      "sampleNote": "G4",
+      "beats": 4,
+      "inversion": "root"
+    }, {
+      "id": "j8lknf",
+      "root": "C",
+      "quality": "major",
+      "label": "C",
+      "roman": "I",
+      "third": "E",
+      "fifth": "G",
+      "degIdx": 0,
+      "extraIdx": 0,
+      "sampleNote": "C4",
+      "beats": 4,
+      "inversion": "3rd"
+    }, {
+      "id": "nmjfxm",
+      "root": "A",
+      "quality": "minor",
+      "label": "Am",
+      "roman": "vi",
+      "third": "C",
+      "fifth": "E",
+      "degIdx": 5,
+      "extraIdx": 0,
+      "sampleNote": "A4",
+      "beats": 4,
+      "inversion": "root"
+    }, {
+      "id": "r9hm91",
+      "label": "Dm",
+      "roman": "ii",
+      "root": "D",
+      "quality": "minor",
+      "third": "F",
+      "fifth": "A",
+      "beats": 4,
+      "inversion": "root",
+      "degIdx": 1,
+      "extraIdx": 0,
+      "sampleNote": "D4"
+    }, {
+      "id": "5oba58",
+      "label": "G",
+      "roman": "V",
+      "root": "G",
+      "quality": "major",
+      "third": "B",
+      "fifth": "D",
+      "beats": 4,
+      "inversion": "root",
+      "degIdx": 4,
+      "extraIdx": 0,
+      "sampleNote": "G4"
+    }, {
+      "id": "fcculw",
+      "label": "C",
+      "roman": "I",
+      "root": "C",
+      "quality": "major",
+      "third": "E",
+      "fifth": "G",
+      "beats": 4,
+      "inversion": "root",
+      "degIdx": 0,
+      "extraIdx": 0,
+      "sampleNote": "C4"
+    }, {
+      "id": "ste2vk",
+      "label": "C",
+      "roman": "I",
+      "root": "C",
+      "quality": "major",
+      "third": "E",
+      "fifth": "G",
+      "beats": 4,
+      "inversion": "root",
+      "degIdx": 0,
+      "extraIdx": 0,
+      "sampleNote": "C4"
+    }],
+    "dyn": {
+      "intensity": 30,
+      "padMuted": false,
+      "padFilter": 68,
+      "pianoMuted": false,
+      "pianoFilter": 68,
+      "bassMuted": false,
+      "bassSteps": [1, 0, 0, 1, 0, 0, 1, 0],
+      "kickMuted": false,
+      "kickSteps": [1, 0, 1, 0, 1, 0, 1, 0],
+      "shakerMuted": false,
+      "shakerSteps": [0, 0, 1, 0, 0, 0, 1, 0],
+      "tambMuted": false,
+      "tambSteps": [0, 0, 0, 0, 1, 0, 0, 0]
+    }
+  }, {
+    "id": "ffwamp",
+    "name": "Verse II",
+    "repeats": 2,
+    "chords": [{
+      "id": "0rkatp",
+      "root": "C",
+      "quality": "major",
+      "label": "C",
+      "roman": "I",
+      "third": "E",
+      "fifth": "G",
+      "degIdx": 0,
+      "extraIdx": 0,
+      "sampleNote": "C4",
+      "beats": 4,
+      "inversion": "root"
+    }, {
+      "id": "z6doph",
+      "root": "F",
+      "quality": "major",
+      "label": "F",
+      "roman": "IV",
+      "third": "A",
+      "fifth": "C",
+      "degIdx": 3,
+      "extraIdx": 0,
+      "sampleNote": "F4",
+      "beats": 2,
+      "inversion": "root"
+    }, {
+      "id": "lbsm38",
+      "root": "C",
+      "quality": "major",
+      "label": "C",
+      "roman": "I",
+      "third": "E",
+      "fifth": "G",
+      "degIdx": 0,
+      "extraIdx": 0,
+      "sampleNote": "C4",
+      "beats": 2,
+      "inversion": "root"
+    }, {
+      "id": "yg6ceo",
+      "label": "Am",
+      "roman": "vi",
+      "root": "A",
+      "quality": "minor",
+      "third": "C",
+      "fifth": "E",
+      "beats": 2,
+      "inversion": "root",
+      "degIdx": 5,
+      "extraIdx": 0,
+      "sampleNote": "A4"
+    }, {
+      "id": "ljfoh0",
+      "root": "G",
+      "quality": "major",
+      "label": "G",
+      "roman": "V",
+      "third": "B",
+      "fifth": "D",
+      "degIdx": 4,
+      "extraIdx": 0,
+      "sampleNote": "G4",
+      "beats": 2,
+      "inversion": "root"
+    }, {
+      "id": "iemdin",
+      "label": "F",
+      "roman": "IV",
+      "root": "F",
+      "quality": "major",
+      "third": "A",
+      "fifth": "C",
+      "beats": 4,
+      "inversion": "root",
+      "degIdx": 3,
+      "extraIdx": 0,
+      "sampleNote": "F4"
+    }],
+    "dyn": {
+      "intensity": 30,
+      "padMuted": false,
+      "padFilter": 79,
+      "pianoMuted": false,
+      "pianoFilter": 78,
+      "bassMuted": false,
+      "bassSteps": [1, 0, 1, 0, 1, 0, 1, 0],
+      "kickMuted": false,
+      "kickSteps": [1, 0, 1, 0, 1, 0, 1, 0],
+      "shakerMuted": false,
+      "shakerSteps": [1, 1, 1, 1, 1, 1, 1, 1],
+      "tambMuted": false,
+      "tambSteps": [0, 0, 0, 0, 1, 0, 0, 0]
+    }
+  }, {
+    "id": "j37kkn",
+    "name": "Chorus II",
+    "repeats": 2,
+    "chords": [{
+      "id": "mv27c8",
+      "root": "F",
+      "quality": "major",
+      "label": "F",
+      "roman": "IV",
+      "third": "A",
+      "fifth": "C",
+      "degIdx": 3,
+      "extraIdx": 0,
+      "sampleNote": "F4",
+      "beats": 4,
+      "inversion": "root"
+    }, {
+      "id": "ef5n52",
+      "root": "G",
+      "quality": "major",
+      "label": "G",
+      "roman": "V",
+      "third": "B",
+      "fifth": "D",
+      "degIdx": 4,
+      "extraIdx": 0,
+      "sampleNote": "G4",
+      "beats": 4,
+      "inversion": "root"
+    }, {
+      "id": "j8lknf",
+      "root": "C",
+      "quality": "major",
+      "label": "C",
+      "roman": "I",
+      "third": "E",
+      "fifth": "G",
+      "degIdx": 0,
+      "extraIdx": 0,
+      "sampleNote": "C4",
+      "beats": 4,
+      "inversion": "3rd"
+    }, {
+      "id": "nmjfxm",
+      "root": "A",
+      "quality": "minor",
+      "label": "Am",
+      "roman": "vi",
+      "third": "C",
+      "fifth": "E",
+      "degIdx": 5,
+      "extraIdx": 0,
+      "sampleNote": "A4",
+      "beats": 4,
+      "inversion": "root"
+    }, {
+      "id": "r9hm91",
+      "label": "Dm",
+      "roman": "ii",
+      "root": "D",
+      "quality": "minor",
+      "third": "F",
+      "fifth": "A",
+      "beats": 4,
+      "inversion": "root",
+      "degIdx": 1,
+      "extraIdx": 0,
+      "sampleNote": "D4"
+    }, {
+      "id": "5oba58",
+      "label": "G",
+      "roman": "V",
+      "root": "G",
+      "quality": "major",
+      "third": "B",
+      "fifth": "D",
+      "beats": 4,
+      "inversion": "root",
+      "degIdx": 4,
+      "extraIdx": 0,
+      "sampleNote": "G4"
+    }, {
+      "id": "fcculw",
+      "label": "C",
+      "roman": "I",
+      "root": "C",
+      "quality": "major",
+      "third": "E",
+      "fifth": "G",
+      "beats": 4,
+      "inversion": "root",
+      "degIdx": 0,
+      "extraIdx": 0,
+      "sampleNote": "C4"
+    }, {
+      "id": "ste2vk",
+      "label": "C",
+      "roman": "I",
+      "root": "C",
+      "quality": "major",
+      "third": "E",
+      "fifth": "G",
+      "beats": 4,
+      "inversion": "root",
+      "degIdx": 0,
+      "extraIdx": 0,
+      "sampleNote": "C4"
+    }],
+    "dyn": {
+      "intensity": 85,
+      "padMuted": false,
+      "padFilter": 88,
+      "pianoMuted": false,
+      "pianoFilter": 88,
+      "bassMuted": false,
+      "bassSteps": [1, 0, 1, 0, 1, 0, 1, 0],
+      "kickMuted": false,
+      "kickSteps": [1, 0, 1, 1, 0, 1, 1, 0],
+      "shakerMuted": false,
+      "shakerSteps": [1, 1, 1, 1, 1, 1, 1, 1],
+      "tambMuted": false,
+      "tambSteps": [1, 0, 0, 1, 0, 0, 1, 0]
+    }
+  }]
+};
 const LS_KEY = "qw_v1";
 const LS_SETLIST = "qw_setlist_v1";
 function loadLibrary() {
@@ -603,16 +1322,17 @@ function buildBeatGrid(chords, timeSig) {
 // ─── App ──────────────────────────────────────────────────────────────────────
 function App() {
   const [songId, setSongId] = useState(() => uid());
-  const [title, setTitle] = useState("NEW SONG");
-  const [key, setKey] = useState("C");
+  const [title, setTitle] = useState(DEMO_SONG.title);
+  const [key, setKey] = useState(DEMO_SONG.key);
   const [scale, setScale] = useState("major");
-  const [bpm, setBpm] = useState(76);
-  const [timeSig, setTimeSig] = useState("4/4");
+  const [bpm, setBpm] = useState(DEMO_SONG.bpm);
+  const [timeSig, setTimeSig] = useState(DEMO_SONG.timeSig);
   const tapRef = useRef([]);
   const [palette, setPalette] = useState(() => buildDefaultPalette("C", "major"));
   const [extraOn, setExtraOn] = useState([]);
   const [mix, setMix] = useState({
-    ...DEFAULT_MIX
+    ...DEFAULT_MIX,
+    ...DEMO_SONG.mix
   });
   const [instruments, setInstruments] = useState({
     pad: true,
@@ -630,32 +1350,14 @@ function App() {
     shaker: false,
     tamb: false
   });
-  const [sections, setSections] = useState(() => {
-    const pal = buildDefaultPalette("C", "major");
-    const d = i => ({
-      ...pal[i],
-      id: uid(),
-      beats: 4,
-      inversion: "root"
-    });
-    return [{
-      id: uid(),
-      name: "Verse",
-      repeats: 2,
-      chords: [d(0), d(3), d(0), d(4)],
-      dyn: defaultDyn("4/4")
-    }, {
-      id: uid(),
-      name: "Chorus",
-      repeats: 2,
-      chords: [d(0), d(4), d(5), d(3)],
-      dyn: {
-        ...defaultDyn("4/4"),
-        intensity: 60,
-        ...applyIntensity(defaultDyn("4/4"), 60, "4/4")
-      }
-    }];
-  });
+  const [sections, setSections] = useState(() => DEMO_SONG.sections.map(s => ({
+    ...s,
+    id: uid(),
+    chords: s.chords.map(c => ({
+      ...c,
+      id: uid()
+    }))
+  })));
   const [openSecId, setOpenSecId] = useState(null);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -718,6 +1420,56 @@ function App() {
         engRef.current.pianoShift.pitch = keyShift(key);
       } catch (e) {}
     }
+    // Live pad swap: load the new key's loop and bring it in at the next loop
+    // boundary so the pad follows the key with no click. Load-on-demand — the
+    // first switch to an uncached key may briefly gap until the file loads.
+    const e = engRef.current;
+    if (!playing || !e?.padPlayer || !e.padHPF) return;
+    const BASE = "https://philthemoser.github.io/qw-samples/";
+    let cancelled = false;
+    const oldPlayer = e.padPlayer;
+    const loopLen = oldPlayer.buffer?.duration || 15; // seconds per loop cycle
+    const next = new Tone.Player({
+      url: padUrl(key, BASE),
+      loop: true,
+      autostart: false
+    }).connect(e.padHPF);
+    next.volume.value = oldPlayer.volume.value;
+    Tone.loaded().then(() => {
+      if (cancelled) {
+        try {
+          next.dispose();
+        } catch (_) {}
+        return;
+      }
+      // Only swap if this is still the current key and still playing
+      if (keyRef.current !== key || !engRef.current || engRef.current.padPlayer !== oldPlayer) {
+        try {
+          next.dispose();
+        } catch (_) {}
+        return;
+      }
+      try {
+        const now = Tone.getTransport().seconds;
+        const boundary = Math.ceil((now + 0.05) / loopLen) * loopLen; // next loop point
+        next.sync().start(boundary);
+        oldPlayer.stop(boundary);
+        Tone.getTransport().scheduleOnce(() => {
+          try {
+            oldPlayer.unsync();
+            oldPlayer.dispose();
+          } catch (_) {}
+        }, boundary + 0.1);
+        engRef.current.padPlayer = next;
+      } catch (err) {
+        try {
+          next.dispose();
+        } catch (_) {}
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [key]);
 
   // Live filter response: apply the CURRENT section's pad & piano filter values
