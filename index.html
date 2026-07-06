@@ -6,9 +6,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <title>Chord &amp; Groove</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Doto:wght@500;700;900&display=swap" rel="stylesheet">
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
-    html,body{background:#0A0D12;height:100%;overflow-x:hidden;-webkit-tap-highlight-color:transparent;}
+    html,body{background:#080A0E;height:100%;overflow-x:hidden;-webkit-tap-highlight-color:transparent;}
     #root{min-height:100vh;}
     button,input,select{touch-action:manipulation;-webkit-appearance:none;}
   </style>
@@ -1082,20 +1085,23 @@ const defaultDyn = (ts = "4/4") => {
 
 // ─── Colours ──────────────────────────────────────────────────────────────────
 const C = {
-  bg: "#0A0D12",
-  surf: "#13171F",
-  surf2: "#191E2A",
-  surf3: "#1F2636",
-  border: "#2C3652",
-  borderHi: "#4056A0",
-  acc: "#C8A056",
+  bg: "#080A0E",
+  surf: "#101319",
+  surf2: "#161A23",
+  surf3: "#1D2230",
+  border: "#29324A",
+  borderHi: "#3E4E86",
+  acc: "#D4A94E",
   accDim: "#8A6A30",
-  accLo: "#C8A05622",
-  text: "#F4F0E8",
-  textMid: "#C8D4E4",
-  textDim: "#8898B8",
+  accLo: "#D4A94E22",
+  text: "#F2EEE4",
+  textMid: "#BFC9DC",
+  textDim: "#7E8CAC",
   green: "#3DBF7A",
   greenLo: "#3DBF7A22",
+  lcd: "#E8C878",
+  lcdDim: "#5A4A28",
+  // segment-display glow for numeric readouts
   red: "#C03850",
   redLo: "#C0385022",
   empty: "#141820",
@@ -1103,35 +1109,41 @@ const C = {
   queued: "#9A7A38"
 };
 const G = `
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Doto:wght@500;700;900&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-body{background:${C.bg};color:${C.text};font-family:'Georgia',serif;-webkit-font-smoothing:antialiased;}
+body{background:${C.bg};color:${C.text};font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;-webkit-font-smoothing:antialiased;}
 input,select,button{font-family:inherit;}
 .app{max-width:680px;margin:0 auto;padding:12px 14px 170px;}
 
-.bar{position:fixed;bottom:0;left:0;right:0;z-index:90;background:${C.surf};border-top:1px solid ${C.border};}
-.bar-main{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;gap:8px;}
-.bar-left{flex:1;min-width:0;cursor:pointer;}
-.bar-right{flex:1;text-align:right;cursor:pointer;}
-.bar-chord-name{font-size:26px;color:${C.acc};line-height:1;font-family:'Georgia',serif;letter-spacing:.02em;}
-.bar-chord-sub{font-family:sans-serif;font-size:9px;color:${C.textDim};letter-spacing:.08em;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.bar-bpm-num{font-size:26px;color:${C.acc};line-height:1;font-family:'Georgia',serif;}
-.bar-bpm-lbl{font-family:sans-serif;font-size:8px;color:${C.textDim};letter-spacing:.14em;text-transform:uppercase;margin-top:2px;}
-.pbtn{width:46px;height:46px;border-radius:50%;background:${C.acc};border:none;color:#0E1014;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .1s,background .15s;}
-.pbtn:active{transform:scale(.93);}
-.pbtn.idle{background:${C.surf2};border:1px solid ${C.border};color:${C.textMid};}
+.bar{position:fixed;bottom:0;left:0;right:0;z-index:90;background:#1A1F2B;border-top:1px solid #333D52;box-shadow:0 -2px 12px #0007;}
+.bar-main{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;gap:6px;}
+.bar-left{width:104px;flex-shrink:0;min-width:0;cursor:pointer;background:#0B0E14;border:1px solid #2B3242;border-top-color:#161B26;border-bottom-color:#3A445C;border-radius:6px;padding:7px 10px;box-shadow:inset 0 2px 6px #000c,inset 0 -1px 0 #ffffff08;}
+.bar-left:active{border-color:${C.acc};}
+.bar-right{width:104px;flex-shrink:0;text-align:right;cursor:pointer;background:#0B0E14;border:1px solid #2B3242;border-top-color:#161B26;border-bottom-color:#3A445C;border-radius:6px;padding:7px 10px;box-shadow:inset 0 2px 6px #000c,inset 0 -1px 0 #ffffff08;}
+.bar-right:active{border-color:${C.acc};}
+.bar-chord-name{font-size:26px;font-family:'Doto','Space Mono',monospace;font-weight:900;color:${C.lcd};line-height:1;letter-spacing:.02em;text-shadow:0 0 10px ${C.acc}55;}
+.bar-chord-sub{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;color:${C.textDim};letter-spacing:.06em;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;}
+.bar-bpm-num{font-size:26px;font-family:'Doto','Space Mono',monospace;font-weight:900;color:${C.lcd};line-height:1;text-shadow:0 0 10px ${C.acc}55;}
+.bar-bpm-lbl{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:8px;color:${C.textDim};letter-spacing:.14em;text-transform:uppercase;margin-top:3px;}
+.pbtn{width:50px;height:50px;border-radius:50%;background:linear-gradient(180deg,#E6BC60,${C.acc});border:none;color:#0E1014;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .08s;box-shadow:0 0 16px ${C.acc}55,inset 0 2px 0 #ffffff66,0 5px 0 #6e5220,0 7px 8px #000a;}
+.pbtn:active{transform:translateY(4px);box-shadow:0 0 16px ${C.acc}55,inset 0 2px 0 #ffffff66,0 1px 0 #6e5220,0 2px 4px #000a;}
+.pbtn.idle{background:linear-gradient(180deg,#525C70,#3A4356);color:#EAEEF6;box-shadow:inset 0 2px 0 #ffffff22,0 5px 0 #04060a,0 7px 8px #000a;}
+.pbtn.idle:active{transform:translateY(4px);box-shadow:inset 0 1px 0 #ffffff14,0 1px 0 #04060a,0 2px 4px #000a;}
 
 .song-header{display:flex;align-items:center;gap:8px;padding:12px 0 14px;border-bottom:1px solid ${C.border};margin-bottom:14px;}
-.qw-logo{font-family:sans-serif;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:${C.textDim};flex-shrink:0;}
-.song-title-inp{background:none;border:none;color:${C.text};font-size:20px;font-family:'Georgia',serif;outline:none;flex:1;min-width:0;border-bottom:1px solid transparent;transition:border-color .15s;padding:2px 4px;}
-.song-title-inp:focus{border-bottom-color:${C.acc};}
+.qw-logo{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:${C.textDim};flex-shrink:0;}
+.song-title-inp{background:#0B0E14;border:1px solid #2B3242;border-top-color:#161B26;border-bottom-color:#3A445C;color:${C.lcd};font-size:17px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;font-family:'Doto','Space Mono',monospace;outline:none;flex:1;min-width:0;border-radius:6px;transition:box-shadow .15s;padding:8px 12px;box-shadow:inset 0 2px 6px #000c,inset 0 -1px 0 #ffffff08;text-shadow:0 0 8px ${C.acc}33;}
+.song-title-inp:focus{box-shadow:inset 0 2px 6px #000c,0 0 0 1px ${C.acc}66;}
 .song-title-inp::placeholder{color:${C.textDim};}
-.hdr-btn{background:none;border:1px solid ${C.border};color:${C.textMid};padding:6px 12px;border-radius:4px;cursor:pointer;font-size:12px;font-family:sans-serif;letter-spacing:.05em;transition:all .15s;white-space:nowrap;flex-shrink:0;}
+.hdr-btn{background:linear-gradient(180deg,#454E60,#333B4B);border:none;color:${C.textMid};padding:7px 12px;border-radius:5px;cursor:pointer;font-size:12px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;letter-spacing:.05em;transition:all .08s;white-space:nowrap;flex-shrink:0;box-shadow:inset 0 1px 0 #ffffff1e,0 4px 0 #04060a,0 5px 6px #000a;}
+.hdr-btn:active{transform:translateY(3px);box-shadow:inset 0 1px 0 #ffffff10,0 0 0 #04060a,0 1px 2px #0009;}
 .hdr-btn:hover{border-color:${C.borderHi};color:${C.text};}
 .hdr-btn.saved{border-color:${C.green}55;color:${C.green};}
 .mute-section{padding:6px 16px 8px;border-top:1px solid ${C.border};}
-.mute-label{font-family:sans-serif;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:${C.textDim};margin-bottom:5px;}
+.mute-label{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:${C.textDim};margin-bottom:5px;}
 .mute-btns{display:flex;gap:5px;}
-.mute-btn{flex:1;background:none;border:1px solid ${C.border};color:${C.textDim};padding:5px 4px;border-radius:3px;cursor:pointer;font-size:10px;font-family:sans-serif;transition:all .15s;text-align:center;}
+.mute-btn{flex:1;background:linear-gradient(180deg,#525C70,#3A4356);border:none;color:${C.textMid};padding:9px 4px;border-radius:6px;cursor:pointer;font-size:10px;letter-spacing:.04em;text-transform:uppercase;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;transition:all .08s;text-align:center;box-shadow:inset 0 2px 0 #ffffff22,0 5px 0 #04060a,0 7px 8px #000a;}
+.mute-btn:active{transform:translateY(4px);box-shadow:inset 0 2px 0 #ffffff1a,0 1px 0 #04060a,0 2px 4px #000a;}
 .mute-btn.on{border-color:${C.acc}55;color:${C.acc};background:${C.accLo};}
 .mute-btn.off{border-color:${C.red}66;color:${C.red};background:${C.redLo};}
 .mix-slider{-webkit-appearance:none;flex:1;height:3px;border-radius:2px;background:${C.border};outline:none;cursor:pointer;}
@@ -1142,7 +1154,7 @@ input,select,button{font-family:inherit;}
 
 /* Chord action bar */
 .chord-action-bar{display:flex;gap:6px;padding:6px 0 4px;align-items:center;}
-.cab-btn{background:${C.surf2};border:1px solid ${C.border};color:${C.textMid};padding:6px 14px;border-radius:4px;cursor:pointer;font-size:13px;font-family:sans-serif;font-weight:600;transition:all .15s;flex:1;text-align:center;}
+.cab-btn{background:${C.surf2};border:1px solid ${C.border};color:${C.textMid};padding:6px 14px;border-radius:4px;cursor:pointer;font-size:13px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:600;transition:all .15s;flex:1;text-align:center;}
 .cab-btn:hover{border-color:${C.borderHi};color:${C.text};}
 .cab-btn:disabled{opacity:.3;cursor:default;pointer-events:none;}
 .cab-btn.del{border-color:${C.red}44;color:${C.red};}
@@ -1152,7 +1164,8 @@ input,select,button{font-family:inherit;}
 .sec-wrap{display:flex;align-items:stretch;gap:6px;margin-bottom:10px;}
 .sec{background:${C.surf};border:1px solid ${C.borderHi};border-left:3px solid transparent;border-radius:6px;flex:1;min-width:0;transition:border-color .25s,border-left-color .25s;}
 .sec-reorder{display:flex;flex-direction:column;gap:4px;justify-content:center;flex-shrink:0;}
-.reorder-btn{background:${C.surf};border:1px solid ${C.border};color:${C.textDim};width:28px;height:28px;border-radius:3px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.reorder-btn{background:linear-gradient(180deg,#454E60,#333B4B);border:none;color:${C.textDim};width:28px;height:28px;border-radius:4px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .08s;box-shadow:inset 0 1px 0 #ffffff1e,0 3px 0 #04060a,0 4px 5px #000a;}
+.reorder-btn:active{transform:translateY(2px);box-shadow:inset 0 1px 0 #ffffff10,0 0 0 #04060a,0 1px 2px #0009;}
 .reorder-btn:hover{border-color:${C.borderHi};color:${C.text};}
 .reorder-btn:disabled{opacity:.2;cursor:default;pointer-events:none;}
 
@@ -1170,13 +1183,13 @@ input,select,button{font-family:inherit;}
 .sec.s-queued{border-color:${C.accDim};}
 
 .sec-hdr{display:flex;align-items:center;padding:10px 10px 6px;gap:0;}
-.sec-name-inp{background:none;border:none;border-bottom:1px solid transparent;color:${C.text};font-size:13px;padding:2px 4px;outline:none;width:86px;flex-shrink:0;}
-.sec-name-inp:focus{border-bottom-color:${C.acc};}
+.sec-name-inp{background:#0B0E14;border:1px solid #2B3242;border-top-color:#161B26;border-bottom-color:#3A445C;color:${C.lcd};font-size:13px;font-weight:700;font-family:'Doto','Space Mono',monospace;text-transform:uppercase;letter-spacing:.02em;padding:5px 9px;outline:none;width:104px;flex-shrink:0;border-radius:5px;box-shadow:inset 0 1px 4px #000a;text-shadow:0 0 6px ${C.acc}22;}
+.sec-name-inp:focus{box-shadow:inset 0 1px 4px #000a,0 0 0 1px ${C.acc}66;}
 .sec-toggle{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:4px 8px;gap:4px;user-select:none;}
 .sec-toggle-line{height:1px;background:${C.border};flex:1;}
 .chevron{font-size:9px;color:${C.textDim};transition:transform .2s;flex-shrink:0;}
 .chevron.open{transform:rotate(180deg);}
-.sec-status{font-family:sans-serif;font-size:11px;letter-spacing:.06em;color:${C.textMid};white-space:nowrap;flex-shrink:0;}
+.sec-status{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;letter-spacing:.06em;color:${C.textMid};white-space:nowrap;flex-shrink:0;}
 .sec-status.cur{color:${C.acc};}
 .sec-status.loop{color:${C.green};}
 .sec-status.queued{color:${C.accDim};}
@@ -1194,59 +1207,71 @@ input,select,button{font-family:inherit;}
 .beat-cell.chord-mid:hover{filter:brightness(1.1);}
 .beat-cell.chord-last{border-radius:0 5px 5px 0;}
 .beat-cell.chord-solo{border-radius:5px;}
-.beat-cell.bar-right::after{content:'';position:absolute;right:-1px;top:4px;bottom:4px;width:2px;background:${C.barLine};border-radius:1px;z-index:2;}
+.beat-cell.bar-right::after{content:'';position:absolute;right:-1px;top:6px;bottom:6px;width:1px;background:${C.barLine}44;z-index:2;}
 .beat-cell.playing{box-shadow:inset 0 0 0 2px rgba(255,255,255,0.5);}
-.cell-name{font-family:sans-serif;font-weight:700;font-size:14px;line-height:1;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
-.cell-roman{font-family:sans-serif;font-size:9px;color:rgba(255,255,255,0.75);margin-top:2px;}
+.cell-name{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;font-size:14px;line-height:1;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.cell-roman{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;color:rgba(255,255,255,0.75);margin-top:2px;}
 
 /* Compact badge row (collapsed) */
 .sec-l2{display:flex;align-items:center;gap:4px;padding:0 10px 6px;overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap;}
 .sec-l2::-webkit-scrollbar{display:none;}
-.badge{font-family:sans-serif;font-weight:700;font-size:13px;padding:4px 10px;border-radius:10px;border:1px solid ${C.borderHi};background:${C.surf3};color:${C.textMid};white-space:nowrap;flex-shrink:0;transition:all .15s;}
+.badge{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;font-size:13px;padding:4px 10px;border-radius:10px;border:1px solid ${C.borderHi};background:${C.surf3};color:${C.textMid};white-space:nowrap;flex-shrink:0;transition:all .15s;}
 .badge.cur{background:${C.acc};border-color:${C.acc};color:#0E1014;}
 .badge-div{width:1px;height:14px;background:${C.barLine};flex-shrink:0;margin:0 2px;}
-.badge-empty{font-family:sans-serif;font-size:10px;color:${C.textDim};padding:3px 0;}
+.badge-empty{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:${C.textDim};padding:3px 0;}
 
 /* Intensity */
 .sec-l3{padding:2px 10px 10px;display:flex;align-items:center;gap:8px;}
-.int-label{font-family:sans-serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:${C.textMid};white-space:nowrap;width:56px;}
+.int-label{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:${C.textMid};white-space:nowrap;width:56px;}
 .int-track{flex:1;height:4px;background:${C.border};border-radius:2px;position:relative;cursor:pointer;}
 .int-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,${C.accDim},${C.acc});}
 .int-thumb{position:absolute;top:50%;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;background:${C.acc};cursor:grab;box-shadow:0 0 0 3px ${C.accLo};}
-.int-val{font-family:sans-serif;font-size:10px;color:${C.acc};width:24px;text-align:right;flex-shrink:0;}
+.int-val{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:${C.acc};width:24px;text-align:right;flex-shrink:0;}
 
 .sec-body{padding:0 10px 14px;border-top:1px solid ${C.border};}
 
 /* Palette */
-.pal-btn{background:${C.surf2};border:1px solid ${C.acc}44;color:${C.acc};padding:7px 10px;border-radius:4px;cursor:pointer;font-size:13px;font-family:sans-serif;font-weight:700;transition:all .15s;min-width:42px;text-align:center;}
+.pal-btn{background:linear-gradient(180deg,#525C70,#3A4356);border:none;color:${C.acc};padding:10px 10px;border-radius:6px;cursor:pointer;font-size:13px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;transition:all .08s;min-width:42px;text-align:center;box-shadow:inset 0 2px 0 #ffffff22,0 5px 0 #04060a,0 7px 8px #000a;}
+.pal-btn:active{transform:translateY(4px);box-shadow:inset 0 2px 0 #ffffff14,0 1px 0 #04060a,0 2px 4px #000a;}
 .pal-btn:hover{background:${C.acc};color:#0E1014;}
 .pal-btn.extra{border-color:${C.border};color:${C.textMid};background:${C.surf2};}
 .pal-btn.extra.on{border-color:${C.acc}44;color:${C.acc};background:${C.accLo};}
 
 /* Context menu */
 .ctx-menu{position:fixed;background:${C.surf};border:1px solid ${C.border};border-radius:5px;padding:4px;z-index:200;box-shadow:0 8px 24px #00000088;min-width:150px;display:flex;flex-direction:column;gap:2px;}
-.cmi{background:none;border:none;color:${C.text};padding:8px 14px;font-family:sans-serif;font-size:12px;cursor:pointer;border-radius:3px;text-align:left;transition:background .1s;white-space:nowrap;}
+.cmi{background:none;border:none;color:${C.text};padding:8px 14px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;cursor:pointer;border-radius:3px;text-align:left;transition:background .1s;white-space:nowrap;}
 .cmi:hover{background:${C.surf2};}
 .cmi.del{color:${C.red};}
 .cmi.disabled{color:${C.textDim};cursor:default;pointer-events:none;}
 
 .sel{background:${C.surf2};border:1px solid ${C.border};color:${C.text};padding:5px 8px;border-radius:3px;font-size:13px;outline:none;cursor:pointer;}
 .sel:focus{border-color:${C.acc};}
-.btn{background:none;border:1px solid ${C.border};color:${C.textMid};padding:6px 13px;border-radius:4px;cursor:pointer;font-size:12px;font-family:sans-serif;letter-spacing:.05em;transition:all .15s;white-space:nowrap;}
+.btn{background:linear-gradient(180deg,#454E60,#333B4B);border:none;color:${C.textMid};padding:7px 13px;border-radius:5px;cursor:pointer;font-size:12px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;letter-spacing:.05em;transition:all .08s;white-space:nowrap;box-shadow:inset 0 1px 0 #ffffff1e,0 4px 0 #04060a,0 5px 6px #000a;}
+.btn:active{transform:translateY(3px);box-shadow:inset 0 1px 0 #ffffff10,0 0 0 #04060a,0 1px 2px #0009;}
+/* Reusable 3D pad look for inline-styled buttons (live cards, setlist) */
+.pad3d{border:none;cursor:pointer;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;transition:all .08s;background:linear-gradient(180deg,#525C70,#3A4356);color:#EAEEF6;box-shadow:inset 0 2px 0 #ffffff22,0 4px 0 #04060a,0 6px 7px #000a;}
+.pad3d:active{transform:translateY(3px);box-shadow:inset 0 2px 0 #ffffff14,0 1px 0 #04060a,0 2px 3px #000a;}
+.pad3d-on{border:none;cursor:pointer;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;transition:all .08s;background:linear-gradient(180deg,#EAC062,${C.acc});color:#0E1014;box-shadow:0 0 12px ${C.acc}66,inset 0 2px 0 #ffffff66,0 4px 0 #6e5220,0 6px 7px #000a;}
+.pad3d-on:active{transform:translateY(3px);box-shadow:0 0 12px ${C.acc}66,inset 0 2px 0 #ffffff66,0 1px 0 #6e5220,0 2px 3px #000a;}
+/* Recessed display screen — dark inset with light bezel, calculator/synth vibe */
+.screen{background:#0B0E14;border:1px solid #2B3242;border-top-color:#161B26;border-bottom-color:#3A445C;border-radius:6px;box-shadow:inset 0 2px 6px #000c,inset 0 -1px 0 #ffffff08,0 1px 0 #ffffff0a;}
+.dispfont{font-family:'Doto','Space Mono',ui-monospace,monospace;font-weight:900;font-variation-settings:'ROND' 0;}
 .btn:hover{border-color:${C.borderHi};color:${C.text};}
 .btn.on{border-color:${C.acc}88;color:${C.acc};background:${C.accLo};}
 .btn.acc{background:${C.acc};border-color:${C.acc};color:#0A0D12;font-weight:700;}
 .btn.danger{border-color:${C.red}88;color:${C.red};}
 .btn.muted{background:${C.redLo};border-color:${C.red}66;color:${C.red};}
 .btn.sm{padding:4px 10px;font-size:11px;}
-.btn-done{display:block;width:100%;background:${C.acc};border:none;color:#0A0D12;font-weight:700;padding:13px;border-radius:5px;cursor:pointer;font-size:15px;font-family:sans-serif;letter-spacing:.04em;transition:filter .15s;margin-top:4px;}
+.btn-done{display:block;width:100%;background:${C.acc};border:none;color:#0A0D12;font-weight:700;padding:13px;border-radius:5px;cursor:pointer;font-size:15px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;letter-spacing:.04em;transition:filter .15s;margin-top:4px;}
 .btn-done:hover{filter:brightness(1.12);}
-.tp{background:${C.surf2};border:1px solid ${C.border};color:${C.textMid};padding:7px 12px;border-radius:4px;cursor:pointer;font-size:13px;font-family:sans-serif;transition:all .15s;}
+.tp{background:linear-gradient(180deg,#525C70,#3A4356);border:none;color:${C.textMid};padding:9px 13px;border-radius:5px;cursor:pointer;font-size:13px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;transition:all .08s;box-shadow:inset 0 2px 0 #ffffff14,0 4px 0 #04060a,0 6px 7px #000a;}
+.tp:active{transform:translateY(3px);box-shadow:inset 0 2px 0 #ffffff14,0 1px 0 #04060a,0 2px 3px #000a;}
 .tp:hover{border-color:${C.acc}88;color:${C.acc};}
 .tp.on{border-color:${C.acc};color:${C.acc};background:${C.accLo};}
-.tap-btn{background:${C.surf2};border:2px solid ${C.border};color:${C.textMid};padding:10px 20px;border-radius:4px;font-size:14px;cursor:pointer;font-family:sans-serif;transition:all .1s;}
+.tap-btn{background:linear-gradient(180deg,#525C70,#3A4356);border:none;color:${C.text};padding:12px 22px;border-radius:6px;font-size:14px;cursor:pointer;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;letter-spacing:.08em;text-transform:uppercase;transition:all .08s;box-shadow:inset 0 2px 0 #ffffff22,0 5px 0 #04060a,0 7px 8px #000a;}
+.tap-btn:active{transform:translateY(4px);box-shadow:inset 0 2px 0 #ffffff1a,0 1px 0 #04060a,0 2px 4px #000a;}
 .tap-btn:active{border-color:${C.acc};background:${C.accLo};transform:scale(.97);}
-.bpm-big{font-size:48px;color:${C.acc};line-height:1;}
+.bpm-big{font-size:44px;font-family:'Doto','Space Mono',monospace;font-weight:900;color:${C.lcd};line-height:1;text-align:center;background:#0B0E14;border:1px solid #2B3242;border-top-color:#161B26;border-bottom-color:#3A445C;border-radius:8px;box-shadow:inset 0 2px 8px #000c,inset 0 -1px 0 #ffffff08;padding:12px 8px;text-shadow:0 0 12px ${C.acc}44;}
 .slider{-webkit-appearance:none;width:100%;height:3px;border-radius:2px;background:${C.border};outline:none;cursor:pointer;}
 .slider::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:${C.acc};cursor:pointer;}
 /* Vertical mixer fader */
@@ -1254,23 +1279,26 @@ input,select,button{font-family:inherit;}
 .vfader::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:18px;border-radius:3px;background:${C.acc};cursor:pointer;border:1px solid #0A0D12;}
 .vfader::-moz-range-thumb{width:28px;height:18px;border-radius:3px;background:${C.acc};cursor:pointer;border:1px solid #0A0D12;}
 .steps{display:flex;gap:4px;flex-wrap:wrap;}
-.step{width:30px;height:30px;border-radius:3px;border:1px solid ${C.border};background:${C.surf2};cursor:pointer;transition:all .12s;}
-.step.on{background:${C.acc};border-color:${C.acc};}
+.step{width:30px;height:30px;border-radius:6px;border:none;background:linear-gradient(180deg,#525C70,#3A4356);cursor:pointer;transition:all .08s;box-shadow:inset 0 2px 0 #ffffff22,0 5px 0 #04060a,0 7px 8px #000a;}
+.step.on{background:linear-gradient(180deg,#EAC062,${C.acc});box-shadow:0 0 12px ${C.acc}77,inset 0 2px 0 #ffffff66,0 5px 0 #6e5220,0 7px 8px #000a;}
+.step:active{transform:translateY(4px);box-shadow:inset 0 2px 0 #ffffff1a,0 1px 0 #04060a,0 2px 4px #000a;}
+.step.on:active{transform:translateY(4px);box-shadow:0 0 12px ${C.acc}77,inset 0 2px 0 #ffffff66,0 1px 0 #6e5220,0 2px 4px #000a;}
 .step.grp-sep{margin-left:6px;}
 .dyn-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
-.dyn-lbl{font-family:sans-serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:${C.textMid};width:56px;flex-shrink:0;}
+.dyn-lbl{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:${C.textMid};width:56px;flex-shrink:0;}
 .card{background:${C.surf};border:1px solid ${C.borderHi};border-radius:6px;padding:14px;margin-bottom:10px;}
-.card-title{font-family:sans-serif;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:${C.textMid};margin-bottom:10px;}
+.card-title{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:${C.textMid};margin-bottom:10px;}
 .inst-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
-.add-menu{position:absolute;top:calc(100% + 4px);left:0;background:${C.surf};border:1px solid ${C.border};border-radius:5px;z-index:30;min-width:180px;padding:4px;box-shadow:0 8px 24px #00000055;}
-.ami{display:block;width:100%;background:none;border:none;color:${C.text};padding:8px 12px;cursor:pointer;text-align:left;font-size:12px;font-family:sans-serif;border-radius:3px;transition:background .1s;}
+.add-menu{position:absolute;bottom:calc(100% + 4px);left:0;background:${C.surf};border:1px solid ${C.borderHi};border-radius:5px;z-index:120;min-width:200px;max-height:60vh;overflow-y:auto;padding:4px;box-shadow:0 10px 34px #000b;}
+.ami{display:block;width:100%;background:none;border:none;color:${C.text};padding:8px 12px;cursor:pointer;text-align:left;font-size:12px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;border-radius:3px;transition:background .1s;}
 .ami:hover{background:${C.surf2};}
 .ami.sub{color:${C.textMid};font-size:11px;}
 .divider{border:none;border-top:1px solid ${C.border};margin:3px 0;}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .ts-row{display:flex;gap:6px;}
-.ts-btn{background:${C.surf2};border:1px solid ${C.border};color:${C.textMid};padding:8px 16px;border-radius:4px;cursor:pointer;font-size:14px;font-family:sans-serif;font-weight:600;transition:all .15s;}
+.ts-btn{background:linear-gradient(180deg,#454E60,#333B4B);border:none;color:${C.textMid};padding:9px 16px;border-radius:5px;cursor:pointer;font-size:14px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:600;transition:all .08s;box-shadow:inset 0 1px 0 #ffffff1e,0 4px 0 #04060a,0 5px 6px #000a;}
+.ts-btn:active{transform:translateY(3px);box-shadow:inset 0 1px 0 #ffffff10,0 0 0 #04060a,0 1px 2px #0009;}
 .ts-btn:hover{border-color:${C.borderHi};color:${C.text};}
 .ts-btn.on{border-color:${C.acc};color:${C.acc};background:${C.accLo};}
 @media(max-width:500px){.two{grid-template-columns:1fr;}}
@@ -1380,6 +1408,7 @@ function App() {
   const [beatPulse, setBeatPulse] = useState(false);
   const [queued, setQueued] = useState(null);
   const [looping, setLooping] = useState(false);
+  const [resolved, setResolved] = useState(false); // song played through — pad-only
   const psRef = useRef({
     s: 0,
     c: 0,
@@ -1420,21 +1449,22 @@ function App() {
         engRef.current.pianoShift.pitch = keyShift(key);
       } catch (e) {}
     }
-    // Live pad swap: load the new key's loop and bring it in at the next loop
-    // boundary so the pad follows the key with no click. Load-on-demand — the
-    // first switch to an uncached key may briefly gap until the file loads.
+    // Live pad swap: crossfade to the new key's loop. Start the new loop now
+    // and ramp the old one out / new one in over ~1.5s, so the pad follows the
+    // key almost immediately with no click (better than waiting for the loop
+    // boundary, which could be a full cycle away). Load-on-demand.
     const e = engRef.current;
     if (!playing || !e?.padPlayer || !e.padHPF) return;
     const BASE = "https://philthemoser.github.io/qw-samples/";
     let cancelled = false;
     const oldPlayer = e.padPlayer;
-    const loopLen = oldPlayer.buffer?.duration || 15; // seconds per loop cycle
+    const targetVol = oldPlayer.volume.value; // dB the pad currently sits at
     const next = new Tone.Player({
       url: padUrl(key, BASE),
       loop: true,
       autostart: false
     }).connect(e.padHPF);
-    next.volume.value = oldPlayer.volume.value;
+    next.volume.value = -60; // start silent, fade in
     Tone.loaded().then(() => {
       if (cancelled) {
         try {
@@ -1442,7 +1472,6 @@ function App() {
         } catch (_) {}
         return;
       }
-      // Only swap if this is still the current key and still playing
       if (keyRef.current !== key || !engRef.current || engRef.current.padPlayer !== oldPlayer) {
         try {
           next.dispose();
@@ -1450,17 +1479,19 @@ function App() {
         return;
       }
       try {
-        const now = Tone.getTransport().seconds;
-        const boundary = Math.ceil((now + 0.05) / loopLen) * loopLen; // next loop point
-        next.sync().start(boundary);
-        oldPlayer.stop(boundary);
-        Tone.getTransport().scheduleOnce(() => {
+        const t = Tone.now();
+        next.sync().start(); // start on the transport now
+        next.volume.rampTo(targetVol, 1.5, t); // fade new in
+        oldPlayer.volume.rampTo(-60, 1.5, t); // fade old out
+        engRef.current.padPlayer = next;
+        // Dispose the old one after the crossfade completes
+        setTimeout(() => {
           try {
             oldPlayer.unsync();
+            oldPlayer.stop();
             oldPlayer.dispose();
           } catch (_) {}
-        }, boundary + 0.1);
-        engRef.current.padPlayer = next;
+        }, 1800);
       } catch (err) {
         try {
           next.dispose();
@@ -1720,6 +1751,12 @@ function App() {
     saveSetlist(n);
     return n;
   });
+  const clearSetlist = () => {
+    if (setlistIds.length === 0) return;
+    if (!window.confirm("Clear the setlist? Songs stay in your library, only the queue is emptied.")) return;
+    setSetlistIds([]);
+    saveSetlist([]);
+  };
 
   // Export a song to the clipboard as pretty-printed JSON
   const [copiedId, setCopiedId] = useState(null);
@@ -2039,6 +2076,7 @@ function App() {
     setBeatPulse(false);
     setQueued(null);
     setLooping(false);
+    setResolved(false);
     setLiveKeyOpen(false);
     setLiveTempoOpen(false);
     setLiveMixerOpen(false);
@@ -2059,7 +2097,8 @@ function App() {
       rep: 0,
       step: 0,
       queued: null,
-      looping: false
+      looping: false,
+      resolved: false
     };
   }, []);
   const startPlayback = useCallback(async () => {
@@ -2202,6 +2241,9 @@ function App() {
         lm = liveMuteRef.current,
         sec = S2[ps.s];
       const active = k => inst[k] && !lm[k]; // instrument enabled in setup AND not live-muted
+      // Resolved: the song has played through — only the pad sustains now.
+      // Skip all scheduling (piano/bass/percussion/pulse/advance) until stop.
+      if (ps.resolved) return;
       if (!sec || !sec.chords.length) {
         let nx = (ps.s + 1) % S2.length,
           t = 0;
@@ -2297,10 +2339,18 @@ function App() {
                 ps.queued = null;
                 setQueued(null);
               } else {
-                let nx = (ps.s + 1) % S2.length,
-                  t = 0;
-                while (!S2[nx]?.chords.length && t++ < S2.length) nx = (nx + 1) % S2.length;
-                ps.s = nx;
+                // Find the next section with chords after this one (no wrap)
+                let nx = ps.s + 1;
+                while (nx < S2.length && !S2[nx]?.chords.length) nx++;
+                if (nx < S2.length) {
+                  ps.s = nx;
+                } else {
+                  // Reached the end — resolve to pad: silence the band, let the
+                  // pad sustain until the user stops. (A queued/looped section
+                  // overrides this.)
+                  ps.resolved = true;
+                  Tone.Draw.schedule(() => setResolved(true), time);
+                }
               }
             }
           }
@@ -2322,9 +2372,42 @@ function App() {
     startFromRef.current = idx;
     startPlayback();
   };
+
+  // Setlist queue: load another song and play it from the top. Stops the
+  // current engine, swaps in the new song, then starts. Used to move through
+  // the set song-to-song without leaving the playing view.
+  const playSetlistSong = s => {
+    const wasPlaying = playing;
+    if (wasPlaying) stopPlayback();
+    loadSong(s);
+    // Continue the set only if we were already playing — otherwise just load the
+    // song into view, stopped, so the user can line it up without it auto-starting.
+    if (wasPlaying) {
+      setTimeout(() => {
+        startFromRef.current = 0;
+        startPlayback();
+      }, 60);
+    }
+  };
   const onSecClick = idx => {
     if (!playing) return;
     const ps = psRef.current;
+    // If the song had resolved to pad, tapping a section revives the band from
+    // there — clear the resolved state and jump to that section.
+    if (ps.resolved) {
+      ps.resolved = false;
+      setResolved(false);
+      ps.s = idx;
+      ps.c = 0;
+      ps.b = 0;
+      ps.rep = 0;
+      ps.step = 0;
+      ps.queued = null;
+      setQueued(null);
+      ps.looping = false;
+      setLooping(false);
+      return;
+    }
     if (idx === ps.s) {
       const nl = !looping;
       setLooping(nl);
@@ -2436,7 +2519,94 @@ function App() {
     className: "reorder-btn",
     disabled: si >= sections.length - 1,
     onClick: () => moveSec(sec.id, 1)
-  }, "↓")))), !playing && /*#__PURE__*/React.createElement("div", {
+  }, "↓")))), playing && (() => {
+    const setSongs = setlistIds.map(id => library.find(x => x.id === id)).filter(Boolean).filter(x => x.id !== songId);
+    if (setSongs.length === 0) return null;
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 8,
+        marginBottom: 16
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        margin: "0 0 8px"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        height: 1,
+        background: C.border
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
+        fontSize: 9,
+        letterSpacing: ".14em",
+        color: C.textDim,
+        textTransform: "uppercase"
+      }
+    }, "Up Next"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        height: 1,
+        background: C.border
+      }
+    })), setSongs.map(s => /*#__PURE__*/React.createElement("div", {
+      key: s.id,
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        padding: "10px 14px",
+        background: C.surf,
+        border: `1px solid ${C.border}`,
+        borderRadius: 6,
+        marginBottom: 6,
+        opacity: .72
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minWidth: 0
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 14,
+        color: C.textMid,
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis"
+      }
+    }, s.title || "Untitled", /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: C.acc,
+        fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
+        marginLeft: 8
+      }
+    }, s.key)), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
+        fontSize: 10,
+        color: C.textDim,
+        marginTop: 3,
+        letterSpacing: ".08em"
+      }
+    }, (s.sections || []).map(sec => (sec.name || "?").trim().charAt(0).toUpperCase()).join(" "))), /*#__PURE__*/React.createElement("button", {
+      className: "pad3d",
+      style: {
+        color: C.acc,
+        width: 38,
+        height: 38,
+        borderRadius: 19,
+        fontSize: 14,
+        flexShrink: 0
+      },
+      onClick: () => playSetlistSong(s)
+    }, "▶"))));
+  })(), !playing && /*#__PURE__*/React.createElement("div", {
     style: {
       position: "relative",
       display: "inline-block",
@@ -2448,7 +2618,7 @@ function App() {
       e.stopPropagation();
       setAddMenuOpen(o => !o);
     }
-  }, "+ Section ▾"), addMenuOpen && /*#__PURE__*/React.createElement("div", {
+  }, "+ Section ▴"), addMenuOpen && /*#__PURE__*/React.createElement("div", {
     className: "add-menu",
     onClick: e => e.stopPropagation()
   }, /*#__PURE__*/React.createElement("button", {
@@ -2486,7 +2656,7 @@ function App() {
     }
   }), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "sans-serif",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 10,
       letterSpacing: ".14em",
       color: C.textMid,
@@ -2513,11 +2683,16 @@ function App() {
   }) => /*#__PURE__*/React.createElement("button", {
     key: k,
     className: "mute-btn",
-    style: {
-      background: liveMute[k] ? "none" : C.acc,
-      border: `1px solid ${C.acc}`,
-      color: liveMute[k] ? C.acc : "#0A0D12",
-      fontWeight: 700
+    style: liveMute[k] ? {
+      background: "linear-gradient(180deg,#525C70,#3A4356)",
+      color: C.textDim,
+      fontWeight: 700,
+      boxShadow: "inset 0 2px 0 #ffffff10,0 5px 0 #04060a,0 7px 8px #000a"
+    } : {
+      background: `linear-gradient(180deg,#EAC062,${C.acc})`,
+      color: "#0E1014",
+      fontWeight: 700,
+      boxShadow: `0 0 12px ${C.acc}66,inset 0 2px 0 #ffffff66,0 5px 0 #6e5220,0 7px 8px #000a`
     },
     onClick: () => setLiveMute(m => ({
       ...m,
@@ -2530,21 +2705,43 @@ function App() {
     onClick: () => playing ? (setLiveKeyOpen(o => !o), setLiveMixerOpen(false), setLiveTempoOpen(false)) : setSettingsOpen(o => !o)
   }, playing ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "bar-chord-name"
-  }, curChordObj ? chordDisplay(curChordObj) : "—"), /*#__PURE__*/React.createElement("div", {
+  }, resolved ? "—" : curChordObj ? chordDisplay(curChordObj) : "—"), /*#__PURE__*/React.createElement("div", {
     className: "bar-chord-sub"
-  }, key, " · ", curSecObj?.name, looping ? " · loop" : queued !== null ? ` · next: ${sections[queued]?.name}` : "")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, resolved ? `${key} · pad` : `${key} · ${curSecObj?.name}${looping ? " · loop" : queued !== null ? ` · next: ${sections[queued]?.name}` : ""}`)) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "bar-chord-name"
   }, key), /*#__PURE__*/React.createElement("div", {
     className: "bar-chord-sub"
-  }, timeSig))), /*#__PURE__*/React.createElement("button", {
-    className: `pbtn${playing ? "" : " idle"}`,
-    onClick: samplesLoading ? undefined : playing ? stopPlayback : startPlayback,
-    disabled: samplesLoading,
-    style: samplesLoading ? {
-      opacity: .6,
-      cursor: "wait"
-    } : undefined
-  }, samplesLoading ? "⋯" : playing ? "■" : "▶"), /*#__PURE__*/React.createElement("div", {
+  }, timeSig))), (() => {
+    // Previous / next setlist neighbours (by setlist order). Buttons are
+    // always shown to hint at sequencing, greyed when unavailable.
+    const idx = setlistIds.indexOf(songId);
+    const prevSong = idx > 0 ? library.find(x => x.id === setlistIds[idx - 1]) : null;
+    const nextSong = idx >= 0 && idx < setlistIds.length - 1 ? library.find(x => x.id === setlistIds[idx + 1]) : null;
+    const navBtn = (song, glyph, label) => /*#__PURE__*/React.createElement("button", {
+      title: label,
+      disabled: !song,
+      className: "pad3d",
+      style: {
+        color: song ? C.acc : C.textDim,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        fontSize: 14,
+        flexShrink: 0,
+        opacity: song ? 1 : .35
+      },
+      onClick: () => song && playSetlistSong(song)
+    }, glyph);
+    return /*#__PURE__*/React.createElement(React.Fragment, null, navBtn(prevSong, "⏮", "Previous song"), /*#__PURE__*/React.createElement("button", {
+      className: `pbtn${playing ? "" : " idle"}`,
+      onClick: samplesLoading ? undefined : playing ? stopPlayback : startPlayback,
+      disabled: samplesLoading,
+      style: samplesLoading ? {
+        opacity: .6,
+        cursor: "wait"
+      } : undefined
+    }, samplesLoading ? "⋯" : playing ? "■" : "▶"), navBtn(nextSong, "⏭", "Next song"));
+  })(), /*#__PURE__*/React.createElement("div", {
     className: "bar-right",
     onClick: () => playing ? (setLiveTempoOpen(o => !o), setLiveMixerOpen(false), setLiveKeyOpen(false)) : setSettingsOpen(o => !o)
   }, settingsOpen && !playing ? /*#__PURE__*/React.createElement("div", {
@@ -2555,13 +2752,13 @@ function App() {
     style: {
       fontSize: 15,
       color: C.acc,
-      fontFamily: "sans-serif",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontWeight: 700,
       letterSpacing: ".04em"
     }
   }, "Done"), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "sans-serif",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 9,
       color: C.green,
       letterSpacing: ".1em",
@@ -2590,7 +2787,7 @@ function App() {
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "sans-serif",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 9,
       letterSpacing: ".14em",
       color: C.textDim,
@@ -2606,16 +2803,12 @@ function App() {
     }
   }, NOTES.map(n => /*#__PURE__*/React.createElement("button", {
     key: n,
+    className: n === key ? "pad3d-on" : "pad3d",
     style: {
-      background: n === key ? C.acc : "none",
-      border: `1px solid ${n === key ? C.acc : C.border}`,
-      color: n === key ? "#0A0D12" : C.text,
-      fontWeight: n === key ? 700 : 400,
+      fontWeight: 700,
       padding: "12px 0",
       borderRadius: 6,
-      cursor: "pointer",
-      fontSize: 15,
-      fontFamily: "'Georgia',serif"
+      fontSize: 15
     },
     onClick: () => setKey(n)
   }, n))))), playing && liveTempoOpen && /*#__PURE__*/React.createElement("div", {
@@ -2640,15 +2833,13 @@ function App() {
       gap: 8
     }
   }, /*#__PURE__*/React.createElement("button", {
+    className: "pad3d",
     style: {
-      background: "none",
-      border: `1px solid ${C.border}`,
-      color: C.text,
       borderRadius: 6,
       width: 58,
       height: 44,
       fontSize: 24,
-      cursor: "pointer"
+      color: C.text
     },
     onClick: () => nudgeBpm(1)
   }, "+"), /*#__PURE__*/React.createElement("div", {
@@ -2657,28 +2848,28 @@ function App() {
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 28,
-      color: C.acc,
-      fontFamily: "'Georgia',serif",
-      lineHeight: 1
+      fontSize: 30,
+      color: C.lcd,
+      fontFamily: "'Doto','Space Mono',monospace",
+      fontWeight: 900,
+      lineHeight: 1,
+      textShadow: `0 0 12px ${C.acc}44`
     }
   }, bpm), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "sans-serif",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 8,
       color: C.textDim,
       letterSpacing: ".14em"
     }
   }, "BPM")), /*#__PURE__*/React.createElement("button", {
+    className: "pad3d",
     style: {
-      background: "none",
-      border: `1px solid ${C.border}`,
-      color: C.text,
       borderRadius: 6,
       width: 58,
       height: 44,
       fontSize: 24,
-      cursor: "pointer"
+      color: C.text
     },
     onClick: () => nudgeBpm(-1)
   }, "−"))), playing && liveMixerOpen && /*#__PURE__*/React.createElement("div", {
@@ -2700,7 +2891,7 @@ function App() {
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "sans-serif",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 9,
       letterSpacing: ".14em",
       color: C.textDim,
@@ -2731,7 +2922,7 @@ function App() {
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "sans-serif",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 10,
       color: C.textMid
     }
@@ -2747,7 +2938,7 @@ function App() {
     className: "vfader"
   }), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "sans-serif",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 10,
       color: C.textDim
     }
@@ -2800,36 +2991,44 @@ function App() {
     }
   }, ["setlist", "library"].map(v => /*#__PURE__*/React.createElement("button", {
     key: v,
+    className: libView === v ? "pad3d-on" : "pad3d",
     style: {
-      background: libView === v ? C.acc : "none",
-      border: `1px solid ${libView === v ? C.acc : C.border}`,
-      color: libView === v ? "#0A0D12" : C.textMid,
-      fontWeight: libView === v ? 700 : 400,
-      padding: "6px 14px",
+      fontWeight: 700,
+      padding: "7px 14px",
       borderRadius: 5,
-      cursor: "pointer",
       fontSize: 12,
-      fontFamily: "sans-serif",
       letterSpacing: ".04em",
       textTransform: "capitalize"
     },
     onClick: () => setLibView(v)
-  }, v))), /*#__PURE__*/React.createElement("button", {
+  }, v))), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "none",
-      border: `1px solid ${C.acc}66`,
-      color: C.acc,
-      padding: "6px 14px",
-      borderRadius: 4,
-      cursor: "pointer",
+      display: "flex",
+      gap: 6
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "pad3d",
+    style: {
+      color: C.textDim,
+      padding: "7px 12px",
+      borderRadius: 5,
       fontSize: 12,
-      fontFamily: "sans-serif",
+      letterSpacing: ".05em"
+    },
+    onClick: clearSetlist
+  }, "Clear Setlist"), /*#__PURE__*/React.createElement("button", {
+    className: "pad3d",
+    style: {
+      color: C.acc,
+      padding: "7px 14px",
+      borderRadius: 5,
+      fontSize: 12,
       letterSpacing: ".05em"
     },
     onClick: importSong
-  }, "Import")), importMsg && /*#__PURE__*/React.createElement("div", {
+  }, "Import"))), importMsg && /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "monospace",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 11,
       color: importMsg.startsWith("Imported") ? C.green : C.textMid,
       background: C.surf2,
@@ -2853,7 +3052,7 @@ function App() {
     if (rows.length === 0) {
       return /*#__PURE__*/React.createElement("div", {
         style: {
-          fontFamily: "sans-serif",
+          fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
           fontSize: 13,
           color: C.textDim,
           textAlign: "center",
@@ -2873,36 +3072,45 @@ function App() {
         borderRadius: 5,
         marginBottom: 7
       }
-    }, libView === "setlist" && /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("button", {
+      className: inSet(s.id) ? "pad3d-on" : "pad3d",
+      style: {
+        color: inSet(s.id) ? "#0E1014" : C.acc,
+        width: 34,
+        height: 34,
+        borderRadius: 5,
+        fontSize: 18,
+        fontWeight: 700,
+        flexShrink: 0,
+        lineHeight: 1
+      },
+      onClick: () => toggleSetlist(s.id)
+    }, inSet(s.id) ? "−" : "+"), libView === "setlist" && /*#__PURE__*/React.createElement("div", {
       style: {
         display: "flex",
         flexDirection: "column",
-        gap: 2,
+        gap: 3,
         flexShrink: 0
       }
     }, /*#__PURE__*/React.createElement("button", {
+      className: "pad3d",
       style: {
-        background: "none",
-        border: `1px solid ${C.border}`,
         color: C.textDim,
-        width: 24,
+        width: 26,
         height: 20,
-        borderRadius: 3,
-        cursor: "pointer",
+        borderRadius: 4,
         fontSize: 11,
         opacity: idx === 0 ? .3 : 1
       },
       disabled: idx === 0,
       onClick: () => moveInSetlist(s.id, -1)
     }, "↑"), /*#__PURE__*/React.createElement("button", {
+      className: "pad3d",
       style: {
-        background: "none",
-        border: `1px solid ${C.border}`,
         color: C.textDim,
-        width: 24,
+        width: 26,
         height: 20,
-        borderRadius: 3,
-        cursor: "pointer",
+        borderRadius: 4,
         fontSize: 11,
         opacity: idx === rows.length - 1 ? .3 : 1
       },
@@ -2925,58 +3133,37 @@ function App() {
       }
     }, s.title || "Untitled"), /*#__PURE__*/React.createElement("div", {
       style: {
-        fontFamily: "sans-serif",
+        fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
         fontSize: 11,
         color: C.textDim,
         marginTop: 2
       }
     }, s.key, " · ", s.timeSig, " · ", s.bpm, " bpm · ", s.sections?.length || 0, " sections")), /*#__PURE__*/React.createElement("button", {
+      className: copiedId === s.id ? "pad3d-on" : "pad3d",
       style: {
-        background: inSet(s.id) ? C.acc : "none",
-        border: `1px solid ${C.acc}`,
-        color: inSet(s.id) ? "#0A0D12" : C.acc,
-        width: 30,
-        height: 30,
-        borderRadius: 4,
-        cursor: "pointer",
-        fontSize: 16,
-        fontWeight: 700,
-        flexShrink: 0,
-        lineHeight: 1
-      },
-      onClick: () => toggleSetlist(s.id)
-    }, inSet(s.id) ? "−" : "+"), /*#__PURE__*/React.createElement("button", {
-      style: {
-        background: copiedId === s.id ? C.acc : "none",
-        border: `1px solid ${C.acc}66`,
-        color: copiedId === s.id ? "#0A0D12" : C.acc,
-        padding: "5px 10px",
-        borderRadius: 3,
-        cursor: "pointer",
+        color: copiedId === s.id ? "#0E1014" : C.acc,
+        padding: "6px 10px",
+        borderRadius: 5,
         fontSize: 11,
-        fontFamily: "sans-serif",
         fontWeight: copiedId === s.id ? 700 : 400,
-        flexShrink: 0,
-        transition: "all .15s"
+        flexShrink: 0
       },
       onClick: () => exportSong(s)
     }, copiedId === s.id ? "Copied" : "Export"), /*#__PURE__*/React.createElement("button", {
+      className: "pad3d",
       style: {
-        background: "none",
-        border: `1px solid ${C.border}`,
         color: C.textDim,
-        padding: "5px 9px",
-        borderRadius: 3,
-        cursor: "pointer",
-        fontSize: 11,
-        fontFamily: "sans-serif",
+        padding: "6px 9px",
+        borderRadius: 5,
+        fontSize: 10,
+        letterSpacing: ".05em",
         flexShrink: 0
       },
       onClick: e => {
         e.stopPropagation();
         deleteSong(s.id);
       }
-    }, "✕")));
+    }, "DELETE")));
   })())));
 }
 
@@ -3037,14 +3224,17 @@ function SettingsSheet({
     style: {
       background: "none",
       border: "none",
-      color: C.acc,
-      fontSize: 48,
-      fontFamily: "'Georgia',serif",
+      color: C.lcd,
+      fontSize: 44,
+      fontFamily: "'Doto','Space Mono',monospace",
+      fontWeight: 900,
       outline: "none",
       cursor: "pointer",
       lineHeight: 1,
       padding: 0,
-      width: "100%"
+      width: "100%",
+      textAlign: "center",
+      textShadow: `0 0 12px ${C.acc}44`
     },
     value: keyN,
     onChange: e => setKey(e.target.value)
@@ -3052,11 +3242,12 @@ function SettingsSheet({
     key: n,
     style: {
       background: C.surf,
-      fontSize: 16
+      fontSize: 16,
+      fontFamily: "'Space Mono',monospace"
     }
   }, n)))), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "sans-serif",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 10,
       color: C.textDim,
       letterSpacing: ".1em",
@@ -3070,7 +3261,7 @@ function SettingsSheet({
     className: "bpm-big"
   }, bpm), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "sans-serif",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 9,
       color: C.textDim,
       letterSpacing: ".12em",
@@ -3160,7 +3351,7 @@ function SettingsSheet({
       }))
     }), /*#__PURE__*/React.createElement("div", {
       style: {
-        fontFamily: "sans-serif",
+        fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
         fontSize: 11,
         color: on ? C.textMid : C.textDim,
         width: 26,
@@ -3201,7 +3392,7 @@ function SettingsSheet({
     }
   }, p.label), /*#__PURE__*/React.createElement("span", {
     style: {
-      fontFamily: "sans-serif",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 8,
       color: C.textDim
     }
@@ -3225,13 +3416,13 @@ function SettingsSheet({
     onClick: () => toggleExtra(ex)
   }, extraOn.includes(ex.label) ? NOTES[(noteIdx(keyN) + ex.semis) % 12] : ex.label), /*#__PURE__*/React.createElement("span", {
     style: {
-      fontFamily: "sans-serif",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 8,
       color: C.textDim
     }
   }, ex.label)))), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "sans-serif",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 10,
       color: C.textDim
     }
@@ -3352,7 +3543,7 @@ function SecCard({
     className: "sec-toggle-line"
   }), /*#__PURE__*/React.createElement("span", {
     style: {
-      fontFamily: "sans-serif",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 10,
       color: C.textDim,
       letterSpacing: ".07em",
@@ -3387,7 +3578,7 @@ function SecCard({
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      fontFamily: "sans-serif",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 10,
       color: C.textDim
     }
@@ -3455,7 +3646,7 @@ function SecCard({
     onBgClick: onClearSel
   }), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "sans-serif",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 9,
       color: C.textDim,
       marginBottom: 10,
@@ -3492,7 +3683,7 @@ function SecCard({
     onClick: () => onAddChord(p)
   }, p.label), /*#__PURE__*/React.createElement("span", {
     style: {
-      fontFamily: "sans-serif",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 8,
       color: C.textDim
     }
@@ -3678,7 +3869,7 @@ function DynPanel({
       border: "1px solid " + C.acc,
       color: muted ? C.acc : "#0A0D12",
       fontWeight: 700,
-      fontFamily: "sans-serif",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 11,
       padding: "4px 10px",
       borderRadius: 4,
@@ -3727,13 +3918,13 @@ function DynPanel({
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      fontFamily: "sans-serif",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 9,
       color: C.textDim
     }
   }, "subtle"), /*#__PURE__*/React.createElement("span", {
     style: {
-      fontFamily: "sans-serif",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 9,
       color: C.textDim
     }
@@ -3766,13 +3957,13 @@ function DynPanel({
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      fontFamily: "sans-serif",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 9,
       color: C.textDim
     }
   }, "warm"), /*#__PURE__*/React.createElement("span", {
     style: {
-      fontFamily: "sans-serif",
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 9,
       color: C.textDim
     }
