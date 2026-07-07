@@ -1127,7 +1127,8 @@ const G = `
 body{background-color:${C.bg};background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");color:${C.text};font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;-webkit-font-smoothing:antialiased;}
 input,select,button{font-family:inherit;}
 html,body,#root{min-height:100%;background-color:${C.bg};}
-.app{max-width:680px;margin:0 auto;padding:12px 14px 170px;min-height:100vh;background-color:${C.bg};background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");}
+.app{max-width:680px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top)) 14px 170px;min-height:100vh;background-color:${C.bg};background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");}
+.notch-bar{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:${C.bg};z-index:200;}
 
 .bar{position:fixed;bottom:0;left:0;right:0;z-index:90;background:#CFCCBF;border-top:1px solid #B4AF9E;box-shadow:0 -2px 12px #00000018;}
 .bar-main{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;gap:6px;}
@@ -2520,6 +2521,8 @@ function App() {
       addMenuOpen && setAddMenuOpen(false);
     }
   }, /*#__PURE__*/React.createElement("div", {
+    className: "notch-bar"
+  }), /*#__PURE__*/React.createElement("div", {
     className: "song-header"
   }, /*#__PURE__*/React.createElement("input", {
     className: "song-title-inp",
@@ -2836,7 +2839,18 @@ function App() {
     className: "bar-bpm-num"
   }, bpm), /*#__PURE__*/React.createElement("div", {
     className: "bar-bpm-lbl"
-  }, "bpm"))))), playing && liveKeyOpen && /*#__PURE__*/React.createElement("div", {
+  }, "bpm"))))), playing && (liveKeyOpen || liveMixerOpen || liveTempoOpen) && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "fixed",
+      inset: 0,
+      zIndex: 45
+    },
+    onClick: () => {
+      setLiveKeyOpen(false);
+      setLiveMixerOpen(false);
+      setLiveTempoOpen(false);
+    }
+  }), playing && liveKeyOpen && /*#__PURE__*/React.createElement("div", {
     style: {
       position: "fixed",
       left: 12,
