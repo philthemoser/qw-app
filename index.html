@@ -86,27 +86,21 @@ const DEGREE_QUALITY = {
   minor: ["minor", "minor", "major", "minor", "minor", "major", "major"]
 };
 const EXTRA_DEGREES = [{
-  label: "bII",
-  semis: 1
-}, {
   label: "II",
   semis: 2
 }, {
   label: "bIII",
   semis: 3
 }, {
-  label: "bVI",
-  semis: 8
-}, {
-  label: "bVII",
-  semis: 10
-}, {
   label: "III",
   semis: 4
 }, {
-  label: "vii°",
-  semis: 11,
-  quality: "dim"
+  label: "iv",
+  semis: 5,
+  quality: "minor"
+}, {
+  label: "VI",
+  semis: 9
 }];
 const INVERSIONS = ["root", "3rd", "5th"];
 
@@ -134,6 +128,24 @@ const TIME_SIGS = {
 const beatsPerLine = ts => TIME_SIGS[ts].beatsPerBar * TIME_SIGS[ts].barsPerLine;
 
 // ─── Chord colours — one per degree index + extras ────────────────────────────
+// OP-1 functional colors — one identity per instrument, used consistently
+// across mute buttons, mixer faders, and the expanded dynamics rows.
+const INST_COLORS = {
+  pad: "#1E74B4",
+  // blue — atmospheric
+  piano: "#7A4FB0",
+  // violet — harmonic
+  bass: "#C7412F",
+  // red — low/warm
+  kick: "#E0902A",
+  // amber — punch
+  shaker: "#1E9E63",
+  // green — texture
+  tamb: "#1E93A8" // teal — sparkle
+};
+// Chords use ONE calm colour — the instruments carry the colour vocabulary.
+// The currently-playing chord is marked with the gold accent instead.
+const CHORD_COLOR = "#6E6960";
 // 0=I, 1=ii, 2=iii, 3=IV, 4=V, 5=vi, 6=vii, 7+=extras
 const DEGREE_COLORS = ["#C08A2E",
 // I  — amber gold
@@ -1150,10 +1162,12 @@ html,body,#root{min-height:100%;background-color:${C.bg};}
 .song-title-inp{background:#23211C;border:1px solid #141310;border-top-color:#0C0B08;border-bottom-color:#3A362C;color:${C.lcd};font-size:17px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;font-family:'Doto','Space Mono',monospace;outline:none;flex:1;min-width:0;border-radius:6px;transition:box-shadow .15s;padding:8px 12px;box-shadow:inset 0 2px 6px #000c,inset 0 -1px 0 #ffffff08;text-shadow:0 0 8px ${C.acc}33;}
 .song-title-inp:focus{box-shadow:inset 0 2px 6px #000c,0 0 0 1px ${C.acc}66;}
 .song-title-inp::placeholder{color:${C.textDim};}
-.hdr-btn{background:linear-gradient(180deg,#F4F2EA,#DAD7CA);border:none;color:${C.textMid};padding:7px 12px;border-radius:5px;cursor:pointer;font-size:12px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;letter-spacing:.05em;transition:all .08s;white-space:nowrap;flex-shrink:0;box-shadow:inset 0 1px 0 #ffffff1e,0 4px 0 #A49E8C,0 5px 6px #00000026;}
-.hdr-btn:active{transform:translateY(3px);box-shadow:inset 0 1px 0 #ffffff10,0 0 0 #A49E8C,0 1px 2px #0009;}
-.hdr-btn:hover{border-color:${C.borderHi};color:${C.text};}
-.hdr-btn.saved{border-color:${C.green}55;color:${C.green};}
+.hdr-btn{background:${C.bg};border:1px solid ${C.border};color:${C.textMid};padding:7px 13px;border-radius:14px;cursor:pointer;font-size:11px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;letter-spacing:.06em;text-transform:uppercase;transition:all .12s;white-space:nowrap;flex-shrink:0;box-shadow:inset 0 1px 3px #00000018;}
+.hdr-btn:active{color:${C.text};border-color:${C.borderHi};box-shadow:inset 0 1px 4px #00000028;}
+.hdr-btn:hover{color:${C.text};}
+.hdr-btn.saved{border-color:${C.green}66;color:${C.green};box-shadow:inset 0 1px 3px #00000014;}
+.hdr-btn.unsaved{position:relative;}
+.hdr-btn.unsaved::after{content:'';position:absolute;top:5px;right:7px;width:5px;height:5px;border-radius:50%;background:${C.acc};box-shadow:0 0 5px ${C.acc}aa;}
 .mute-section{padding:6px 16px 8px;border-top:1px solid ${C.border};}
 .mute-label{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:${C.textDim};margin-bottom:5px;}
 .mute-btns{display:flex;gap:5px;}
@@ -1186,7 +1200,7 @@ html,body,#root{min-height:100%;background-color:${C.bg};}
 
 .backdrop{position:fixed;inset:0;bottom:var(--bar-h,110px);background:#00000088;z-index:70;opacity:0;transition:opacity .25s;pointer-events:none;}
 .backdrop.open{opacity:1;pointer-events:all;}
-.sheet{position:fixed;bottom:var(--bar-h,110px);left:0;right:0;z-index:80;background:${C.surf};border-top:1px solid ${C.border};border-radius:14px 14px 0 0;max-height:78vh;overflow-y:auto;transform:translateY(100%);transition:transform .28s cubic-bezier(.32,0,.18,1);}
+.sheet{position:fixed;bottom:var(--bar-h,110px);left:0;right:0;z-index:80;background:${C.surf};border-top:1px solid ${C.border};border-radius:14px 14px 0 0;max-height:calc(100vh - var(--bar-h,110px) - env(safe-area-inset-top) - 8px);overflow-y:auto;transform:translateY(100%);transition:transform .28s cubic-bezier(.32,0,.18,1);}
 .sheet.open{transform:translateY(0);}
 .sheet-handle{width:36px;height:4px;background:${C.border};border-radius:2px;margin:10px auto 14px;}
 .sheet-inner{padding:0 16px 24px;}
@@ -1247,8 +1261,8 @@ html,body,#root{min-height:100%;background-color:${C.bg};}
 .sec-body{padding:0 10px 14px;border-top:1px solid ${C.border};}
 
 /* Palette */
-.pal-btn{background:linear-gradient(180deg,#FBFAF6,#E4E1D6);border:none;color:${C.acc};padding:10px 10px;border-radius:6px;cursor:pointer;font-size:13px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;transition:all .08s;min-width:42px;text-align:center;box-shadow:inset 0 2px 0 #ffffff22,0 5px 0 #A49E8C,0 7px 8px #0000002e;}
-.pal-btn:active{transform:translateY(4px);box-shadow:inset 0 2px 0 #ffffff14,0 1px 0 #A49E8C,0 2px 4px #0000001e;}
+.pal-btn{background:${C.bg};border:1px solid ${C.border};color:${C.textMid};padding:9px 12px;border-radius:14px;cursor:pointer;font-size:13px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;transition:all .12s;min-width:42px;text-align:center;box-shadow:inset 0 1px 3px #00000018;}
+.pal-btn:active{color:${C.text};border-color:${C.borderHi};box-shadow:inset 0 1px 4px #00000028;}
 .pal-btn:hover{background:${C.acc};color:#0E1014;}
 .pal-btn.extra{border-color:${C.border};color:${C.textMid};background:${C.surf2};}
 .pal-btn.extra.on{border-color:${C.acc}44;color:${C.acc};background:${C.accLo};}
@@ -1283,7 +1297,7 @@ html,body,#root{min-height:100%;background-color:${C.bg};}
 .tp{background:linear-gradient(180deg,#FBFAF6,#E4E1D6);border:none;color:${C.textMid};padding:9px 13px;border-radius:5px;cursor:pointer;font-size:13px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;transition:all .08s;box-shadow:inset 0 2px 0 #ffffff14,0 4px 0 #A49E8C,0 6px 7px #0000002a;}
 .tp:active{transform:translateY(3px);box-shadow:inset 0 2px 0 #ffffff14,0 1px 0 #A49E8C,0 2px 3px #0000001e;}
 .tp:hover{border-color:${C.acc}88;color:${C.acc};}
-.tp.on{border-color:${C.acc};color:${C.acc};background:${C.accLo};}
+.tp.on{background:linear-gradient(180deg,#F4D48A,#E8C067);color:#2A2824;font-weight:700;box-shadow:inset 0 2px 0 #ffffff55,0 4px 0 #B89340,0 6px 7px #0000002a;}
 .tap-btn{background:linear-gradient(180deg,#FBFAF6,#E4E1D6);border:none;color:${C.text};padding:12px 22px;border-radius:6px;font-size:14px;cursor:pointer;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;letter-spacing:.08em;text-transform:uppercase;transition:all .08s;box-shadow:inset 0 2px 0 #ffffff22,0 5px 0 #A49E8C,0 7px 8px #0000002e;}
 .tap-btn:active{transform:translateY(4px);box-shadow:inset 0 2px 0 #ffffff1a,0 1px 0 #A49E8C,0 2px 4px #0000001e;}
 .tap-btn:active{border-color:${C.acc};background:${C.accLo};transform:scale(.97);}
@@ -1304,6 +1318,11 @@ html,body,#root{min-height:100%;background-color:${C.bg};}
 .dyn-lbl{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:${C.textMid};width:56px;flex-shrink:0;}
 .card{background:${C.surf};border:1px solid ${C.borderHi};border-radius:6px;padding:14px;margin-bottom:10px;}
 .card-title{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:${C.textMid};margin-bottom:10px;}
+/* Rack-unit card: vertical spine label on the left, content fills the rest */
+.spine-card{background:${C.surf};border:1px solid ${C.borderHi};border-radius:6px;margin-bottom:10px;display:flex;overflow:hidden;}
+.spine{flex-shrink:0;width:26px;display:flex;align-items:center;justify-content:center;background:${C.bg};border-right:1px solid ${C.border};}
+.spine span{writing-mode:vertical-rl;transform:rotate(180deg);font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:${C.textMid};white-space:nowrap;}
+.spine-body{flex:1;min-width:0;padding:10px 12px;}
 .inst-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
 .add-menu{position:absolute;bottom:calc(100% + 4px);left:0;background:${C.surf};border:1px solid ${C.borderHi};border-radius:5px;z-index:120;min-width:200px;max-height:60vh;overflow-y:auto;padding:4px;box-shadow:0 10px 34px #000b;}
 .ami{display:block;width:100%;background:none;border:none;color:${C.text};padding:8px 12px;cursor:pointer;text-align:left;font-size:12px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;border-radius:3px;transition:background .1s;}
@@ -1316,7 +1335,7 @@ html,body,#root{min-height:100%;background-color:${C.bg};}
 .ts-btn{background:linear-gradient(180deg,#F4F2EA,#DAD7CA);border:none;color:${C.textMid};padding:9px 16px;border-radius:5px;cursor:pointer;font-size:14px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:600;transition:all .08s;box-shadow:inset 0 1px 0 #ffffff1e,0 4px 0 #A49E8C,0 5px 6px #00000026;}
 .ts-btn:active{transform:translateY(3px);box-shadow:inset 0 1px 0 #ffffff10,0 0 0 #A49E8C,0 1px 2px #0009;}
 .ts-btn:hover{border-color:${C.borderHi};color:${C.text};}
-.ts-btn.on{border-color:${C.acc};color:${C.acc};background:${C.accLo};}
+.ts-btn.on{background:linear-gradient(180deg,#F4D48A,#E8C067);color:#2A2824;font-weight:700;box-shadow:inset 0 1px 0 #ffffff55,0 4px 0 #B89340,0 5px 6px #00000026;}
 @media(max-width:500px){.two{grid-template-columns:1fr;}}
 `;
 
@@ -1404,10 +1423,11 @@ function App() {
   })));
   const [openSecId, setOpenSecId] = useState(null);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(null); // null | "left" | "right"
   const [liveKeyOpen, setLiveKeyOpen] = useState(false); // key list during playback
   const [liveTempoOpen, setLiveTempoOpen] = useState(false); // tempo nudge during playback
   const [liveMixerOpen, setLiveMixerOpen] = useState(false); // mixer faders during playback
+  const [livePadsOpen, setLivePadsOpen] = useState(false); // chord sketchpad in build mode
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [library, setLibrary] = useState(() => loadLibrary());
   const [setlistIds, setSetlistIds] = useState(() => loadSetlist());
@@ -1437,6 +1457,8 @@ function App() {
     looping: false
   });
   const engRef = useRef(null);
+  const audRef = useRef(null); // independent sampler for the chord sketchpad
+  const barRef = useRef(null); // measured to keep the settings sheet above the bar
   const secRef = useRef(sections);
   const instRef = useRef(instruments);
   const mixRef = useRef(mix);
@@ -2439,6 +2461,71 @@ function App() {
     setOpenSecId(null);
   }, [bpm, timeSig]);
   useEffect(() => () => stopPlayback(), []);
+
+  // Keep the settings sheet sitting exactly on top of the bar by measuring the
+  // bar's real height (it varies with play state, mutes, pads) into --bar-h.
+  useEffect(() => {
+    const setH = () => {
+      const h = barRef.current?.offsetHeight;
+      if (h) document.documentElement.style.setProperty("--bar-h", h + "px");
+    };
+    setH();
+    const ro = typeof ResizeObserver !== "undefined" && barRef.current ? new ResizeObserver(setH) : null;
+    if (ro) ro.observe(barRef.current);
+    window.addEventListener("resize", setH);
+    return () => {
+      if (ro) ro.disconnect();
+      window.removeEventListener("resize", setH);
+    };
+  }, [playing, livePadsOpen, settingsOpen, instruments]);
+
+  // Chord sketchpad: play a chord on tap through an independent sampler so the
+  // songwriter can audition progressions in the current key without starting
+  // the whole transport. Created lazily on first tap.
+  const [audChord, setAudChord] = useState(null); // which pad is flashing
+  const auditionChord = async ch => {
+    try {
+      await Tone.start();
+      const BASE = "https://philthemoser.github.io/qw-samples/";
+      if (!audRef.current) {
+        const lpf = new Tone.Filter({
+          type: "lowpass",
+          frequency: 11000
+        }).toDestination();
+        const shift = new Tone.PitchShift({
+          pitch: keyShift(keyRef.current),
+          windowSize: 0.1
+        }).connect(lpf);
+        const sampler = new Tone.Sampler({
+          urls: {
+            "C4": `${BASE}C.mp3`,
+            "D4": `${BASE}Dm.mp3`,
+            "E4": `${BASE}Em.mp3`,
+            "F4": `${BASE}F.mp3`,
+            "G4": `${BASE}G.mp3`,
+            "A4": `${BASE}Am.mp3`
+          },
+          release: 2
+        }).connect(shift);
+        sampler.volume.value = -4;
+        audRef.current = {
+          sampler,
+          shift,
+          lpf
+        };
+        await Tone.loaded();
+      }
+      // Keep the sketchpad in the current key
+      try {
+        audRef.current.shift.pitch = keyShift(keyRef.current);
+      } catch (e) {}
+      const C_MAJOR_ROOTS = ["C", "D", "E", "F", "G", "A", "B"];
+      const note = ch.sampleNote || (ch.degIdx >= 0 ? C_MAJOR_ROOTS[ch.degIdx] + "4" : ch.semis != null ? NOTES[ch.semis] + "5" : "C4");
+      audRef.current.sampler.triggerAttackRelease(note, 1.6);
+      setAudChord(ch.id);
+      setTimeout(() => setAudChord(a => a === ch.id ? null : a), 300);
+    } catch (e) {}
+  };
   const playFromSection = idx => {
     startFromRef.current = idx;
     startPlayback();
@@ -2533,7 +2620,7 @@ function App() {
     className: "hdr-btn",
     onClick: newSong
   }, "New"), /*#__PURE__*/React.createElement("button", {
-    className: `hdr-btn${!dirty && saveFlash ? " saved" : ""}`,
+    className: `hdr-btn${!dirty && saveFlash ? " saved" : ""}${dirty ? " unsaved" : ""}`,
     onClick: saveSong
   }, !dirty && saveFlash ? "Saved ✓" : "Save"), /*#__PURE__*/React.createElement("button", {
     className: "hdr-btn",
@@ -2702,12 +2789,122 @@ function App() {
     className: "ami sub",
     onClick: () => dupSec(s.id)
   }, "Copy \"", s.name, "\""))))), /*#__PURE__*/React.createElement("div", {
-    className: "bar"
+    className: "bar",
+    ref: barRef
+  }, !playing && livePadsOpen && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "12px 16px 8px",
+      borderBottom: `1px solid ${C.border}`
+    }
   }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "center",
+      marginBottom: 10
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "screen",
+    style: {
+      background: C.screenBg,
+      border: `1px solid ${C.screenTop}`,
+      borderBottomColor: C.screenBot,
+      borderRadius: 5,
+      padding: "5px 14px",
+      boxShadow: "inset 0 2px 5px #000c"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: "'Doto','Space Mono',monospace",
+      fontWeight: 900,
+      fontSize: 13,
+      color: C.lcd,
+      letterSpacing: ".08em",
+      textShadow: `0 0 8px ${C.acc}55`
+    }
+  }, key, " · TAP TO HEAR"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 8,
+      alignItems: "flex-start"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr 1fr",
+      gap: 6,
+      flex: 1
+    }
+  }, palette.filter(p => p.degIdx >= 0).map(p => {
+    const flash = audChord === p.id;
+    return /*#__PURE__*/React.createElement("button", {
+      key: p.id,
+      onClick: () => auditionChord(p),
+      style: {
+        border: "none",
+        cursor: "pointer",
+        borderRadius: 8,
+        padding: "14px 6px",
+        fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
+        fontWeight: 700,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 2,
+        color: flash ? "#0E1014" : "#fff",
+        background: flash ? `linear-gradient(180deg,#EAC062,${C.acc})` : `linear-gradient(180deg,${CHORD_COLOR},#5A554C)`,
+        boxShadow: flash ? `0 0 14px ${C.acc}88,inset 0 2px 0 #ffffff66,0 3px 0 #6e5220,0 5px 6px #0000002e` : "inset 0 2px 0 #ffffff22,0 4px 0 #3A362E,0 6px 7px #0000002e",
+        transform: flash ? "translateY(2px)" : "none",
+        transition: "all .06s"
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 15
+      }
+    }, p.label), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 8,
+        opacity: .8
+      }
+    }, p.roman));
+  })), palette.filter(p => p.degIdx < 0).length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 5,
+      width: 64,
+      flexShrink: 0
+    }
+  }, palette.filter(p => p.degIdx < 0).map(p => {
+    const flash = audChord === p.id;
+    return /*#__PURE__*/React.createElement("button", {
+      key: p.id,
+      onClick: () => auditionChord(p),
+      style: {
+        border: "none",
+        cursor: "pointer",
+        borderRadius: 8,
+        padding: "10px 4px",
+        fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
+        fontWeight: 700,
+        fontSize: 12,
+        color: flash ? "#0E1014" : "#fff",
+        background: flash ? `linear-gradient(180deg,#EAC062,${C.acc})` : `linear-gradient(180deg,${CHORD_COLOR},#5A554C)`,
+        boxShadow: flash ? `0 0 14px ${C.acc}88,inset 0 2px 0 #ffffff66,0 3px 0 #6e5220,0 5px 6px #0000002e` : "inset 0 2px 0 #ffffff22,0 3px 0 #3A362E,0 5px 6px #0000002e",
+        transform: flash ? "translateY(2px)" : "none",
+        transition: "all .06s"
+      }
+    }, p.label);
+  })))), /*#__PURE__*/React.createElement("div", {
     className: "mute-section"
-  }, playing && /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     onClick: () => {
-      setLiveMixerOpen(o => !o);
+      if (playing) {
+        setLiveMixerOpen(o => !o);
+        setLivePadsOpen(false);
+      } else {
+        setLivePadsOpen(o => !o);
+        setLiveMixerOpen(false);
+      }
       setLiveKeyOpen(false);
       setLiveTempoOpen(false);
     },
@@ -2733,7 +2930,7 @@ function App() {
       color: C.textMid,
       textTransform: "uppercase"
     }
-  }, "Mixer ", liveMixerOpen ? "▾" : "▴"), /*#__PURE__*/React.createElement("div", {
+  }, playing ? `Mixer ${liveMixerOpen ? "▾" : "▴"}` : `Chords ${livePadsOpen ? "▾" : "▴"}`), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       height: 1,
@@ -2751,29 +2948,32 @@ function App() {
   }) => instruments[k]).map(({
     k,
     lbl
-  }) => /*#__PURE__*/React.createElement("button", {
-    key: k,
-    className: "mute-btn",
-    style: liveMute[k] ? {
-      background: "linear-gradient(180deg,#FBFAF6,#E4E1D6)",
-      color: C.textDim,
-      fontWeight: 700,
-      boxShadow: "inset 0 2px 0 #ffffff10,0 5px 0 #A49E8C,0 7px 8px #0000002e"
-    } : {
-      background: `linear-gradient(180deg,#EAC062,${C.acc})`,
-      color: "#0E1014",
-      fontWeight: 700,
-      boxShadow: `0 0 12px ${C.acc}66,inset 0 2px 0 #ffffff66,0 5px 0 #6e5220,0 7px 8px #0000002e`
-    },
-    onClick: () => setLiveMute(m => ({
-      ...m,
-      [k]: !m[k]
-    }))
-  }, lbl)))), /*#__PURE__*/React.createElement("div", {
+  }) => {
+    const ic = INST_COLORS[k];
+    return /*#__PURE__*/React.createElement("button", {
+      key: k,
+      className: "mute-btn",
+      style: liveMute[k] ? {
+        background: "linear-gradient(180deg,#FBFAF6,#E4E1D6)",
+        color: C.textDim,
+        fontWeight: 700,
+        boxShadow: "inset 0 2px 0 #ffffff10,0 5px 0 #A49E8C,0 7px 8px #0000002e"
+      } : {
+        background: `linear-gradient(180deg,${ic}E6,${ic})`,
+        color: "#fff",
+        fontWeight: 700,
+        boxShadow: `0 0 10px ${ic}55,inset 0 2px 0 #ffffff44,0 5px 0 ${ic}66,0 7px 8px #0000002e`
+      },
+      onClick: () => setLiveMute(m => ({
+        ...m,
+        [k]: !m[k]
+      }))
+    }, lbl);
+  }))), /*#__PURE__*/React.createElement("div", {
     className: "bar-main"
   }, /*#__PURE__*/React.createElement("div", {
     className: "bar-left",
-    onClick: () => playing ? (setLiveKeyOpen(o => !o), setLiveMixerOpen(false), setLiveTempoOpen(false)) : setSettingsOpen(o => !o)
+    onClick: () => playing ? (setLiveKeyOpen(o => !o), setLiveMixerOpen(false), setLiveTempoOpen(false)) : setSettingsOpen(s => s === "left" ? null : "left")
   }, playing ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "bar-chord-name"
   }, resolved ? "—" : curChordObj ? chordDisplay(curChordObj) : "—"), /*#__PURE__*/React.createElement("div", {
@@ -2782,28 +2982,67 @@ function App() {
     className: "bar-chord-name"
   }, key), /*#__PURE__*/React.createElement("div", {
     className: "bar-chord-sub"
-  }, timeSig, " · tap"))), (() => {
+  }, "key · tap"))), (() => {
     // Previous / next setlist neighbours (by setlist order). Buttons are
     // always shown to hint at sequencing, greyed when unavailable.
     const idx = setlistIds.indexOf(songId);
     const prevSong = idx > 0 ? library.find(x => x.id === setlistIds[idx - 1]) : null;
     const nextSong = idx >= 0 && idx < setlistIds.length - 1 ? library.find(x => x.id === setlistIds[idx + 1]) : null;
-    const navBtn = (song, glyph, label) => /*#__PURE__*/React.createElement("button", {
+    const triColor = song => song ? C.acc : C.textDim;
+    const DoubleTri = ({
+      dir,
+      song
+    }) => {
+      const c = triColor(song);
+      const tri = dir === "prev" ? {
+        borderWidth: "5px 7px 5px 0",
+        borderColor: `transparent ${c} transparent transparent`
+      } : {
+        borderWidth: "5px 0 5px 7px",
+        borderColor: `transparent transparent transparent ${c}`
+      };
+      return /*#__PURE__*/React.createElement("span", {
+        style: {
+          display: "inline-flex",
+          gap: 1,
+          alignItems: "center"
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          width: 0,
+          height: 0,
+          borderStyle: "solid",
+          ...tri
+        }
+      }), /*#__PURE__*/React.createElement("span", {
+        style: {
+          width: 0,
+          height: 0,
+          borderStyle: "solid",
+          ...tri
+        }
+      }));
+    };
+    const navBtn = (song, dir, label) => /*#__PURE__*/React.createElement("button", {
       title: label,
       disabled: !song,
       className: "pad3d",
       style: {
-        color: song ? C.acc : C.textDim,
         width: 40,
         height: 40,
         borderRadius: 20,
-        fontSize: 14,
         flexShrink: 0,
-        opacity: song ? 1 : .35
+        opacity: song ? 1 : .35,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
       },
       onClick: () => song && playSetlistSong(song)
-    }, glyph);
-    return /*#__PURE__*/React.createElement(React.Fragment, null, navBtn(prevSong, "⏮", "Previous song"), /*#__PURE__*/React.createElement("button", {
+    }, /*#__PURE__*/React.createElement(DoubleTri, {
+      dir: dir,
+      song: song
+    }));
+    return /*#__PURE__*/React.createElement(React.Fragment, null, navBtn(prevSong, "prev", "Previous song"), /*#__PURE__*/React.createElement("button", {
       className: `pbtn${playing ? "" : " idle"}`,
       onClick: samplesLoading ? undefined : playing ? stopPlayback : startPlayback,
       disabled: samplesLoading,
@@ -2811,11 +3050,11 @@ function App() {
         opacity: .6,
         cursor: "wait"
       } : undefined
-    }, samplesLoading ? "⋯" : playing ? "■" : "▶"), navBtn(nextSong, "⏭", "Next song"));
+    }, samplesLoading ? "⋯" : playing ? "■" : "▶"), navBtn(nextSong, "next", "Next song"));
   })(), /*#__PURE__*/React.createElement("div", {
     className: "bar-right",
-    onClick: () => playing ? (setLiveTempoOpen(o => !o), setLiveMixerOpen(false), setLiveKeyOpen(false)) : setSettingsOpen(o => !o)
-  }, settingsOpen && !playing ? /*#__PURE__*/React.createElement("div", {
+    onClick: () => playing ? (setLiveTempoOpen(o => !o), setLiveMixerOpen(false), setLiveKeyOpen(false)) : setSettingsOpen(s => s === "right" ? null : "right")
+  }, settingsOpen === "right" && !playing ? /*#__PURE__*/React.createElement("div", {
     style: {
       textAlign: "right"
     }
@@ -2839,7 +3078,7 @@ function App() {
     className: "bar-bpm-num"
   }, bpm), /*#__PURE__*/React.createElement("div", {
     className: "bar-bpm-lbl"
-  }, "bpm"))))), playing && (liveKeyOpen || liveMixerOpen || liveTempoOpen) && /*#__PURE__*/React.createElement("div", {
+  }, "bpm · ", timeSig))))), (liveKeyOpen || liveMixerOpen || liveTempoOpen || livePadsOpen) && /*#__PURE__*/React.createElement("div", {
     style: {
       position: "fixed",
       inset: 0,
@@ -2849,6 +3088,7 @@ function App() {
       setLiveKeyOpen(false);
       setLiveMixerOpen(false);
       setLiveTempoOpen(false);
+      setLivePadsOpen(false);
     }
   }), playing && liveKeyOpen && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -3017,16 +3257,20 @@ function App() {
       ...m,
       [k]: Number(e.target.value)
     })),
-    className: "vfader"
+    className: "vfader",
+    style: {
+      accentColor: INST_COLORS[k]
+    }
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 10,
-      color: C.textDim
+      color: INST_COLORS[k],
+      fontWeight: 700
     }
   }, lbl)))))), /*#__PURE__*/React.createElement("div", {
     className: `backdrop${settingsOpen ? " open" : ""}`,
-    onClick: () => setSettingsOpen(false)
+    onClick: () => setSettingsOpen(null)
   }), /*#__PURE__*/React.createElement("div", {
     className: `sheet${settingsOpen ? " open" : ""}`
   }, /*#__PURE__*/React.createElement("div", {
@@ -3034,6 +3278,7 @@ function App() {
   }), /*#__PURE__*/React.createElement("div", {
     className: "sheet-inner"
   }, /*#__PURE__*/React.createElement(SettingsSheet, {
+    side: settingsOpen,
     keyN: key,
     setKey: setKey,
     scale: scale,
@@ -3049,7 +3294,9 @@ function App() {
     instruments: instruments,
     setInstruments: setInstruments,
     mix: mix,
-    setMix: setMix
+    setMix: setMix,
+    auditionChord: auditionChord,
+    audChord: audChord
   }))), /*#__PURE__*/React.createElement("div", {
     className: `backdrop${libraryOpen ? " open" : ""}`,
     onClick: () => setLibraryOpen(false)
@@ -3251,6 +3498,7 @@ function App() {
 
 // ─── Settings sheet ───────────────────────────────────────────────────────────
 function SettingsSheet({
+  side,
   keyN,
   setKey,
   scale,
@@ -3266,8 +3514,11 @@ function SettingsSheet({
   instruments,
   setInstruments,
   mix,
-  setMix
+  setMix,
+  auditionChord,
+  audChord
 }) {
+  const isRight = side === "right";
   const INST = [{
     k: "pad",
     lbl: "Pad"
@@ -3288,26 +3539,29 @@ function SettingsSheet({
     lbl: "Tamb"
   }];
   const PRESETS = [70, 76, 84, 130];
-  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "two",
+  return /*#__PURE__*/React.createElement("div", null, !isRight && /*#__PURE__*/React.createElement("div", {
+    className: "spine-card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "spine"
+  }, /*#__PURE__*/React.createElement("span", null, "Key")), /*#__PURE__*/React.createElement("div", {
+    className: "spine-body",
     style: {
-      marginBottom: 12
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center"
     }
   }, /*#__PURE__*/React.createElement("div", {
-    className: "card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "Key"), /*#__PURE__*/React.createElement("div", {
     className: "bpm-big",
     style: {
-      marginBottom: 8
+      marginBottom: 6,
+      padding: "8px 8px"
     }
   }, /*#__PURE__*/React.createElement("select", {
     style: {
       background: "none",
       border: "none",
       color: C.lcd,
-      fontSize: 44,
+      fontSize: 38,
       fontFamily: "'Doto','Space Mono',monospace",
       fontWeight: 900,
       outline: "none",
@@ -3316,6 +3570,7 @@ function SettingsSheet({
       padding: 0,
       width: "100%",
       textAlign: "center",
+      textAlignLast: "center",
       textShadow: `0 0 12px ${C.acc}44`
     },
     value: keyN,
@@ -3330,16 +3585,21 @@ function SettingsSheet({
   }, n)))), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-      fontSize: 10,
+      fontSize: 9,
       color: C.textDim,
-      letterSpacing: ".1em",
+      letterSpacing: ".08em",
       textAlign: "center"
     }
-  }, "MAJOR · for a minor song pick its relative major")), /*#__PURE__*/React.createElement("div", {
-    className: "card"
+  }, "MAJOR · for a minor song pick its relative major"))), isRight && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "spine-card"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "Tempo"), /*#__PURE__*/React.createElement("div", {
+    className: "spine"
+  }, /*#__PURE__*/React.createElement("span", null, "Tempo")), /*#__PURE__*/React.createElement("div", {
+    className: "spine-body",
+    style: {
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
     className: "bpm-big"
   }, bpm), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -3367,33 +3627,32 @@ function SettingsSheet({
     style: {
       display: "flex",
       gap: 4,
-      flexWrap: "wrap"
+      flexWrap: "wrap",
+      justifyContent: "center"
     }
   }, PRESETS.map(t => /*#__PURE__*/React.createElement("button", {
     key: t,
     className: `tp${bpm === t ? " on" : ""}`,
     onClick: () => setBpm(t)
   }, t))))), /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      marginBottom: 12
-    }
+    className: "spine-card"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "Time Signature"), /*#__PURE__*/React.createElement("div", {
+    className: "spine"
+  }, /*#__PURE__*/React.createElement("span", null, "Time Sig")), /*#__PURE__*/React.createElement("div", {
+    className: "spine-body"
+  }, /*#__PURE__*/React.createElement("div", {
     className: "ts-row"
   }, Object.keys(TIME_SIGS).map(ts => /*#__PURE__*/React.createElement("button", {
     key: ts,
     className: `ts-btn${timeSig === ts ? " on" : ""}`,
     onClick: () => setTimeSig(ts)
-  }, ts)))), /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      marginBottom: 12
-    }
+  }, ts)))))), !isRight && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "spine-card"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "Mixer"), INST.map(({
+    className: "spine"
+  }, /*#__PURE__*/React.createElement("span", null, "Mixer")), /*#__PURE__*/React.createElement("div", {
+    className: "spine-body"
+  }, INST.map(({
     k,
     lbl
   }) => {
@@ -3403,15 +3662,21 @@ function SettingsSheet({
       style: {
         display: "flex",
         alignItems: "center",
-        gap: 10,
-        marginBottom: 10
+        gap: 9,
+        marginBottom: 6
       }
     }, /*#__PURE__*/React.createElement("button", {
-      className: `btn sm${on ? "" : " muted"}`,
+      className: "btn sm",
       style: {
-        width: 64,
+        width: 60,
         flexShrink: 0,
-        textAlign: "center"
+        textAlign: "center",
+        padding: "5px 4px",
+        ...(on ? {
+          background: `linear-gradient(180deg,${INST_COLORS[k]}E6,${INST_COLORS[k]})`,
+          color: "#fff",
+          boxShadow: `0 0 8px ${INST_COLORS[k]}44,inset 0 1px 0 #ffffff44,0 3px 0 ${INST_COLORS[k]}66,0 4px 5px #0000002a`
+        } : {})
       },
       onClick: () => setInstruments(i => ({
         ...i,
@@ -3425,7 +3690,8 @@ function SettingsSheet({
       value: mix?.[k] ?? 75,
       disabled: !on,
       style: {
-        opacity: on ? 1 : .35
+        opacity: on ? 1 : .35,
+        accentColor: INST_COLORS[k]
       },
       onChange: e => setMix(m => ({
         ...m,
@@ -3436,19 +3702,18 @@ function SettingsSheet({
         fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
         fontSize: 11,
         color: on ? C.textMid : C.textDim,
-        width: 26,
+        width: 24,
         textAlign: "right",
         flexShrink: 0
       }
     }, mix?.[k] ?? 75));
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      marginBottom: 12
-    }
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "spine-card"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "card-title"
-  }, "Chord palette"), /*#__PURE__*/React.createElement("div", {
+    className: "spine"
+  }, /*#__PURE__*/React.createElement("span", null, "Chords")), /*#__PURE__*/React.createElement("div", {
+    className: "spine-body"
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       gap: 5,
@@ -3469,8 +3734,8 @@ function SettingsSheet({
     style: {
       cursor: "default",
       opacity: .85,
-      borderColor: degreeColor(p.degIdx) + "66",
-      color: degreeColor(p.degIdx)
+      borderColor: CHORD_COLOR + "66",
+      color: CHORD_COLOR
     }
   }, p.label), /*#__PURE__*/React.createElement("span", {
     style: {
@@ -3496,7 +3761,7 @@ function SettingsSheet({
   }, /*#__PURE__*/React.createElement("button", {
     className: `pal-btn extra${extraOn.includes(ex.label) ? " on" : ""}`,
     onClick: () => toggleExtra(ex)
-  }, extraOn.includes(ex.label) ? NOTES[(noteIdx(keyN) + ex.semis) % 12] : ex.label), /*#__PURE__*/React.createElement("span", {
+  }, extraOn.includes(ex.label) ? chordLabel(NOTES[(noteIdx(keyN) + ex.semis) % 12], ex.quality || "major") : ex.label), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 8,
@@ -3508,7 +3773,7 @@ function SettingsSheet({
       fontSize: 10,
       color: C.textDim
     }
-  }, "Diatonic always included · tap extras to add")));
+  }, "Diatonic always included · tap extras to add")))));
 }
 
 // ─── Section card ─────────────────────────────────────────────────────────────
@@ -3565,7 +3830,7 @@ function SecCard({
         key: `bd-${ci}`,
         className: "badge-div"
       }));
-      const col = degreeColor(ch.degIdx, ch.extraIdx);
+      const col = CHORD_COLOR;
       const isActive = isCur && ci === curChord;
       const isPulse = isActive && beatPulse;
       els.push(/*#__PURE__*/React.createElement("span", {
@@ -3760,8 +4025,8 @@ function SecCard({
     style: {
       fontSize: 13,
       padding: "6px 10px",
-      borderColor: degreeColor(p.degIdx, p.extraIdx) + "66",
-      color: degreeColor(p.degIdx, p.extraIdx)
+      borderColor: CHORD_COLOR + "66",
+      color: CHORD_COLOR
     },
     onClick: () => onAddChord(p)
   }, p.label), /*#__PURE__*/React.createElement("span", {
@@ -3818,7 +4083,7 @@ function BeatGrid({
       }
     });
     const ch = slot.chord;
-    const col = degreeColor(ch.degIdx, ch.extraIdx);
+    const col = CHORD_COLOR;
     const isActive = slot.chordIdx === curChord;
     const isPulse = isActive && beatPulse;
     const isSel = slot.chordIdx === selChord;
@@ -3945,22 +4210,28 @@ function DynPanel({
   const NameToggle = ({
     label,
     muted,
-    onTog
-  }) => /*#__PURE__*/React.createElement("button", {
-    className: muted ? "pad3d" : "pad3d-on",
-    style: {
-      fontWeight: 700,
-      fontSize: 11,
-      padding: "7px 10px",
-      borderRadius: 5,
-      width: 62,
-      flexShrink: 0,
-      textAlign: "center",
-      letterSpacing: ".04em",
-      color: muted ? C.textDim : "#2A2824"
-    },
-    onClick: onTog
-  }, label);
+    onTog,
+    ik
+  }) => {
+    const ic = INST_COLORS[ik] || C.acc;
+    return /*#__PURE__*/React.createElement("button", {
+      className: "pad3d",
+      style: {
+        fontWeight: 700,
+        fontSize: 11,
+        padding: "7px 10px",
+        borderRadius: 5,
+        width: 62,
+        flexShrink: 0,
+        textAlign: "center",
+        letterSpacing: ".04em",
+        color: muted ? C.textDim : "#fff",
+        background: muted ? undefined : `linear-gradient(180deg,${ic}E6,${ic})`,
+        boxShadow: muted ? undefined : `0 0 8px ${ic}44,inset 0 2px 0 #ffffff44,0 4px 0 ${ic}66,0 6px 7px #0000002a`
+      },
+      onClick: onTog
+    }, label);
+  };
   return /*#__PURE__*/React.createElement("div", {
     style: {
       paddingTop: 12,
@@ -3972,6 +4243,7 @@ function DynPanel({
     className: "dyn-row"
   }, /*#__PURE__*/React.createElement(NameToggle, {
     label: "Pad",
+    ik: "pad",
     muted: dyn.padMuted,
     onTog: () => onUpd({
       padMuted: !dyn.padMuted
@@ -4014,6 +4286,7 @@ function DynPanel({
     className: "dyn-row"
   }, /*#__PURE__*/React.createElement(NameToggle, {
     label: "Piano",
+    ik: "piano",
     muted: dyn.pianoMuted,
     onTog: () => onUpd({
       pianoMuted: !dyn.pianoMuted
@@ -4057,6 +4330,7 @@ function DynPanel({
     className: "dyn-row"
   }, /*#__PURE__*/React.createElement(NameToggle, {
     label: lbl,
+    ik: ik,
     muted: dyn[mk],
     onTog: () => onUpd({
       [mk]: !dyn[mk]
@@ -4070,8 +4344,12 @@ function DynPanel({
     }
   }, (dyn[sk] || []).map((on, i) => /*#__PURE__*/React.createElement("button", {
     key: i,
-    className: "step" + (on ? " on" : "") + (i > 0 && i % grpSize === 0 ? " grp-sep" : ""),
-    onClick: () => onTogStep(sk, i)
+    className: "step" + (i > 0 && i % grpSize === 0 ? " grp-sep" : ""),
+    onClick: () => onTogStep(sk, i),
+    style: on ? {
+      background: `linear-gradient(180deg,${INST_COLORS[ik]}E6,${INST_COLORS[ik]})`,
+      boxShadow: `0 0 8px ${INST_COLORS[ik]}66,inset 0 2px 0 #ffffff44,0 5px 0 ${INST_COLORS[ik]}66,0 7px 8px #0000002e`
+    } : undefined
   })))) : null));
 }
 
