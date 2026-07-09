@@ -1339,6 +1339,8 @@ html,body,#root{min-height:100%;background-color:${C.bg};}
 .tp:hover{border-color:${C.acc}88;color:${C.acc};}
 .tp.on{background:linear-gradient(180deg,#F4D48A,#E8C067);color:#2A2824;font-weight:700;box-shadow:inset 0 2px 0 #ffffff55,0 4px 0 #B89340,0 6px 7px #0000002a;}
 .tap-btn{background:linear-gradient(180deg,#FBFAF6,#E4E1D6);border:none;color:${C.text};padding:12px 22px;border-radius:6px;font-size:14px;cursor:pointer;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;letter-spacing:.08em;text-transform:uppercase;transition:all .08s;box-shadow:inset 0 2px 0 #ffffff22,0 5px 0 #A49E8C,0 7px 8px #0000002e;}
+.tempo-pm{background:linear-gradient(180deg,#FBFAF6,#E4E1D6);border:none;color:${C.text};width:44px;height:44px;border-radius:6px;font-size:22px;cursor:pointer;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;flex-shrink:0;transition:all .08s;box-shadow:inset 0 2px 0 #ffffff22,0 5px 0 #A49E8C,0 7px 8px #0000002e;}
+.tempo-pm:active{transform:translateY(4px);box-shadow:inset 0 2px 0 #ffffff14,0 1px 0 #A49E8C,0 2px 4px #0000001e;}
 .tap-btn:active{transform:translateY(4px);box-shadow:inset 0 2px 0 #ffffff1a,0 1px 0 #A49E8C,0 2px 4px #0000001e;}
 .tap-btn:active{border-color:${C.acc};background:${C.accLo};transform:scale(.97);}
 .bpm-big{font-size:44px;font-family:'Doto','Space Mono',monospace;font-weight:900;color:${C.lcd};line-height:1;text-align:center;background:#23211C;border:1px solid #141310;border-top-color:#0C0B08;border-bottom-color:#3A362C;border-radius:8px;box-shadow:inset 0 2px 8px #000c,inset 0 -1px 0 #ffffff08;padding:12px 8px;text-shadow:0 0 12px ${C.acc}44;}
@@ -1486,6 +1488,9 @@ function App() {
   const [curSec, setCurSec] = useState(0);
   const [curChord, setCurChord] = useState(0);
   const [beatPulse, setBeatPulse] = useState(false);
+  const [metroOn, setMetroOn] = useState(false); // metronome click on/off
+  const [metroPan, setMetroPan] = useState("center"); // center | left | right
+  const [metroVol, setMetroVol] = useState(70); // 0-100
   const [queued, setQueued] = useState(null);
   const [looping, setLooping] = useState(false);
   const [resolved, setResolved] = useState(false); // song played through — pad-only
@@ -1508,6 +1513,11 @@ function App() {
   const tsRef = useRef(timeSig);
   const keyRef = useRef(key);
   const pulseTimer = useRef(null);
+  const metroRef = useRef({
+    on: false,
+    pan: "center",
+    vol: 70
+  });
   useEffect(() => {
     secRef.current = sections;
   }, [sections]);
@@ -1523,6 +1533,25 @@ function App() {
   useEffect(() => {
     tsRef.current = timeSig;
   }, [timeSig]);
+  // Keep the metronome ref in sync and apply pan/volume live to its channel
+  useEffect(() => {
+    metroRef.current = {
+      on: metroOn,
+      pan: metroPan,
+      vol: metroVol
+    };
+    const eng = engRef.current;
+    if (eng && eng.metroPanner) {
+      try {
+        eng.metroPanner.pan.value = metroPan === "left" ? -1 : metroPan === "right" ? 1 : 0;
+      } catch (e) {}
+    }
+    if (eng && eng.metroSynth) {
+      try {
+        eng.metroSynth.volume.value = metroOn ? metroVol / 100 * 20 - 20 : -60;
+      } catch (e) {}
+    }
+  }, [metroOn, metroPan, metroVol]);
   useEffect(() => {
     keyRef.current = key;
     // Live capo: update the piano bus PitchShift when the key changes.
@@ -2424,6 +2453,22 @@ function App() {
       autostart: false
     }).toDestination();
     tambPlayer.volume.value = db(m.tamb, -8);
+
+    // ── Metronome — synthesised click, routed through its own panner so it can
+    // be sent to one side for silent-to-house monitoring on earbuds.
+    const mr = metroRef.current;
+    const metroPanner = new Tone.Panner(mr.pan === "left" ? -1 : mr.pan === "right" ? 1 : 0).toDestination();
+    const metroSynth = new Tone.MembraneSynth({
+      pitchDecay: 0.008,
+      octaves: 2,
+      envelope: {
+        attack: 0.001,
+        decay: 0.06,
+        sustain: 0,
+        release: 0.02
+      }
+    }).connect(metroPanner);
+    metroSynth.volume.value = mr.on ? mr.vol / 100 * 20 - 20 : -60;
     engRef.current = {
       padFilt,
       padHPF,
@@ -2434,7 +2479,9 @@ function App() {
       bassSynth,
       kickPlayer,
       shakerPlayer,
-      tambPlayer
+      tambPlayer,
+      metroSynth,
+      metroPanner
     };
 
     // CRITICAL: wait for all samples (piano, pad, percussion) to finish downloading
@@ -2503,6 +2550,15 @@ function App() {
           clearTimeout(pulseTimer.current);
           pulseTimer.current = setTimeout(() => setBeatPulse(false), 90);
         }, time);
+        // Metronome click on the quarter, higher pitch to accent the downbeat
+        if (metroRef.current.on) {
+          const eng = engRef.current;
+          if (eng && eng.metroSynth) {
+            try {
+              eng.metroSynth.triggerAttackRelease(ps.b === 0 ? "C5" : "G4", 0.03, time);
+            } catch (e) {}
+          }
+        }
       }
       if (active("kick") && !dyn.kickMuted && dyn.kickSteps[step]) {
         try {
@@ -3286,7 +3342,7 @@ function App() {
     style: {
       position: "fixed",
       left: 12,
-      bottom: 158,
+      bottom: "calc(var(--bar-h,110px) + 8px)",
       zIndex: 46,
       width: 220,
       pointerEvents: "auto"
@@ -3329,7 +3385,7 @@ function App() {
     style: {
       position: "fixed",
       right: 12,
-      bottom: 158,
+      bottom: "calc(var(--bar-h,110px) + 8px)",
       zIndex: 46,
       width: 84,
       pointerEvents: "auto"
@@ -3395,7 +3451,27 @@ function App() {
       color: C.text
     },
     onClick: () => nudgeBpm(-1)
-  }, "−"))), /*#__PURE__*/React.createElement("div", {
+  }, "−")), /*#__PURE__*/React.createElement("button", {
+    className: "pad3d",
+    onClick: () => setMetroOn(o => !o),
+    style: {
+      width: "100%",
+      marginTop: 8,
+      padding: "8px 6px",
+      borderRadius: 6,
+      fontWeight: 700,
+      fontSize: 11,
+      letterSpacing: ".08em",
+      textTransform: "uppercase",
+      ...(metroOn ? {
+        background: "linear-gradient(180deg,#EAC062," + C.acc + ")",
+        color: "#2A2824",
+        boxShadow: "inset 0 2px 0 #ffffff66,0 4px 0 #6e5220,0 6px 7px #0000002a"
+      } : {
+        color: C.textMid
+      })
+    }
+  }, "Metronome ", metroOn ? "On" : "Off")), /*#__PURE__*/React.createElement("div", {
     className: `backdrop${settingsOpen ? " open" : ""}`,
     onClick: () => setSettingsOpen(null)
   }), /*#__PURE__*/React.createElement("div", {
@@ -3422,6 +3498,12 @@ function App() {
     setInstruments: setInstruments,
     mix: mix,
     setMix: setMix,
+    metroOn: metroOn,
+    setMetroOn: setMetroOn,
+    metroPan: metroPan,
+    setMetroPan: setMetroPan,
+    metroVol: metroVol,
+    setMetroVol: setMetroVol,
     auditionChord: auditionChord,
     audChord: audChord
   }))), /*#__PURE__*/React.createElement("div", {
@@ -3679,6 +3761,12 @@ function SettingsSheet({
   setInstruments,
   mix,
   setMix,
+  metroOn,
+  setMetroOn,
+  metroPan,
+  setMetroPan,
+  metroVol,
+  setMetroVol,
   auditionChord,
   audChord
 }) {
@@ -3773,10 +3861,26 @@ function SettingsSheet({
       letterSpacing: ".12em",
       marginBottom: 8
     }
-  }, "BPM"), /*#__PURE__*/React.createElement("button", {
+  }, "BPM"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "tempo-pm",
+    onClick: () => setBpm(b => Math.max(40, b - 1))
+  }, "−"), /*#__PURE__*/React.createElement("button", {
     className: "tap-btn",
-    onClick: tap
-  }, "Tap"), /*#__PURE__*/React.createElement("input", {
+    onClick: tap,
+    style: {
+      margin: 0
+    }
+  }, "Tap"), /*#__PURE__*/React.createElement("button", {
+    className: "tempo-pm",
+    onClick: () => setBpm(b => Math.min(200, b + 1))
+  }, "+")), /*#__PURE__*/React.createElement("input", {
     type: "range",
     className: "slider",
     min: "40",
@@ -3810,7 +3914,107 @@ function SettingsSheet({
     key: ts,
     className: `ts-btn${timeSig === ts ? " on" : ""}`,
     onClick: () => setTimeSig(ts)
-  }, ts)))))), !isRight && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, ts))))), /*#__PURE__*/React.createElement("div", {
+    className: "spine-card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "spine"
+  }, /*#__PURE__*/React.createElement("span", null, "Metronome")), /*#__PURE__*/React.createElement("div", {
+    className: "spine-body"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 8,
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "pad3d",
+    onClick: () => setMetroOn(o => !o),
+    style: {
+      flex: 1,
+      padding: "9px 6px",
+      borderRadius: 6,
+      fontWeight: 700,
+      fontSize: 12,
+      letterSpacing: ".04em",
+      ...(metroOn ? {
+        background: "linear-gradient(180deg,#EAC062," + C.acc + ")",
+        color: "#2A2824",
+        boxShadow: "inset 0 2px 0 #ffffff66,0 4px 0 #6e5220,0 6px 7px #0000002a"
+      } : {
+        color: C.textMid
+      })
+    }
+  }, metroOn ? "On" : "Off")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 6,
+      marginBottom: 12
+    }
+  }, [["left", "L"], ["center", "Center"], ["right", "R"]].map(([val, lbl]) => {
+    const on = metroPan === val;
+    return /*#__PURE__*/React.createElement("button", {
+      key: val,
+      className: "pad3d",
+      onClick: () => setMetroPan(val),
+      style: {
+        flex: 1,
+        padding: "9px 6px",
+        borderRadius: 6,
+        fontWeight: 700,
+        fontSize: 12,
+        letterSpacing: ".04em",
+        ...(on ? {
+          background: "linear-gradient(180deg,#EAC062," + C.acc + ")",
+          color: "#2A2824",
+          boxShadow: "inset 0 2px 0 #ffffff66,0 4px 0 #6e5220,0 6px 7px #0000002a"
+        } : {
+          color: C.textMid
+        })
+      }
+    }, lbl);
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
+      fontSize: 9,
+      color: C.textDim,
+      letterSpacing: ".1em",
+      width: 34,
+      flexShrink: 0
+    }
+  }, "VOL"), /*#__PURE__*/React.createElement("input", {
+    type: "range",
+    className: "mix-slider",
+    min: "0",
+    max: "100",
+    value: metroVol,
+    style: {
+      accentColor: C.acc
+    },
+    onChange: e => setMetroVol(Number(e.target.value))
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
+      fontSize: 11,
+      color: C.textMid,
+      width: 24,
+      textAlign: "right",
+      flexShrink: 0
+    }
+  }, metroVol)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
+      fontSize: 9,
+      color: C.textDim,
+      marginTop: 10,
+      lineHeight: 1.5
+    }
+  }, "Send to one side to hear the click on an earbud without it reaching the room.")))), !isRight && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "spine-card"
   }, /*#__PURE__*/React.createElement("div", {
     className: "spine"
