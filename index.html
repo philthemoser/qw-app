@@ -334,10 +334,10 @@ const DEFAULT_MIX = {
   tamb: 60
 };
 const DEMO_SONG = {
-  "title": "Holy forever",
+  "title": "Demo song",
   "key": "C",
   "scale": "major",
-  "bpm": 70,
+  "bpm": 76,
   "timeSig": "4/4",
   "palette": [{
     "id": "d-C-major-0",
@@ -408,12 +408,12 @@ const DEMO_SONG = {
   }],
   "extraOn": [],
   "mix": {
-    "pad": 37,
-    "piano": 70,
+    "pad": 75,
+    "piano": 85,
     "bass": 75,
-    "kick": 32,
-    "shaker": 7,
-    "tamb": 31
+    "kick": 33,
+    "shaker": 5,
+    "tamb": 29
   },
   "instruments": {
     "pad": true,
@@ -424,11 +424,11 @@ const DEMO_SONG = {
     "tamb": true
   },
   "sections": [{
-    "id": "cwzv3y",
-    "name": "Intro",
-    "repeats": 1,
+    "id": "dgc5km",
+    "name": "Only pad",
+    "repeats": 2,
     "chords": [{
-      "id": "brvn0t",
+      "id": "yh2mh3",
       "label": "C",
       "roman": "I",
       "root": "C",
@@ -444,89 +444,63 @@ const DEMO_SONG = {
     "dyn": {
       "intensity": 30,
       "padMuted": false,
-      "padFilter": 33,
+      "padFilter": 44,
       "pianoMuted": true,
       "pianoFilter": 44,
       "bassMuted": true,
-      "bassSteps": [0, 0, 0, 0, 0, 0, 0, 0],
+      "bassSteps": [1, 0, 0, 0, 0, 0, 0, 0],
       "kickMuted": true,
-      "kickSteps": [0, 0, 0, 0, 0, 0, 0, 0],
+      "kickSteps": [1, 0, 0, 0, 1, 0, 0, 0],
       "shakerMuted": true,
-      "shakerSteps": [0, 0, 0, 0, 0, 0, 0, 0],
+      "shakerSteps": [1, 0, 0, 0, 0, 0, 0, 0],
       "tambMuted": true,
       "tambSteps": [0, 0, 0, 0, 0, 0, 0, 0]
     }
   }, {
-    "id": "1igx7v",
-    "name": "Verse",
-    "repeats": 2,
+    "id": "kllpxy",
+    "name": "Add piano",
+    "repeats": 1,
     "chords": [{
-      "id": "0rkatp",
-      "root": "C",
-      "quality": "major",
-      "label": "C",
-      "roman": "I",
-      "third": "E",
-      "fifth": "G",
-      "degIdx": 0,
-      "extraIdx": 0,
-      "sampleNote": "C4",
+      "id": "k5w7ra",
+      "label": "Dm",
+      "roman": "ii",
+      "root": "D",
+      "quality": "minor",
+      "third": "F",
+      "fifth": "A",
       "beats": 4,
-      "inversion": "root"
-    }, {
-      "id": "z6doph",
-      "root": "F",
-      "quality": "major",
-      "label": "F",
-      "roman": "IV",
-      "third": "A",
-      "fifth": "C",
-      "degIdx": 3,
+      "inversion": "root",
+      "degIdx": 1,
       "extraIdx": 0,
-      "sampleNote": "F4",
-      "beats": 2,
-      "inversion": "root"
+      "sampleNote": "D4"
     }, {
-      "id": "lbsm38",
-      "root": "C",
-      "quality": "major",
-      "label": "C",
-      "roman": "I",
-      "third": "E",
-      "fifth": "G",
-      "degIdx": 0,
-      "extraIdx": 0,
-      "sampleNote": "C4",
-      "beats": 2,
-      "inversion": "root"
-    }, {
-      "id": "yg6ceo",
+      "id": "94l875",
       "label": "Am",
       "roman": "vi",
       "root": "A",
       "quality": "minor",
       "third": "C",
       "fifth": "E",
-      "beats": 2,
+      "beats": 4,
       "inversion": "root",
       "degIdx": 5,
       "extraIdx": 0,
       "sampleNote": "A4"
     }, {
-      "id": "ljfoh0",
-      "root": "G",
+      "id": "789dks",
+      "label": "C",
+      "roman": "I",
+      "root": "C",
       "quality": "major",
-      "label": "G",
-      "roman": "V",
-      "third": "B",
-      "fifth": "D",
-      "degIdx": 4,
+      "third": "E",
+      "fifth": "G",
+      "beats": 4,
+      "inversion": "root",
+      "degIdx": 0,
       "extraIdx": 0,
-      "sampleNote": "G4",
-      "beats": 2,
-      "inversion": "root"
+      "sampleNote": "C4"
     }, {
-      "id": "iemdin",
+      "id": "iozur9",
       "label": "F",
       "roman": "IV",
       "root": "F",
@@ -545,21 +519,86 @@ const DEMO_SONG = {
       "padFilter": 44,
       "pianoMuted": false,
       "pianoFilter": 44,
-      "bassMuted": false,
-      "bassSteps": [1, 0, 0, 0, 0, 0, 0, 1],
-      "kickMuted": false,
-      "kickSteps": [1, 0, 0, 0, 0, 0, 0, 0],
-      "shakerMuted": false,
-      "shakerSteps": [0, 0, 0, 0, 0, 0, 0, 0],
-      "tambMuted": false,
+      "bassMuted": true,
+      "bassSteps": [1, 0, 0, 0, 0, 0, 0, 0],
+      "kickMuted": true,
+      "kickSteps": [1, 0, 0, 0, 1, 0, 0, 0],
+      "shakerMuted": true,
+      "shakerSteps": [1, 0, 0, 0, 0, 0, 0, 0],
+      "tambMuted": true,
       "tambSteps": [0, 0, 0, 0, 0, 0, 0, 0]
     }
   }, {
-    "id": "ip9iaq",
-    "name": "Pre-Chorus",
+    "id": "vir1mf",
+    "name": "Add bass",
     "repeats": 1,
     "chords": [{
-      "id": "8qe294",
+      "id": "k5w7ra",
+      "label": "Dm",
+      "roman": "ii",
+      "root": "D",
+      "quality": "minor",
+      "third": "F",
+      "fifth": "A",
+      "beats": 3,
+      "inversion": "root",
+      "degIdx": 1,
+      "extraIdx": 0,
+      "sampleNote": "D4"
+    }, {
+      "id": "qmeswu",
+      "label": "Dm",
+      "roman": "ii",
+      "root": "D",
+      "quality": "minor",
+      "third": "F",
+      "fifth": "A",
+      "beats": 1,
+      "inversion": "3rd",
+      "degIdx": 1,
+      "extraIdx": 0,
+      "sampleNote": "D4"
+    }, {
+      "id": "94l875",
+      "label": "Am",
+      "roman": "vi",
+      "root": "A",
+      "quality": "minor",
+      "third": "C",
+      "fifth": "E",
+      "beats": 4,
+      "inversion": "root",
+      "degIdx": 5,
+      "extraIdx": 0,
+      "sampleNote": "A4"
+    }, {
+      "id": "789dks",
+      "label": "C",
+      "roman": "I",
+      "root": "C",
+      "quality": "major",
+      "third": "E",
+      "fifth": "G",
+      "beats": 2,
+      "inversion": "3rd",
+      "degIdx": 0,
+      "extraIdx": 0,
+      "sampleNote": "C4"
+    }, {
+      "id": "85gg9g",
+      "label": "C",
+      "roman": "I",
+      "root": "C",
+      "quality": "major",
+      "third": "E",
+      "fifth": "G",
+      "beats": 2,
+      "inversion": "5th",
+      "degIdx": 0,
+      "extraIdx": 0,
+      "sampleNote": "C4"
+    }, {
+      "id": "iozur9",
       "label": "F",
       "roman": "IV",
       "root": "F",
@@ -567,488 +606,136 @@ const DEMO_SONG = {
       "third": "A",
       "fifth": "C",
       "beats": 3,
-      "inversion": "root",
+      "inversion": "3rd",
       "degIdx": 3,
       "extraIdx": 0,
       "sampleNote": "F4"
     }, {
-      "id": "e4vmjn",
-      "label": "Am",
-      "roman": "vi",
-      "root": "A",
-      "quality": "minor",
-      "third": "C",
-      "fifth": "E",
+      "id": "juopuo",
+      "label": "G",
+      "roman": "V",
+      "root": "G",
+      "quality": "major",
+      "third": "B",
+      "fifth": "D",
       "beats": 1,
-      "inversion": "root",
-      "degIdx": 5,
-      "extraIdx": 0,
-      "sampleNote": "A4"
-    }, {
-      "id": "my8vd2",
-      "label": "G",
-      "roman": "V",
-      "root": "G",
-      "quality": "major",
-      "third": "B",
-      "fifth": "D",
-      "beats": 4,
-      "inversion": "root",
+      "inversion": "3rd",
       "degIdx": 4,
       "extraIdx": 0,
       "sampleNote": "G4"
-    }, {
-      "id": "q01wjd",
-      "label": "Am",
-      "roman": "vi",
-      "root": "A",
-      "quality": "minor",
-      "third": "C",
-      "fifth": "E",
-      "beats": 4,
-      "inversion": "root",
-      "degIdx": 5,
-      "extraIdx": 0,
-      "sampleNote": "A4"
-    }, {
-      "id": "2sk17n",
-      "label": "F",
-      "roman": "IV",
-      "root": "F",
-      "quality": "major",
-      "third": "A",
-      "fifth": "C",
-      "beats": 4,
-      "inversion": "root",
-      "degIdx": 3,
-      "extraIdx": 0,
-      "sampleNote": "F4"
-    }, {
-      "id": "s6wf72",
-      "label": "F",
-      "roman": "IV",
-      "root": "F",
-      "quality": "major",
-      "third": "A",
-      "fifth": "C",
-      "beats": 3,
-      "inversion": "root",
-      "degIdx": 3,
-      "extraIdx": 0,
-      "sampleNote": "F4"
-    }, {
-      "id": "051y39",
-      "label": "Am",
-      "roman": "vi",
-      "root": "A",
-      "quality": "minor",
-      "third": "C",
-      "fifth": "E",
-      "beats": 1,
-      "inversion": "root",
-      "degIdx": 5,
-      "extraIdx": 0,
-      "sampleNote": "A4"
-    }, {
-      "id": "s5h3tj",
-      "label": "G",
-      "roman": "V",
-      "root": "G",
-      "quality": "major",
-      "third": "B",
-      "fifth": "D",
-      "beats": 4,
-      "inversion": "root",
-      "degIdx": 4,
-      "extraIdx": 0,
-      "sampleNote": "G4"
-    }, {
-      "id": "a8q6o0",
-      "label": "Am",
-      "roman": "vi",
-      "root": "A",
-      "quality": "minor",
-      "third": "C",
-      "fifth": "E",
-      "beats": 4,
-      "inversion": "root",
-      "degIdx": 5,
-      "extraIdx": 0,
-      "sampleNote": "A4"
-    }, {
-      "id": "h3ci6z",
-      "label": "Dm",
-      "roman": "ii",
-      "root": "D",
-      "quality": "minor",
-      "third": "F",
-      "fifth": "A",
-      "beats": 4,
-      "inversion": "root",
-      "degIdx": 1,
-      "extraIdx": 0,
-      "sampleNote": "D4"
     }],
     "dyn": {
-      "intensity": 30,
+      "intensity": 91,
       "padMuted": false,
-      "padFilter": 44,
+      "padFilter": 93,
       "pianoMuted": false,
-      "pianoFilter": 44,
+      "pianoFilter": 93,
       "bassMuted": false,
-      "bassSteps": [1, 0, 0, 1, 0, 0, 1, 0],
-      "kickMuted": false,
-      "kickSteps": [1, 0, 0, 0, 1, 0, 0, 0],
-      "shakerMuted": false,
-      "shakerSteps": [0, 0, 0, 0, 0, 0, 0, 0],
-      "tambMuted": false,
-      "tambSteps": [0, 0, 0, 0, 1, 0, 0, 0]
-    }
-  }, {
-    "id": "44od4n",
-    "name": "Chorus",
-    "repeats": 2,
-    "chords": [{
-      "id": "mv27c8",
-      "root": "F",
-      "quality": "major",
-      "label": "F",
-      "roman": "IV",
-      "third": "A",
-      "fifth": "C",
-      "degIdx": 3,
-      "extraIdx": 0,
-      "sampleNote": "F4",
-      "beats": 4,
-      "inversion": "root"
-    }, {
-      "id": "ef5n52",
-      "root": "G",
-      "quality": "major",
-      "label": "G",
-      "roman": "V",
-      "third": "B",
-      "fifth": "D",
-      "degIdx": 4,
-      "extraIdx": 0,
-      "sampleNote": "G4",
-      "beats": 4,
-      "inversion": "root"
-    }, {
-      "id": "j8lknf",
-      "root": "C",
-      "quality": "major",
-      "label": "C",
-      "roman": "I",
-      "third": "E",
-      "fifth": "G",
-      "degIdx": 0,
-      "extraIdx": 0,
-      "sampleNote": "C4",
-      "beats": 4,
-      "inversion": "3rd"
-    }, {
-      "id": "nmjfxm",
-      "root": "A",
-      "quality": "minor",
-      "label": "Am",
-      "roman": "vi",
-      "third": "C",
-      "fifth": "E",
-      "degIdx": 5,
-      "extraIdx": 0,
-      "sampleNote": "A4",
-      "beats": 4,
-      "inversion": "root"
-    }, {
-      "id": "r9hm91",
-      "label": "Dm",
-      "roman": "ii",
-      "root": "D",
-      "quality": "minor",
-      "third": "F",
-      "fifth": "A",
-      "beats": 4,
-      "inversion": "root",
-      "degIdx": 1,
-      "extraIdx": 0,
-      "sampleNote": "D4"
-    }, {
-      "id": "5oba58",
-      "label": "G",
-      "roman": "V",
-      "root": "G",
-      "quality": "major",
-      "third": "B",
-      "fifth": "D",
-      "beats": 4,
-      "inversion": "root",
-      "degIdx": 4,
-      "extraIdx": 0,
-      "sampleNote": "G4"
-    }, {
-      "id": "fcculw",
-      "label": "C",
-      "roman": "I",
-      "root": "C",
-      "quality": "major",
-      "third": "E",
-      "fifth": "G",
-      "beats": 4,
-      "inversion": "root",
-      "degIdx": 0,
-      "extraIdx": 0,
-      "sampleNote": "C4"
-    }, {
-      "id": "ste2vk",
-      "label": "C",
-      "roman": "I",
-      "root": "C",
-      "quality": "major",
-      "third": "E",
-      "fifth": "G",
-      "beats": 4,
-      "inversion": "root",
-      "degIdx": 0,
-      "extraIdx": 0,
-      "sampleNote": "C4"
-    }],
-    "dyn": {
-      "intensity": 30,
-      "padMuted": false,
-      "padFilter": 68,
-      "pianoMuted": false,
-      "pianoFilter": 68,
-      "bassMuted": false,
-      "bassSteps": [1, 0, 0, 1, 0, 0, 1, 0],
-      "kickMuted": false,
-      "kickSteps": [1, 0, 1, 0, 1, 0, 1, 0],
-      "shakerMuted": false,
-      "shakerSteps": [0, 0, 1, 0, 0, 0, 1, 0],
-      "tambMuted": false,
-      "tambSteps": [0, 0, 0, 0, 1, 0, 0, 0]
-    }
-  }, {
-    "id": "ffwamp",
-    "name": "Verse II",
-    "repeats": 2,
-    "chords": [{
-      "id": "0rkatp",
-      "root": "C",
-      "quality": "major",
-      "label": "C",
-      "roman": "I",
-      "third": "E",
-      "fifth": "G",
-      "degIdx": 0,
-      "extraIdx": 0,
-      "sampleNote": "C4",
-      "beats": 4,
-      "inversion": "root"
-    }, {
-      "id": "z6doph",
-      "root": "F",
-      "quality": "major",
-      "label": "F",
-      "roman": "IV",
-      "third": "A",
-      "fifth": "C",
-      "degIdx": 3,
-      "extraIdx": 0,
-      "sampleNote": "F4",
-      "beats": 2,
-      "inversion": "root"
-    }, {
-      "id": "lbsm38",
-      "root": "C",
-      "quality": "major",
-      "label": "C",
-      "roman": "I",
-      "third": "E",
-      "fifth": "G",
-      "degIdx": 0,
-      "extraIdx": 0,
-      "sampleNote": "C4",
-      "beats": 2,
-      "inversion": "root"
-    }, {
-      "id": "yg6ceo",
-      "label": "Am",
-      "roman": "vi",
-      "root": "A",
-      "quality": "minor",
-      "third": "C",
-      "fifth": "E",
-      "beats": 2,
-      "inversion": "root",
-      "degIdx": 5,
-      "extraIdx": 0,
-      "sampleNote": "A4"
-    }, {
-      "id": "ljfoh0",
-      "root": "G",
-      "quality": "major",
-      "label": "G",
-      "roman": "V",
-      "third": "B",
-      "fifth": "D",
-      "degIdx": 4,
-      "extraIdx": 0,
-      "sampleNote": "G4",
-      "beats": 2,
-      "inversion": "root"
-    }, {
-      "id": "iemdin",
-      "label": "F",
-      "roman": "IV",
-      "root": "F",
-      "quality": "major",
-      "third": "A",
-      "fifth": "C",
-      "beats": 4,
-      "inversion": "root",
-      "degIdx": 3,
-      "extraIdx": 0,
-      "sampleNote": "F4"
-    }],
-    "dyn": {
-      "intensity": 30,
-      "padMuted": false,
-      "padFilter": 79,
-      "pianoMuted": false,
-      "pianoFilter": 78,
-      "bassMuted": false,
-      "bassSteps": [1, 0, 1, 0, 1, 0, 1, 0],
-      "kickMuted": false,
-      "kickSteps": [1, 0, 1, 0, 1, 0, 1, 0],
-      "shakerMuted": false,
-      "shakerSteps": [1, 1, 1, 1, 1, 1, 1, 1],
-      "tambMuted": false,
-      "tambSteps": [0, 0, 0, 0, 1, 0, 0, 0]
-    }
-  }, {
-    "id": "j37kkn",
-    "name": "Chorus II",
-    "repeats": 2,
-    "chords": [{
-      "id": "mv27c8",
-      "root": "F",
-      "quality": "major",
-      "label": "F",
-      "roman": "IV",
-      "third": "A",
-      "fifth": "C",
-      "degIdx": 3,
-      "extraIdx": 0,
-      "sampleNote": "F4",
-      "beats": 4,
-      "inversion": "root"
-    }, {
-      "id": "ef5n52",
-      "root": "G",
-      "quality": "major",
-      "label": "G",
-      "roman": "V",
-      "third": "B",
-      "fifth": "D",
-      "degIdx": 4,
-      "extraIdx": 0,
-      "sampleNote": "G4",
-      "beats": 4,
-      "inversion": "root"
-    }, {
-      "id": "j8lknf",
-      "root": "C",
-      "quality": "major",
-      "label": "C",
-      "roman": "I",
-      "third": "E",
-      "fifth": "G",
-      "degIdx": 0,
-      "extraIdx": 0,
-      "sampleNote": "C4",
-      "beats": 4,
-      "inversion": "3rd"
-    }, {
-      "id": "nmjfxm",
-      "root": "A",
-      "quality": "minor",
-      "label": "Am",
-      "roman": "vi",
-      "third": "C",
-      "fifth": "E",
-      "degIdx": 5,
-      "extraIdx": 0,
-      "sampleNote": "A4",
-      "beats": 4,
-      "inversion": "root"
-    }, {
-      "id": "r9hm91",
-      "label": "Dm",
-      "roman": "ii",
-      "root": "D",
-      "quality": "minor",
-      "third": "F",
-      "fifth": "A",
-      "beats": 4,
-      "inversion": "root",
-      "degIdx": 1,
-      "extraIdx": 0,
-      "sampleNote": "D4"
-    }, {
-      "id": "5oba58",
-      "label": "G",
-      "roman": "V",
-      "root": "G",
-      "quality": "major",
-      "third": "B",
-      "fifth": "D",
-      "beats": 4,
-      "inversion": "root",
-      "degIdx": 4,
-      "extraIdx": 0,
-      "sampleNote": "G4"
-    }, {
-      "id": "fcculw",
-      "label": "C",
-      "roman": "I",
-      "root": "C",
-      "quality": "major",
-      "third": "E",
-      "fifth": "G",
-      "beats": 4,
-      "inversion": "root",
-      "degIdx": 0,
-      "extraIdx": 0,
-      "sampleNote": "C4"
-    }, {
-      "id": "ste2vk",
-      "label": "C",
-      "roman": "I",
-      "root": "C",
-      "quality": "major",
-      "third": "E",
-      "fifth": "G",
-      "beats": 4,
-      "inversion": "root",
-      "degIdx": 0,
-      "extraIdx": 0,
-      "sampleNote": "C4"
-    }],
-    "dyn": {
-      "intensity": 85,
-      "padMuted": false,
-      "padFilter": 88,
-      "pianoMuted": false,
-      "pianoFilter": 88,
-      "bassMuted": false,
-      "bassSteps": [1, 0, 1, 0, 1, 0, 1, 0],
-      "kickMuted": false,
+      "bassSteps": [1, 0, 0, 0, 1, 0, 1, 0],
+      "kickMuted": true,
       "kickSteps": [1, 0, 1, 1, 0, 1, 1, 0],
-      "shakerMuted": false,
-      "shakerSteps": [1, 1, 1, 1, 1, 1, 1, 1],
-      "tambMuted": false,
+      "shakerMuted": true,
+      "shakerSteps": [1, 0, 1, 0, 1, 0, 1, 0],
+      "tambMuted": true,
       "tambSteps": [1, 0, 0, 1, 0, 0, 1, 0]
+    }
+  }, {
+    "id": "j4p9n1",
+    "name": "Add percussion",
+    "repeats": 1,
+    "chords": [{
+      "id": "k5w7ra",
+      "label": "Dm",
+      "roman": "ii",
+      "root": "D",
+      "quality": "minor",
+      "third": "F",
+      "fifth": "A",
+      "beats": 3,
+      "inversion": "root",
+      "degIdx": 1,
+      "extraIdx": 0,
+      "sampleNote": "D4"
+    }, {
+      "id": "qmeswu",
+      "label": "Dm",
+      "roman": "ii",
+      "root": "D",
+      "quality": "minor",
+      "third": "F",
+      "fifth": "A",
+      "beats": 1,
+      "inversion": "root",
+      "degIdx": 1,
+      "extraIdx": 0,
+      "sampleNote": "D4"
+    }, {
+      "id": "94l875",
+      "label": "Am",
+      "roman": "vi",
+      "root": "A",
+      "quality": "minor",
+      "third": "C",
+      "fifth": "E",
+      "beats": 4,
+      "inversion": "root",
+      "degIdx": 5,
+      "extraIdx": 0,
+      "sampleNote": "A4"
+    }, {
+      "id": "789dks",
+      "label": "C",
+      "roman": "I",
+      "root": "C",
+      "quality": "major",
+      "third": "E",
+      "fifth": "G",
+      "beats": 2,
+      "inversion": "3rd",
+      "degIdx": 0,
+      "extraIdx": 0,
+      "sampleNote": "C4"
+    }, {
+      "id": "85gg9g",
+      "label": "C",
+      "roman": "I",
+      "root": "C",
+      "quality": "major",
+      "third": "E",
+      "fifth": "G",
+      "beats": 2,
+      "inversion": "5th",
+      "degIdx": 0,
+      "extraIdx": 0,
+      "sampleNote": "C4"
+    }, {
+      "id": "f4gkfm",
+      "label": "G",
+      "roman": "V",
+      "root": "G",
+      "quality": "major",
+      "third": "B",
+      "fifth": "D",
+      "beats": 4,
+      "inversion": "root",
+      "degIdx": 4,
+      "extraIdx": 0,
+      "sampleNote": "G4"
+    }],
+    "dyn": {
+      "intensity": 97,
+      "padMuted": false,
+      "padFilter": 98,
+      "pianoMuted": false,
+      "pianoFilter": 98,
+      "bassMuted": false,
+      "bassSteps": [1, 0, 1, 0, 1, 0, 1, 0],
+      "kickMuted": false,
+      "kickSteps": [1, 0, 0, 1, 1, 0, 1, 0],
+      "shakerMuted": false,
+      "shakerSteps": [1, 0, 1, 0, 1, 0, 1, 0],
+      "tambMuted": false,
+      "tambSteps": [0, 0, 0, 1, 0, 0, 0, 0]
     }
   }]
 };
@@ -1086,13 +773,13 @@ const defaultDyn = (ts = "4/4") => {
     padFilter: 44,
     pianoMuted: false,
     pianoFilter: 44,
-    bassMuted: false,
+    bassMuted: true,
     bassSteps: euclidean(n, 1),
-    kickMuted: false,
+    kickMuted: true,
     kickSteps: euclidean(n, 2),
-    shakerMuted: false,
+    shakerMuted: true,
     shakerSteps: euclidean(n, 1),
-    tambMuted: false,
+    tambMuted: true,
     tambSteps: Array(n).fill(0)
   };
 };
@@ -1139,10 +826,11 @@ const G = `
 body{background-color:${C.bg};background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");color:${C.text};font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;-webkit-font-smoothing:antialiased;}
 input,select,button{font-family:inherit;}
 html,body,#root{min-height:100%;background-color:${C.bg};}
-.app{max-width:680px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top)) 14px 170px;min-height:100vh;background-color:${C.bg};background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");}
+.app{max-width:680px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top)) 14px calc(var(--bar-h,150px) + 40px);min-height:100vh;background-color:${C.bg};background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");}
 .notch-bar{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:${C.bg};z-index:200;}
 
 .bar{position:fixed;bottom:0;left:0;right:0;z-index:90;background:#CFCCBF;border-top:1px solid #B4AF9E;box-shadow:0 -2px 12px #00000018;}
+.bar-inner{max-width:680px;margin:0 auto;}
 .bar-main{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;gap:6px;}
 .bar-left{width:104px;flex-shrink:0;min-width:0;cursor:pointer;background:#23211C;border:1px solid #141310;border-top-color:#0C0B08;border-bottom-color:#3A362C;border-radius:6px;padding:7px 10px;box-shadow:inset 0 2px 6px #000c,inset 0 -1px 0 #ffffff08;}
 .bar-left:active{border-color:${C.acc};}
@@ -1208,9 +896,9 @@ html,body,#root{min-height:100%;background-color:${C.bg};}
 
 .backdrop{position:fixed;inset:0;bottom:var(--bar-h,110px);background:#00000088;z-index:70;opacity:0;transition:opacity .25s;pointer-events:none;}
 .backdrop.open{opacity:1;pointer-events:all;}
-.sheet{position:fixed;bottom:var(--bar-h,110px);left:0;right:0;z-index:80;background:${C.surf};border-top:1px solid ${C.border};border-radius:14px 14px 0 0;max-height:calc(100vh - var(--bar-h,110px) - env(safe-area-inset-top) - 8px);overflow-y:auto;transform:translateY(100%);transition:transform .28s cubic-bezier(.32,0,.18,1);}
+.sheet{position:fixed;bottom:var(--bar-h,110px);left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:680px;z-index:80;background:${C.surf};border-top:1px solid ${C.border};border-radius:14px 14px 0 0;max-height:calc(100vh - var(--bar-h,110px) - env(safe-area-inset-top) - 8px);overflow-y:auto;transition:transform .28s cubic-bezier(.32,0,.18,1);}
+.sheet.open{transform:translateX(-50%) translateY(0);}
 .library-sheet{min-height:56vh;}
-.sheet.open{transform:translateY(0);}
 .sheet-handle{width:36px;height:4px;background:${C.border};border-radius:2px;margin:10px auto 14px;}
 .sheet-inner{padding:0 16px 24px;}
 
@@ -1221,7 +909,7 @@ html,body,#root{min-height:100%;background-color:${C.bg};}
 .sec.s-queued{border-color:${C.accDim};}
 
 .sec-hdr{display:flex;align-items:center;padding:10px 10px 6px;gap:0;}
-.sec-name-inp{background:#23211C;border:1px solid #141310;border-top-color:#0C0B08;border-bottom-color:#3A362C;color:${C.lcd};font-size:13px;font-weight:700;font-family:'Doto','Space Mono',monospace;text-transform:uppercase;letter-spacing:.02em;padding:5px 9px;outline:none;width:104px;flex-shrink:0;border-radius:5px;box-shadow:inset 0 1px 4px #000a;text-shadow:0 0 6px ${C.acc}22;}
+.sec-name-inp{background:#23211C;border:1px solid #141310;border-top-color:#0C0B08;border-bottom-color:#3A362C;color:${C.lcd};font-size:13px;font-weight:700;font-family:'Doto','Space Mono',monospace;text-transform:uppercase;letter-spacing:.02em;padding:5px 9px;outline:none;width:104px;flex-shrink:0;border-radius:5px;box-shadow:inset 0 1px 4px #000a;text-shadow:0 0 6px ${C.acc}22;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:28px;}
 .sec-name-inp:focus{box-shadow:inset 0 1px 4px #000a,0 0 0 1px ${C.acc}66;}
 .sec-toggle{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:4px 8px;gap:6px;user-select:none;}
 .sec-toggle-line{height:1px;background:${C.border};flex:1;}
@@ -1566,7 +1254,7 @@ function App() {
     // boundary, which could be a full cycle away). Load-on-demand.
     const e = engRef.current;
     if (!playing || !e?.padPlayer || !e.padHPF) return;
-    const BASE = "https://philthemoser.github.io/qw-samples/";
+    const BASE = "samples/";
     let cancelled = false;
     const oldPlayer = e.padPlayer;
     const targetVol = oldPlayer.volume.value; // dB the pad currently sits at
@@ -2374,7 +2062,7 @@ function App() {
     Tone.getTransport().cancel();
     const m = mixRef.current;
     const db = (v, b) => Tone.gainToDb(Math.max(0.001, v / 100)) + b;
-    const BASE = "https://philthemoser.github.io/qw-samples/";
+    const BASE = "samples/";
 
     // ── Piano — samples are the app "in C". Changing key pitch-shifts from the
     //    C-key sample of the same chord role, so the whole set transposes together.
@@ -2683,7 +2371,7 @@ function App() {
   const auditionChord = async ch => {
     try {
       await Tone.start();
-      const BASE = "https://philthemoser.github.io/qw-samples/";
+      const BASE = "samples/";
       if (!audRef.current) {
         const lpf = new Tone.Filter({
           type: "lowpass",
@@ -2988,6 +2676,8 @@ function App() {
   }, "Copy \"", s.name, "\""))))), /*#__PURE__*/React.createElement("div", {
     className: "bar",
     ref: barRef
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bar-inner"
   }, playing && liveMixerOpen && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "12px 16px 8px",
@@ -3326,7 +3016,7 @@ function App() {
     className: "bar-bpm-num"
   }, bpm), /*#__PURE__*/React.createElement("div", {
     className: "bar-bpm-lbl"
-  }, "bpm · ", timeSig))))), (liveKeyOpen || liveMixerOpen || liveTempoOpen || livePadsOpen) && /*#__PURE__*/React.createElement("div", {
+  }, "bpm · ", timeSig)))))), (liveKeyOpen || liveMixerOpen || liveTempoOpen || livePadsOpen) && /*#__PURE__*/React.createElement("div", {
     style: {
       position: "fixed",
       inset: 0,
@@ -3341,7 +3031,7 @@ function App() {
   }), playing && liveKeyOpen && /*#__PURE__*/React.createElement("div", {
     style: {
       position: "fixed",
-      left: 12,
+      left: "max(12px, calc(50% - 328px))",
       bottom: "calc(var(--bar-h,110px) + 8px)",
       zIndex: 46,
       width: 220,
@@ -3384,7 +3074,7 @@ function App() {
   }, n))))), playing && liveTempoOpen && /*#__PURE__*/React.createElement("div", {
     style: {
       position: "fixed",
-      right: 12,
+      right: "max(12px, calc(50% - 328px))",
       bottom: "calc(var(--bar-h,110px) + 8px)",
       zIndex: 46,
       width: 84,
@@ -4225,16 +3915,11 @@ function SecCard({
   }, /*#__PURE__*/React.createElement("div", {
     className: "sec-hdr"
   }, playing ? /*#__PURE__*/React.createElement("div", {
+    className: "sec-name-inp",
     style: {
-      fontSize: 14,
-      fontWeight: 600,
-      color: C.text,
-      flexShrink: 0,
-      padding: "2px 4px",
-      width: 90,
-      whiteSpace: "nowrap",
-      overflow: "hidden",
-      textOverflow: "ellipsis"
+      display: "flex",
+      alignItems: "center",
+      boxSizing: "border-box"
     }
   }, sec.name) : /*#__PURE__*/React.createElement("input", {
     className: "sec-name-inp",
