@@ -77,6 +77,22 @@ function keyShift(key) {
   if (s > 6) s -= 12;
   return s;
 }
+// Anchor-bank selection: keys 0-6 semitones from C use the C bank (shifting UP
+// from C); keys 7-11 use the G bank (G is 7 above C), also shifting UP from G.
+// Pitching UP always sounds better than the old down-shift for high keys.
+function anchorBank(key) {
+  let s = NOTES.indexOf(normNote(key));
+  if (s < 0) s = 0;
+  s %= 12;
+  if (s <= 6) return {
+    bank: "C",
+    shift: s
+  }; // C..F# → up from C
+  return {
+    bank: "G",
+    shift: s - 7
+  }; // G..B  → up from G (0..4 semitones)
+}
 const SCALE_INTERVALS = {
   major: [0, 2, 4, 5, 7, 9, 11],
   minor: [0, 2, 3, 5, 7, 8, 10]
@@ -103,6 +119,74 @@ const EXTRA_DEGREES = [{
   semis: 9
 }];
 const INVERSIONS = ["root", "3rd", "5th"];
+
+// ─── Chord progression templates ──────────────────────────────────────────────
+// Stored as degrees so they transpose to any key. Each step: {deg} for a
+// diatonic degree (0=I..5=vi), or {extra:"VI"} for a chromatic chord, plus
+// optional inv ("root"|"3rd"|"5th") and beats (default 4).
+const PROGRESSIONS = [{
+  name: "I  V  vi  IV",
+  steps: [{
+    deg: 0
+  }, {
+    deg: 4
+  }, {
+    deg: 5
+  }, {
+    deg: 3
+  }]
+}, {
+  name: "IV  V  vi  I/iii",
+  steps: [{
+    deg: 3
+  }, {
+    deg: 4
+  }, {
+    deg: 5
+  }, {
+    deg: 0,
+    inv: "3rd"
+  }]
+}, {
+  name: "vi  IV  I  V",
+  steps: [{
+    deg: 5
+  }, {
+    deg: 3
+  }, {
+    deg: 0
+  }, {
+    deg: 4
+  }]
+}, {
+  name: "IV  I  V  vi",
+  steps: [{
+    deg: 3
+  }, {
+    deg: 0
+  }, {
+    deg: 4
+  }, {
+    deg: 5
+  }]
+}];
+function buildProgression(key, scale, tmpl) {
+  return tmpl.steps.map(st => {
+    let ch;
+    if (st.extra) {
+      const ex = EXTRA_DEGREES.find(e => e.label === st.extra);
+      ch = buildExtra(key, ex, EXTRA_DEGREES.indexOf(ex));
+    } else {
+      ch = buildDegree(key, scale, st.deg);
+    }
+    return {
+      ...ch,
+      id: uid(),
+      beats: st.beats || 4,
+      inversion: st.inv || "root"
+    };
+  });
+}
 
 // ─── Time signatures ──────────────────────────────────────────────────────────
 const TIME_SIGS = {
@@ -843,6 +927,8 @@ html,body,#root{min-height:100%;background-color:${C.bg};}
 .pbtn{width:50px;height:50px;border-radius:50%;background:linear-gradient(180deg,#E6BC60,${C.acc});border:none;color:#0E1014;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .08s;box-shadow:0 0 16px ${C.acc}55,inset 0 2px 0 #ffffff66,0 5px 0 #6e5220,0 7px 8px #0000002e;}
 .pbtn:active{transform:translateY(4px);box-shadow:0 0 16px ${C.acc}55,inset 0 2px 0 #ffffff66,0 1px 0 #6e5220,0 2px 4px #0000001e;}
 .pbtn.idle{background:linear-gradient(180deg,#FBFAF6,#E4E1D6);color:#2A2824;box-shadow:inset 0 2px 0 #ffffff22,0 5px 0 #A49E8C,0 7px 8px #0000002e;}
+.pbtn.fading{animation:fadepulse 1s ease-in-out infinite;}
+@keyframes fadepulse{0%,100%{box-shadow:0 0 16px ${C.acc}55,inset 0 2px 0 #ffffff66,0 5px 0 #6e5220,0 7px 8px #0000002e;}50%{box-shadow:0 0 6px ${C.acc}22,inset 0 2px 0 #ffffff44,0 5px 0 #6e5220,0 7px 8px #0000002e;opacity:.7;}}
 .pbtn.idle:active{transform:translateY(4px);box-shadow:inset 0 1px 0 #ffffff14,0 1px 0 #A49E8C,0 2px 4px #0000001e;}
 
 .song-header{display:flex;align-items:center;gap:8px;padding:12px 0 14px;border-bottom:1px solid ${C.border};margin-bottom:14px;}
@@ -909,6 +995,9 @@ html,body,#root{min-height:100%;background-color:${C.bg};}
 .sec.s-queued{border-color:${C.accDim};}
 
 .sec-hdr{display:flex;align-items:center;padding:10px 10px 6px;gap:0;}
+.rep-screen{background:${C.screenBg};border:1px solid ${C.screenTop};border-bottom-color:${C.screenBot};border-radius:5px;padding:4px 12px;min-width:48px;text-align:center;font-family:'Doto','Space Mono',monospace;font-weight:900;font-size:16px;color:${C.lcd};box-shadow:inset 0 1px 4px #000a;text-shadow:0 0 6px ${C.acc}33;}
+.rep-pm{background:linear-gradient(180deg,#FBFAF6,#E4E1D6);border:none;color:${C.text};width:34px;height:32px;border-radius:5px;font-size:18px;cursor:pointer;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;flex-shrink:0;box-shadow:inset 0 1px 0 #ffffff1e,0 3px 0 #A49E8C,0 4px 5px #00000022;transition:all .08s;}
+.rep-pm:active{transform:translateY(2px);box-shadow:inset 0 1px 0 #ffffff10,0 1px 0 #A49E8C,0 1px 2px #00000018;}
 .sec-name-inp{background:#23211C;border:1px solid #141310;border-top-color:#0C0B08;border-bottom-color:#3A362C;color:${C.lcd};font-size:13px;font-weight:700;font-family:'Doto','Space Mono',monospace;text-transform:uppercase;letter-spacing:.02em;padding:5px 9px;outline:none;width:104px;flex-shrink:0;border-radius:5px;box-shadow:inset 0 1px 4px #000a;text-shadow:0 0 6px ${C.acc}22;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:28px;}
 .sec-name-inp:focus{box-shadow:inset 0 1px 4px #000a,0 0 0 1px ${C.acc}66;}
 .sec-toggle{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:4px 8px;gap:6px;user-select:none;}
@@ -1153,6 +1242,7 @@ function App() {
   })));
   const [openSecId, setOpenSecId] = useState(null);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
+  const [chooseMenuOpen, setChooseMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(null); // null | "left" | "right"
   const [liveKeyOpen, setLiveKeyOpen] = useState(false); // key list during playback
   const [liveTempoOpen, setLiveTempoOpen] = useState(false); // tempo nudge during playback
@@ -1172,6 +1262,7 @@ function App() {
 
   // playback
   const [playing, setPlaying] = useState(false);
+  const [fading, setFading] = useState(false);
   const [samplesLoading, setSamplesLoading] = useState(false);
   const [curSec, setCurSec] = useState(0);
   const [curChord, setCurChord] = useState(0);
@@ -1179,6 +1270,7 @@ function App() {
   const [metroOn, setMetroOn] = useState(false); // metronome click on/off
   const [metroPan, setMetroPan] = useState("center"); // center | left | right
   const [metroVol, setMetroVol] = useState(70); // 0-100
+  const [countIn, setCountIn] = useState(false); // one bar of clicks before play
   const [queued, setQueued] = useState(null);
   const [looping, setLooping] = useState(false);
   const [resolved, setResolved] = useState(false); // song played through — pad-only
@@ -1206,6 +1298,10 @@ function App() {
     pan: "center",
     vol: 70
   });
+  const countInRef = useRef(false);
+  useEffect(() => {
+    countInRef.current = countIn;
+  }, [countIn]);
   useEffect(() => {
     secRef.current = sections;
   }, [sections]);
@@ -1243,9 +1339,13 @@ function App() {
   useEffect(() => {
     keyRef.current = key;
     // Live capo: update the piano bus PitchShift when the key changes.
+    // Note: crossing the C↔G bank boundary changes which samples are needed;
+    // the bank is chosen when the engine is built, so a live cross-boundary
+    // change updates pitch but the new bank loads on the next play. Within a
+    // bank (the common case) the live capo is exact.
     if (engRef.current?.pianoShift) {
       try {
-        engRef.current.pianoShift.pitch = keyShift(key);
+        engRef.current.pianoShift.pitch = anchorBank(key).shift;
       } catch (e) {}
     }
     // Live pad swap: crossfade to the new key's loop. Start the new loop now
@@ -1709,9 +1809,31 @@ function App() {
   };
 
   // ── Whole-library / setlist backup: download & upload a .json file ──────────
-  const downloadJSON = (data, filename) => {
+  const downloadJSON = async (data, filename) => {
+    const json = JSON.stringify(data, null, 2);
+    // Prefer the native share sheet (iOS: "Save to Files", AirDrop, Mail, …).
     try {
-      const blob = new Blob([JSON.stringify(data, null, 2)], {
+      if (navigator.canShare) {
+        const file = new File([json], filename, {
+          type: "application/json"
+        });
+        if (navigator.canShare({
+          files: [file]
+        })) {
+          await navigator.share({
+            files: [file],
+            title: filename
+          });
+          return;
+        }
+      }
+    } catch (e) {
+      // User cancelled the share sheet, or share failed — fall through to download.
+      if (e && e.name === "AbortError") return; // cancelled: don't also download
+    }
+    // Fallback: trigger a normal file download (desktop / unsupported browsers)
+    try {
+      const blob = new Blob([json], {
         type: "application/json"
       });
       const url = URL.createObjectURL(blob);
@@ -1725,7 +1847,7 @@ function App() {
         URL.revokeObjectURL(url);
       }, 100);
     } catch (e) {
-      setImportMsg("Couldn't create the download file.");
+      setImportMsg("Couldn't create the file.");
     }
   };
   const exportAll = () => {
@@ -1827,6 +1949,19 @@ function App() {
     }]);
     setOpenSecId(id);
     setAddMenuOpen(false);
+  };
+  const addProgression = tmpl => {
+    const id = uid();
+    const chords = buildProgression(key, scale, tmpl);
+    setSections(s => [...s, {
+      id,
+      name: tmpl.name,
+      repeats: 1,
+      chords,
+      dyn: defaultDyn(timeSig)
+    }]);
+    setOpenSecId(id);
+    setChooseMenuOpen(false);
   };
   const dupSec = srcId => {
     const src = sections.find(x => x.id === srcId);
@@ -2032,6 +2167,7 @@ function App() {
     setLiveTempoOpen(false);
     setLiveMixerOpen(false);
     setSamplesLoading(false);
+    setFading(false);
     setLiveMute({
       pad: false,
       piano: false,
@@ -2041,6 +2177,7 @@ function App() {
       tamb: false
     });
     clearTimeout(pulseTimer.current);
+    clearTimeout(fadeTimer.current);
     psRef.current = {
       s: 0,
       c: 0,
@@ -2052,6 +2189,25 @@ function App() {
       resolved: false
     };
   }, []);
+
+  // Fade-out "pause": ramp the master output to silence over 2s, then hard stop.
+  const fadeTimer = useRef(null);
+  const fadeOutStop = useCallback(() => {
+    try {
+      const dest = Tone.getDestination();
+      dest.volume.rampTo(-60, 2);
+      setFading(true);
+      clearTimeout(fadeTimer.current);
+      fadeTimer.current = setTimeout(() => {
+        stopPlayback();
+        try {
+          Tone.getDestination().volume.value = 0;
+        } catch (e) {} // reset for next play
+      }, 2050);
+    } catch (e) {
+      stopPlayback();
+    }
+  }, [stopPlayback]);
   const startPlayback = useCallback(async () => {
     if (engRef.current) return; // already playing or loading — prevent double engine
     const S = secRef.current;
@@ -2077,20 +2233,39 @@ function App() {
       type: "lowpass",
       frequency: 10000
     }).toDestination();
-    // PitchShift capos the entire piano output by the key's semitone offset.
+    // Pick the sample bank by key so high keys pitch UP from G instead of down from C.
+    const ab = anchorBank(keyRef.current);
     const pianoShift = new Tone.PitchShift({
-      pitch: keyShift(keyRef.current),
+      pitch: ab.shift,
       windowSize: 0.1
     }).connect(pianoLPF);
+    const pianoUrls = ab.bank === "C" ? {
+      "C4": `${BASE}C.mp3`,
+      "D4": `${BASE}Dm.mp3`,
+      "E4": `${BASE}Em.mp3`,
+      "F4": `${BASE}F.mp3`,
+      "G4": `${BASE}G.mp3`,
+      "A4": `${BASE}Am.mp3`,
+      "D5": `${BASE}C/C-II.m4a`,
+      "D#5": `${BASE}C/C-bIII.m4a`,
+      "E5": `${BASE}C/C-III.m4a`,
+      "F5": `${BASE}C/C-iv.m4a`,
+      "A5": `${BASE}C/C-VI.m4a`
+    } : {
+      "C4": `${BASE}G/G-I.m4a`,
+      "D4": `${BASE}G/G-ii.m4a`,
+      "E4": `${BASE}G/G-iii.m4a`,
+      "F4": `${BASE}G/G-IV.m4a`,
+      "G4": `${BASE}G/G-V.m4a`,
+      "A4": `${BASE}G/G-vi.m4a`,
+      "D5": `${BASE}G/G-II.m4a`,
+      "D#5": `${BASE}G/G-bIII.m4a`,
+      "E5": `${BASE}G/G-III.m4a`,
+      "F5": `${BASE}G/G-iv.m4a`,
+      "A5": `${BASE}G/G-VI.m4a`
+    };
     const piano = new Tone.Sampler({
-      urls: {
-        "C4": `${BASE}C.mp3`,
-        "D4": `${BASE}Dm.mp3`,
-        "E4": `${BASE}Em.mp3`,
-        "F4": `${BASE}F.mp3`,
-        "G4": `${BASE}G.mp3`,
-        "A4": `${BASE}Am.mp3`
-      },
+      urls: pianoUrls,
       release: 2
     }).connect(pianoShift);
     piano.volume.value = db(m.piano, -6);
@@ -2341,11 +2516,67 @@ function App() {
         padPlayer.sync().start(0);
       } catch (e) {}
     }
-    Tone.getTransport().start();
+    // Count-in: if enabled, play one bar of metronome clicks, then start the
+    // transport on the next downbeat. Uses the metronome synth even if the
+    // running metronome is off. No separate display — just the pre-roll clicks.
+    const tp = Tone.getTransport();
+    if (countInRef.current) {
+      const tsi = TIME_SIGS[tsRef.current];
+      const beats = tsi.beatsPerBar || 4;
+      const spb = 60 / bpm; // seconds per beat
+      const eng = engRef.current;
+      const now = Tone.now();
+      if (eng && eng.metroSynth) {
+        for (let i = 0; i < beats; i++) {
+          try {
+            eng.metroSynth.triggerAttackRelease(i === 0 ? "C5" : "G4", 0.04, now + i * spb);
+          } catch (e) {}
+        }
+      }
+      tp.start(`+${beats * spb}`);
+    } else {
+      tp.start();
+    }
     setPlaying(true);
     setOpenSecId(null);
   }, [bpm, timeSig]);
   useEffect(() => () => stopPlayback(), []);
+
+  // Keep the screen awake while playing so the leader never loses their place.
+  const wakeLockRef = useRef(null);
+  useEffect(() => {
+    let cancelled = false;
+    async function manage() {
+      try {
+        if (playing && "wakeLock" in navigator) {
+          if (!wakeLockRef.current) {
+            wakeLockRef.current = await navigator.wakeLock.request("screen");
+            wakeLockRef.current.addEventListener?.("release", () => {
+              wakeLockRef.current = null;
+            });
+          }
+        } else if (wakeLockRef.current) {
+          await wakeLockRef.current.release();
+          wakeLockRef.current = null;
+        }
+      } catch (e) {/* wake lock unsupported or denied — harmless */}
+      if (cancelled && wakeLockRef.current) {
+        try {
+          wakeLockRef.current.release();
+        } catch (e) {}
+      }
+    }
+    manage();
+    // Re-acquire if the page was hidden and comes back while still playing
+    const onVis = () => {
+      if (document.visibilityState === "visible" && playing) manage();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, [playing]);
 
   // Keep the settings sheet sitting exactly on top of the bar by measuring the
   // bar's real height (it varies with play state, mutes, pads) into --bar-h.
@@ -2372,40 +2603,74 @@ function App() {
     try {
       await Tone.start();
       const BASE = "samples/";
+      const ab = anchorBank(keyRef.current);
+      // Rebuild the sketchpad sampler if the key has moved to a different bank.
+      if (audRef.current && audRef.current.bank !== ab.bank) {
+        try {
+          Object.values(audRef.current).forEach(n => {
+            if (n && n.dispose) n.dispose();
+          });
+        } catch (e) {}
+        audRef.current = null;
+      }
       if (!audRef.current) {
         const lpf = new Tone.Filter({
           type: "lowpass",
           frequency: 11000
         }).toDestination();
         const shift = new Tone.PitchShift({
-          pitch: keyShift(keyRef.current),
+          pitch: ab.shift,
           windowSize: 0.1
         }).connect(lpf);
+        const urls = ab.bank === "C" ? {
+          "C4": `${BASE}C.mp3`,
+          "D4": `${BASE}Dm.mp3`,
+          "E4": `${BASE}Em.mp3`,
+          "F4": `${BASE}F.mp3`,
+          "G4": `${BASE}G.mp3`,
+          "A4": `${BASE}Am.mp3`,
+          "D5": `${BASE}C/C-II.m4a`,
+          "D#5": `${BASE}C/C-bIII.m4a`,
+          "E5": `${BASE}C/C-III.m4a`,
+          "F5": `${BASE}C/C-iv.m4a`,
+          "A5": `${BASE}C/C-VI.m4a`
+        } : {
+          "C4": `${BASE}G/G-I.m4a`,
+          "D4": `${BASE}G/G-ii.m4a`,
+          "E4": `${BASE}G/G-iii.m4a`,
+          "F4": `${BASE}G/G-IV.m4a`,
+          "G4": `${BASE}G/G-V.m4a`,
+          "A4": `${BASE}G/G-vi.m4a`,
+          "D5": `${BASE}G/G-II.m4a`,
+          "D#5": `${BASE}G/G-bIII.m4a`,
+          "E5": `${BASE}G/G-III.m4a`,
+          "F5": `${BASE}G/G-iv.m4a`,
+          "A5": `${BASE}G/G-VI.m4a`
+        };
         const sampler = new Tone.Sampler({
-          urls: {
-            "C4": `${BASE}C.mp3`,
-            "D4": `${BASE}Dm.mp3`,
-            "E4": `${BASE}Em.mp3`,
-            "F4": `${BASE}F.mp3`,
-            "G4": `${BASE}G.mp3`,
-            "A4": `${BASE}Am.mp3`
-          },
+          urls,
           release: 3.5
         }).connect(shift);
         sampler.volume.value = -4;
         audRef.current = {
           sampler,
           shift,
-          lpf
+          lpf,
+          bank: ab.bank
         };
         await Tone.loaded();
       }
       // Keep the sketchpad in the current key
       try {
-        audRef.current.shift.pitch = keyShift(keyRef.current);
+        audRef.current.shift.pitch = anchorBank(keyRef.current).shift;
       } catch (e) {}
       const C_MAJOR_ROOTS = ["C", "D", "E", "F", "G", "A", "B"];
       const note = ch.sampleNote || (ch.degIdx >= 0 ? C_MAJOR_ROOTS[ch.degIdx] + "4" : ch.semis != null ? NOTES[ch.semis] + "5" : "C4");
+      // Cut any chord still ringing from the previous tap so the sketchpad plays
+      // progressions as a sequence rather than stacking chords on top of each other.
+      try {
+        audRef.current.sampler.releaseAll();
+      } catch (e) {}
       audRef.current.sampler.triggerAttackRelease(note, 3.5);
       setAudChord(ch.id);
       setTimeout(() => setAudChord(a => a === ch.id ? null : a), 300);
@@ -2651,29 +2916,71 @@ function App() {
     }, "▶"))));
   })(), !playing && /*#__PURE__*/React.createElement("div", {
     style: {
+      display: "flex",
+      gap: 8,
+      marginBottom: 16,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "btn",
+    onClick: e => {
+      e.stopPropagation();
+      addSec();
+    }
+  }, "+ Add"), /*#__PURE__*/React.createElement("div", {
+    style: {
       position: "relative",
-      display: "inline-block",
-      marginBottom: 16
+      display: "inline-block"
     }
   }, /*#__PURE__*/React.createElement("button", {
     className: "btn",
     onClick: e => {
       e.stopPropagation();
       setAddMenuOpen(o => !o);
-    }
-  }, "+ Section ▴"), addMenuOpen && /*#__PURE__*/React.createElement("div", {
+      setChooseMenuOpen(false);
+    },
+    disabled: sections.length === 0,
+    style: sections.length === 0 ? {
+      opacity: .4
+    } : undefined
+  }, "Copy ▴"), addMenuOpen && sections.length > 0 && /*#__PURE__*/React.createElement("div", {
     className: "add-menu",
     onClick: e => e.stopPropagation()
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "ami",
-    onClick: addSec
-  }, "New section"), sections.length > 0 && /*#__PURE__*/React.createElement("hr", {
-    className: "divider"
-  }), sections.map(s => /*#__PURE__*/React.createElement("button", {
+  }, sections.map(s => /*#__PURE__*/React.createElement("button", {
     key: s.id,
-    className: "ami sub",
-    onClick: () => dupSec(s.id)
-  }, "Copy \"", s.name, "\""))))), /*#__PURE__*/React.createElement("div", {
+    className: "ami",
+    onClick: () => {
+      dupSec(s.id);
+      setAddMenuOpen(false);
+    }
+  }, "Copy \"", s.name, "\"")))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      display: "inline-block"
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "btn",
+    onClick: e => {
+      e.stopPropagation();
+      setChooseMenuOpen(o => !o);
+      setAddMenuOpen(false);
+    }
+  }, "Choose ▴"), chooseMenuOpen && /*#__PURE__*/React.createElement("div", {
+    className: "add-menu",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
+      fontSize: 9,
+      color: C.textDim,
+      padding: "4px 10px 6px",
+      letterSpacing: ".06em"
+    }
+  }, "PROGRESSION"), PROGRESSIONS.map((p, i) => /*#__PURE__*/React.createElement("button", {
+    key: i,
+    className: "ami",
+    onClick: () => addProgression(p)
+  }, p.name)))))), /*#__PURE__*/React.createElement("div", {
     className: "bar",
     ref: barRef
   }, /*#__PURE__*/React.createElement("div", {
@@ -2981,14 +3288,14 @@ function App() {
       song: song
     }));
     return /*#__PURE__*/React.createElement(React.Fragment, null, navBtn(prevSong, "prev", "Previous song"), /*#__PURE__*/React.createElement("button", {
-      className: `pbtn${playing ? "" : " idle"}`,
-      onClick: samplesLoading ? undefined : playing ? stopPlayback : startPlayback,
+      className: `pbtn${playing ? "" : " idle"}${fading ? " fading" : ""}`,
+      onClick: samplesLoading ? undefined : fading ? stopPlayback : playing ? fadeOutStop : startPlayback,
       disabled: samplesLoading,
       style: samplesLoading ? {
         opacity: .6,
         cursor: "wait"
       } : undefined
-    }, samplesLoading ? "⋯" : playing ? "■" : "▶"), navBtn(nextSong, "next", "Next song"));
+    }, samplesLoading ? "⋯" : fading ? "■" : playing ? "❚❚" : "▶"), navBtn(nextSong, "next", "Next song"));
   })(), /*#__PURE__*/React.createElement("div", {
     className: "bar-right",
     onClick: () => playing ? (setLiveTempoOpen(o => !o), setLiveMixerOpen(false), setLiveKeyOpen(false)) : setSettingsOpen(s => s === "right" ? null : "right")
@@ -3013,8 +3320,24 @@ function App() {
       marginTop: 1
     }
   }, "tap to close")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    className: "bar-bpm-num"
-  }, bpm), /*#__PURE__*/React.createElement("div", {
+    className: "bar-bpm-num",
+    style: {
+      position: "relative"
+    }
+  }, bpm, playing && /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      top: 2,
+      right: -9,
+      width: 6,
+      height: 6,
+      borderRadius: "50%",
+      background: C.acc,
+      opacity: beatPulse ? 1 : 0.18,
+      boxShadow: beatPulse ? `0 0 6px ${C.acc}` : "none",
+      transition: beatPulse ? "none" : "opacity .12s"
+    }
+  })), /*#__PURE__*/React.createElement("div", {
     className: "bar-bpm-lbl"
   }, "bpm · ", timeSig)))))), (liveKeyOpen || liveMixerOpen || liveTempoOpen || livePadsOpen) && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -3194,6 +3517,8 @@ function App() {
     setMetroPan: setMetroPan,
     metroVol: metroVol,
     setMetroVol: setMetroVol,
+    countIn: countIn,
+    setCountIn: setCountIn,
     auditionChord: auditionChord,
     audChord: audChord
   }))), /*#__PURE__*/React.createElement("div", {
@@ -3457,6 +3782,8 @@ function SettingsSheet({
   setMetroPan,
   metroVol,
   setMetroVol,
+  countIn,
+  setCountIn,
   auditionChord,
   audChord
 }) {
@@ -3592,7 +3919,26 @@ function SettingsSheet({
     key: t,
     className: `tp${bpm === t ? " on" : ""}`,
     onClick: () => setBpm(t)
-  }, t))))), /*#__PURE__*/React.createElement("div", {
+  }, t))), /*#__PURE__*/React.createElement("button", {
+    className: "pad3d",
+    onClick: () => setCountIn(c => !c),
+    style: {
+      width: "100%",
+      marginTop: 12,
+      padding: "9px 6px",
+      borderRadius: 6,
+      fontWeight: 700,
+      fontSize: 12,
+      letterSpacing: ".04em",
+      ...(countIn ? {
+        background: "linear-gradient(180deg,#EAC062," + C.acc + ")",
+        color: "#2A2824",
+        boxShadow: "inset 0 2px 0 #ffffff66,0 4px 0 #6e5220,0 6px 7px #0000002a"
+      } : {
+        color: C.textMid
+      })
+    }
+  }, "Count-in ", countIn ? "On" : "Off"))), /*#__PURE__*/React.createElement("div", {
     className: "spine-card"
   }, /*#__PURE__*/React.createElement("div", {
     className: "spine"
@@ -3991,19 +4337,25 @@ function SecCard({
       fontSize: 10,
       color: C.textDim
     }
-  }, "Repeats"), /*#__PURE__*/React.createElement("select", {
-    className: "sel",
-    value: sec.repeats,
-    onChange: e => onUpdate({
-      repeats: Number(e.target.value)
-    }),
+  }, "Repeats"), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontSize: 12
+      display: "flex",
+      alignItems: "center",
+      gap: 6
     }
-  }, [1, 2, 3, 4, 6, 8].map(n => /*#__PURE__*/React.createElement("option", {
-    key: n,
-    value: n
-  }, n))), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "rep-pm",
+    onClick: () => onUpdate({
+      repeats: Math.max(1, sec.repeats - 1)
+    })
+  }, "−"), /*#__PURE__*/React.createElement("div", {
+    className: "rep-screen"
+  }, "×", sec.repeats), /*#__PURE__*/React.createElement("button", {
+    className: "rep-pm",
+    onClick: () => onUpdate({
+      repeats: Math.min(16, sec.repeats + 1)
+    })
+  }, "+")), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
@@ -4156,15 +4508,21 @@ function BeatGrid({
     const isSel = slot.chordIdx === selChord;
     // Per-chord shade: same hue, stepped light→dark by degree.
     // Darkest→lightest: C(I) G(V) F(IV) Am(vi) Em(iii) Dm(ii). Extras = gold.
-    const SHADE_BY_DEG = {
-      0: "#3A362F",
-      4: "#4E4841",
-      3: "#635C52",
-      5: "#7C7568",
-      2: "#968E7F",
-      1: "#AEA697"
+    // Colour chords by HARMONIC FUNCTION (muted, so instrument colours
+    // still dominate). Tonic=home, Subdominant=movement, Dominant=tension.
+    // Tonic: I(0),vi(5) · Subdominant: IV(3),ii(1) · Dominant: V(4),iii(2),vii(6)
+    const FUNC_COLOR = {
+      0: "#4A6B57",
+      5: "#4A6B57",
+      // tonic  — muted green (rest/home)
+      3: "#4A6079",
+      1: "#4A6079",
+      // subdom — muted blue (movement)
+      4: "#8A5340",
+      2: "#8A5340",
+      6: "#8A5340" // dominant — muted terracotta (tension)
     };
-    const chordCol = ch.degIdx >= 0 ? SHADE_BY_DEG[ch.degIdx] || "#615C54" : C.acc;
+    const chordCol = ch.degIdx >= 0 ? FUNC_COLOR[ch.degIdx] || "#615C54" : C.acc;
     const alpha = slot.isFirst ? 1 : 0.62;
     const pos = slot.isSolo ? "chord-solo" : slot.isFirst ? "chord-first" : slot.isLast ? "chord-last" : "chord-mid";
     return /*#__PURE__*/React.createElement("div", {
