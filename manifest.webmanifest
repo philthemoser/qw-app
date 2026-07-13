@@ -1,6 +1,6 @@
 {
-  "name": "Tinuo — the quick way to a fuller sound",
-  "short_name": "Tinuo",
+  "name": "Tinue — the quick way to a fuller sound",
+  "short_name": "Tinue",
   "description": "The quick way to a fuller sound. Pick a key, set a tempo, and organize chord progressions into sections — about 80% of a band, fast.",
   "start_url": "./",
   "scope": "./",
@@ -10,19 +10,19 @@
   "theme_color": "#EDEAE0",
   "icons": [
     {
-      "src": "icons/tinuo-192.png",
+      "src": "icons/tinue-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/tinuo-512.png",
+      "src": "icons/tinue-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/tinuo-512.png",
+      "src": "icons/tinue-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
