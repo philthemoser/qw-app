@@ -6,9 +6,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
   <meta name="theme-color" content="#EDEAE0"/>
-  <title>Tinuë &mdash; the quick way to a fuller sound</title>
+  <title>Tinue &mdash; the quick way to a fuller sound</title>
   <meta name="description" content="The quick way to a fuller sound. Pick a key, set a tempo, and organize chord progressions into sections &mdash; about 80% of a band, fast."/>
-  <meta name="apple-mobile-web-app-title" content="Tinuë"/>
+  <meta name="apple-mobile-web-app-title" content="Tinue"/>
   <link rel="manifest" href="manifest.webmanifest"/>
   <link rel="apple-touch-icon" href="icons/tinue-180.png"/>
   <link rel="icon" type="image/png" sizes="192x192" href="icons/tinue-192.png"/>
@@ -3559,7 +3559,20 @@ function App() {
       fontSize: 15
     },
     onClick: () => setKey(n)
-  }, n))))), playing && liveTempoOpen && /*#__PURE__*/React.createElement("div", {
+  }, n))), capo > 0 && /*#__PURE__*/React.createElement("button", {
+    className: "pad3d",
+    onClick: () => setCapo(0),
+    style: {
+      width: "100%",
+      marginTop: 6,
+      padding: "9px 0",
+      borderRadius: 6,
+      fontWeight: 700,
+      fontSize: 12,
+      letterSpacing: ".04em",
+      color: C.opRed
+    }
+  }, "Remove capo (", capo, ")"))), playing && liveTempoOpen && /*#__PURE__*/React.createElement("div", {
     style: {
       position: "fixed",
       right: "max(12px, calc(50% - 328px))",
@@ -4695,6 +4708,7 @@ function SecCard({
     chords: sec.chords,
     timeSig: timeSig,
     curChord: isCur ? curChord : -1,
+    capo: capo,
     beatPulse: isCur ? beatPulse : false,
     selChord: selChord,
     onCellClick: ci => onSelectChord(ci),
@@ -4766,7 +4780,8 @@ function BeatGrid({
   beatPulse,
   selChord,
   onCellClick,
-  onBgClick
+  onBgClick,
+  capo = 0
 }) {
   const lpl = beatsPerLine(timeSig);
   const bpb = TIME_SIGS[timeSig].beatsPerBar;
