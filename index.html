@@ -6,7 +6,13 @@
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
   <meta name="theme-color" content="#EDEAE0"/>
-  <title>Chord &amp; Groove</title>
+  <title>Tinuo — the quick way to a fuller sound</title>
+  <meta name="description" content="The quick way to a fuller sound. Pick a key, set a tempo, and organize chord progressions into sections — about 80% of a band, fast."/>
+  <meta name="apple-mobile-web-app-title" content="Tinuo"/>
+  <link rel="manifest" href="manifest.webmanifest"/>
+  <link rel="apple-touch-icon" href="icons/tinuo-180.png"/>
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/tinuo-192.png"/>
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/tinuo-512.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Doto:wght@500;700;900&display=swap" rel="stylesheet">
@@ -825,6 +831,7 @@ const DEMO_SONG = {
 };
 const LS_KEY = "qw_v1";
 const LS_SETLIST = "qw_setlist_v1";
+const LS_WELCOME = "qw_welcome_seen_v1";
 function loadLibrary() {
   try {
     return JSON.parse(localStorage.getItem(LS_KEY) || "[]");
@@ -910,7 +917,7 @@ const G = `
 body{background-color:${C.bg};background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");color:${C.text};font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;-webkit-font-smoothing:antialiased;}
 input,select,button{font-family:inherit;}
 html,body,#root{min-height:100%;background-color:${C.bg};}
-.app{max-width:680px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top)) 14px calc(var(--bar-h,150px) + 40px);min-height:100vh;background-color:${C.bg};background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");}
+.app{max-width:680px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top)) 14px calc(var(--bar-h,150px) + 20px);min-height:100vh;overscroll-behavior:none;background-color:${C.bg};background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");}
 .notch-bar{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:${C.bg};z-index:200;}
 
 .bar{position:fixed;bottom:0;left:0;right:0;z-index:90;background:#CFCCBF;border-top:1px solid #B4AF9E;box-shadow:0 -2px 12px #00000018;}
@@ -981,6 +988,18 @@ html,body,#root{min-height:100%;background-color:${C.bg};}
 .reorder-btn:disabled{opacity:.2;cursor:default;pointer-events:none;}
 
 .backdrop{position:fixed;inset:0;bottom:var(--bar-h,110px);background:#00000088;z-index:70;opacity:0;transition:opacity .25s;pointer-events:none;}
+.welcome-backdrop{position:fixed;inset:0;background:#000000aa;z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;padding-top:max(20px,env(safe-area-inset-top));padding-bottom:max(20px,env(safe-area-inset-bottom));overflow-y:auto;}
+.welcome-card{background:${C.surf};border:1px solid ${C.borderHi};border-radius:16px;max-width:400px;width:100%;padding:22px 20px;box-shadow:0 20px 60px #000a;margin:auto;}
+.welcome-title{font-family:'Doto','Space Mono',monospace;font-weight:900;font-size:22px;color:${C.text};letter-spacing:.02em;margin-bottom:12px;}
+.welcome-p{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:12.5px;line-height:1.6;color:${C.textMid};margin-bottom:16px;}
+.welcome-p b{color:${C.text};}
+.welcome-uses{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
+.welcome-use{background:${C.surf2};border:1px solid ${C.border};border-radius:9px;padding:10px 12px;}
+.welcome-use-h{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;font-size:12.5px;color:${C.text};margin-bottom:3px;}
+.welcome-use-b{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;line-height:1.5;color:${C.textDim};}
+.welcome-hint{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;line-height:1.5;color:${C.textDim};font-style:italic;margin-bottom:18px;}
+.welcome-btn{width:100%;background:linear-gradient(180deg,#E6BC60,${C.acc});border:none;color:#2A2824;padding:13px;border-radius:9px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;font-size:14px;letter-spacing:.04em;cursor:pointer;box-shadow:inset 0 2px 0 #ffffff66,0 5px 0 #6e5220,0 7px 8px #0000002e;transition:all .08s;}
+.welcome-btn:active{transform:translateY(4px);box-shadow:inset 0 2px 0 #ffffff66,0 1px 0 #6e5220,0 2px 4px #0000001e;}
 .backdrop.open{opacity:1;pointer-events:all;}
 .sheet{position:fixed;bottom:var(--bar-h,110px);left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:680px;z-index:80;background:${C.surf};border-top:1px solid ${C.border};border-radius:14px 14px 0 0;max-height:calc(100vh - var(--bar-h,110px) - env(safe-area-inset-top) - 8px);overflow-y:auto;transition:transform .28s cubic-bezier(.32,0,.18,1);}
 .sheet.open{transform:translateX(-50%) translateY(0);}
@@ -1249,6 +1268,19 @@ function App() {
   const [liveMixerOpen, setLiveMixerOpen] = useState(false); // mixer faders during playback
   const [livePadsOpen, setLivePadsOpen] = useState(false); // chord sketchpad in build mode
   const [libraryOpen, setLibraryOpen] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(() => {
+    try {
+      return !localStorage.getItem(LS_WELCOME);
+    } catch (e) {
+      return false;
+    }
+  });
+  const dismissWelcome = () => {
+    try {
+      localStorage.setItem(LS_WELCOME, "1");
+    } catch (e) {}
+    setShowWelcome(false);
+  };
   const [library, setLibrary] = useState(() => loadLibrary());
   const [setlistIds, setSetlistIds] = useState(() => loadSetlist());
   const [libView, setLibView] = useState("library"); // "library" | "setlist"
@@ -2755,7 +2787,42 @@ function App() {
     k: "tamb",
     lbl: "Tamb"
   }];
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("style", null, G), /*#__PURE__*/React.createElement("div", {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("style", null, G), showWelcome && /*#__PURE__*/React.createElement("div", {
+    className: "welcome-backdrop",
+    onClick: dismissWelcome
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "welcome-card",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "welcome-title"
+  }, "Welcome to Chord & Groove"), /*#__PURE__*/React.createElement("p", {
+    className: "welcome-p"
+  }, "A quick worship accompaniment tool — about 80% of a band, fast. The basic workflow: ", /*#__PURE__*/React.createElement("b", null, "pick a key"), ", ", /*#__PURE__*/React.createElement("b", null, "choose a tempo"), ", and organize ", /*#__PURE__*/React.createElement("b", null, "chord progressions into sections"), "."), /*#__PURE__*/React.createElement("div", {
+    className: "welcome-uses"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "welcome-use"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "welcome-use-h"
+  }, "🌊 Just a pad"), /*#__PURE__*/React.createElement("div", {
+    className: "welcome-use-b"
+  }, "Leave the sections empty and play a background pad in any key — no instruments, no arranging.")), /*#__PURE__*/React.createElement("div", {
+    className: "welcome-use"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "welcome-use-h"
+  }, "🎹 Sketch progressions"), /*#__PURE__*/React.createElement("div", {
+    className: "welcome-use-b"
+  }, "Use the chord pads to try out and write progressions by ear before building a song.")), /*#__PURE__*/React.createElement("div", {
+    className: "welcome-use"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "welcome-use-h"
+  }, "🎵 Full songs & setlists"), /*#__PURE__*/React.createElement("div", {
+    className: "welcome-use-b"
+  }, "Arrange sections into complete songs, then line them up into a setlist for a service."))), /*#__PURE__*/React.createElement("p", {
+    className: "welcome-hint"
+  }, "Tip: press play to hear the demo song — each section adds an instrument."), /*#__PURE__*/React.createElement("button", {
+    className: "welcome-btn",
+    onClick: dismissWelcome
+  }, "Get started"))), /*#__PURE__*/React.createElement("div", {
     className: "app",
     onClick: () => {
       addMenuOpen && setAddMenuOpen(false);
