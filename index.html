@@ -6,8 +6,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
   <meta name="theme-color" content="#EDEAE0"/>
-  <title>Tinuo — the quick way to a fuller sound</title>
-  <meta name="description" content="The quick way to a fuller sound. Pick a key, set a tempo, and organize chord progressions into sections — about 80% of a band, fast."/>
+  <title>Tinuo &mdash; the quick way to a fuller sound</title>
+  <meta name="description" content="The quick way to a fuller sound. Pick a key, set a tempo, and organize chord progressions into sections &mdash; about 80% of a band, fast."/>
   <meta name="apple-mobile-web-app-title" content="Tinuo"/>
   <link rel="manifest" href="manifest.webmanifest"/>
   <link rel="apple-touch-icon" href="icons/tinuo-180.png"/>
@@ -302,6 +302,33 @@ function chordLabel(root, quality) {
   if (quality === "minor") return root + "m";
   return root + "°";
 }
+// ─── Capo (display only) ──────────────────────────────────────────────────────
+// A guitar capo lets you play EASY shapes that SOUND in a harder key. To sound
+// in the real key, the shape is fingered N semitones LOWER (N = capo fret).
+// e.g. sound in C, capo 5 → play G shapes (G is 5 below C).
+const CAGED_SHAPES = ["C", "A", "G", "E", "D"]; // the five open-position shapes
+function capoShapeLabel(label, capo) {
+  // Shift a chord label's ROOT down by `capo` semitones (quality/suffix kept).
+  if (!capo) return label;
+  const m = label.match(/^([A-G]#?)(.*)$/);
+  if (!m) return label;
+  const idx = noteIdx(m[1]);
+  if (idx < 0) return label;
+  return NOTES[((idx - capo) % 12 + 12) % 12] + m[2];
+}
+function capoOptions(keyName) {
+  // For the current sounding key, return the CAGED shapes reachable with a
+  // sensible capo fret (1–7). Shape must sit below the key; fret = distance up.
+  const k = noteIdx(keyName);
+  if (k < 0) return [];
+  return CAGED_SHAPES.map(sh => {
+    const fret = ((k - noteIdx(sh)) % 12 + 12) % 12;
+    return {
+      shape: sh,
+      fret
+    };
+  }).filter(o => o.fret >= 1 && o.fret <= 7).sort((a, b) => a.fret - b.fret);
+}
 function midiFreq(m) {
   return 440 * Math.pow(2, (m - 69) / 12);
 }
@@ -365,13 +392,15 @@ function buildDefaultPalette(key, scale) {
   // Only 6 diatonic degrees — dim (index 6) moved to extras
   return SCALE_INTERVALS[scale].slice(0, 6).map((_, i) => buildDegree(key, scale, i));
 }
-function chordDisplay(ch) {
-  if (ch.inversion === "root") return ch.label;
-  return `${ch.label}/${{
+function chordDisplay(ch, capo = 0) {
+  const lbl = capoShapeLabel(ch.label, capo);
+  if (ch.inversion === "root") return lbl;
+  const bass = {
     root: ch.root,
     "3rd": ch.third,
     "5th": ch.fifth
-  }[ch.inversion]}`;
+  }[ch.inversion];
+  return `${lbl}/${capo ? NOTES[((noteIdx(bass) - capo) % 12 + 12) % 12] : bass}`;
 }
 
 // ─── Euclidean ────────────────────────────────────────────────────────────────
@@ -925,6 +954,7 @@ html,body,#root{min-height:100%;background-color:${C.bg};}
 .bar-main{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;gap:6px;}
 .bar-left{width:104px;flex-shrink:0;min-width:0;cursor:pointer;background:#23211C;border:1px solid #141310;border-top-color:#0C0B08;border-bottom-color:#3A362C;border-radius:6px;padding:7px 10px;box-shadow:inset 0 2px 6px #000c,inset 0 -1px 0 #ffffff08;}
 .bar-left:active{border-color:${C.acc};}
+.capo-tag{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:8px;font-weight:700;color:${C.opRed};letter-spacing:.04em;margin-left:5px;vertical-align:middle;text-shadow:0 0 5px ${C.opRed}66;}
 .bar-right{width:104px;flex-shrink:0;text-align:right;cursor:pointer;background:#23211C;border:1px solid #141310;border-top-color:#0C0B08;border-bottom-color:#3A362C;border-radius:6px;padding:7px 10px;box-shadow:inset 0 2px 6px #000c,inset 0 -1px 0 #ffffff08;}
 .bar-right:active{border-color:${C.acc};}
 .bar-chord-name{font-size:26px;font-family:'Doto','Space Mono',monospace;font-weight:900;color:${C.lcd};line-height:1;letter-spacing:.02em;text-shadow:0 0 10px ${C.acc}55;}
@@ -988,14 +1018,16 @@ html,body,#root{min-height:100%;background-color:${C.bg};}
 .reorder-btn:disabled{opacity:.2;cursor:default;pointer-events:none;}
 
 .backdrop{position:fixed;inset:0;bottom:var(--bar-h,110px);background:#00000088;z-index:70;opacity:0;transition:opacity .25s;pointer-events:none;}
-.welcome-backdrop{position:fixed;inset:0;background:#000000aa;z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;padding-top:max(20px,env(safe-area-inset-top));padding-bottom:max(20px,env(safe-area-inset-bottom));overflow-y:auto;}
+.welcome-backdrop{position:fixed;inset:0;background:#000;z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;padding-top:max(20px,env(safe-area-inset-top));padding-bottom:max(20px,env(safe-area-inset-bottom));overflow-y:auto;}
 .welcome-card{background:${C.surf};border:1px solid ${C.borderHi};border-radius:16px;max-width:400px;width:100%;padding:22px 20px;box-shadow:0 20px 60px #000a;margin:auto;}
 .welcome-title{font-family:'Doto','Space Mono',monospace;font-weight:900;font-size:22px;color:${C.text};letter-spacing:.02em;margin-bottom:12px;}
 .welcome-p{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:12.5px;line-height:1.6;color:${C.textMid};margin-bottom:16px;}
 .welcome-p b{color:${C.text};}
 .welcome-uses{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
-.welcome-use{background:${C.surf2};border:1px solid ${C.border};border-radius:9px;padding:10px 12px;}
-.welcome-use-h{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;font-size:12.5px;color:${C.text};margin-bottom:3px;}
+.welcome-use{display:block;width:100%;text-align:left;background:${C.surf2};border:1px solid ${C.border};border-radius:9px;padding:11px 12px;cursor:pointer;transition:all .1s;box-shadow:inset 0 1px 0 #ffffff10,0 2px 0 ${C.border};}
+.welcome-use:active{transform:translateY(2px);box-shadow:inset 0 1px 0 #ffffff10,0 0 0 ${C.border};}
+.welcome-use:hover{border-color:${C.acc}88;}
+.welcome-use-h{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;font-size:12.5px;color:${C.acc};margin-bottom:3px;}
 .welcome-use-b{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;line-height:1.5;color:${C.textDim};}
 .welcome-hint{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;line-height:1.5;color:${C.textDim};font-style:italic;margin-bottom:18px;}
 .welcome-btn{width:100%;background:linear-gradient(180deg,#E6BC60,${C.acc});border:none;color:#2A2824;padding:13px;border-radius:9px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;font-size:14px;letter-spacing:.04em;cursor:pointer;box-shadow:inset 0 2px 0 #ffffff66,0 5px 0 #6e5220,0 7px 8px #0000002e;transition:all .08s;}
@@ -1225,6 +1257,7 @@ function App() {
   const [songId, setSongId] = useState(() => uid());
   const [title, setTitle] = useState(DEMO_SONG.title);
   const [key, setKey] = useState(DEMO_SONG.key);
+  const [capo, setCapo] = useState(0); // display-only: shift section chord LABELS down by N semitones (guitar capo shapes)
   const [scale, setScale] = useState("major");
   const [bpm, setBpm] = useState(DEMO_SONG.bpm);
   const [timeSig, setTimeSig] = useState(DEMO_SONG.timeSig);
@@ -1280,6 +1313,36 @@ function App() {
       localStorage.setItem(LS_WELCOME, "1");
     } catch (e) {}
     setShowWelcome(false);
+  };
+  // Welcome use-case shortcuts: each dismisses the popup and sets up that flow.
+  const welcomePadOnly = () => {
+    const id = uid();
+    const chord = {
+      ...buildDegree(key, scale, 0),
+      id: uid(),
+      beats: 4,
+      inversion: "root"
+    };
+    setSections([{
+      id,
+      name: "Pad",
+      repeats: 1,
+      chords: [chord],
+      dyn: {
+        ...defaultDyn(timeSig),
+        pianoMuted: true
+      }
+    }]);
+    setOpenSecId(id);
+    dismissWelcome();
+  };
+  const welcomeSketch = () => {
+    dismissWelcome();
+    setLivePadsOpen(true);
+  };
+  const welcomeSetlist = () => {
+    dismissWelcome();
+    setLibraryOpen(true);
   };
   const [library, setLibrary] = useState(() => loadLibrary());
   const [setlistIds, setSetlistIds] = useState(() => loadSetlist());
@@ -1370,6 +1433,7 @@ function App() {
   }, [metroOn, metroPan, metroVol]);
   useEffect(() => {
     keyRef.current = key;
+    setCapo(0); // capo is a temporary view — reset when the key changes
     // Live capo: update the piano bus PitchShift when the key changes.
     // Note: crossing the C↔G bank boundary changes which samples are needed;
     // the bank is chosen when the engine is built, so a live cross-boundary
@@ -2562,11 +2626,30 @@ function App() {
       const eng = engRef.current;
       const now = Tone.now();
       if (eng && eng.metroSynth) {
+        // The metro synth may be muted (metronome off). Force it audible for the
+        // count-in clicks, then restore to whatever the running metronome needs.
+        const mr = metroRef.current;
+        try {
+          eng.metroSynth.volume.value = mr.vol / 100 * 20 - 20;
+        } catch (e) {}
         for (let i = 0; i < beats; i++) {
           try {
             eng.metroSynth.triggerAttackRelease(i === 0 ? "C5" : "G4", 0.04, now + i * spb);
           } catch (e) {}
+          // Blink the beat light on each count-in click (brightest on beat 1)
+          Tone.Draw.schedule(() => {
+            setBeatPulse(true);
+            clearTimeout(pulseTimer.current);
+            pulseTimer.current = setTimeout(() => setBeatPulse(false), 110);
+          }, now + i * spb);
         }
+        // Restore the synth to its running state after the count-in bar
+        const restore = mr.on ? mr.vol / 100 * 20 - 20 : -60;
+        setTimeout(() => {
+          try {
+            eng.metroSynth.volume.value = restore;
+          } catch (e) {}
+        }, beats * spb * 1000 + 60);
       }
       tp.start(`+${beats * spb}`);
     } else {
@@ -2795,34 +2878,43 @@ function App() {
     onClick: e => e.stopPropagation()
   }, /*#__PURE__*/React.createElement("div", {
     className: "welcome-title"
-  }, "Welcome to Chord & Groove"), /*#__PURE__*/React.createElement("p", {
+  }, "Welcome!"), /*#__PURE__*/React.createElement("p", {
     className: "welcome-p"
-  }, "A quick worship accompaniment tool — about 80% of a band, fast. The basic workflow: ", /*#__PURE__*/React.createElement("b", null, "pick a key"), ", ", /*#__PURE__*/React.createElement("b", null, "choose a tempo"), ", and organize ", /*#__PURE__*/React.createElement("b", null, "chord progressions into sections"), "."), /*#__PURE__*/React.createElement("div", {
+  }, "A quick accompaniment tool — about 80% of a band, fast. The basic workflow: ", /*#__PURE__*/React.createElement("b", null, "pick a key"), ", ", /*#__PURE__*/React.createElement("b", null, "choose a tempo"), ", and organize ", /*#__PURE__*/React.createElement("b", null, "chord progressions into sections"), "."), /*#__PURE__*/React.createElement("p", {
+    className: "welcome-p",
+    style: {
+      marginBottom: 10,
+      color: C.textDim
+    }
+  }, "Tap a use case below to jump in, or explore on your own:"), /*#__PURE__*/React.createElement("div", {
     className: "welcome-uses"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "welcome-use"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "welcome-use-h"
-  }, "🌊 Just a pad"), /*#__PURE__*/React.createElement("div", {
-    className: "welcome-use-b"
-  }, "Leave the sections empty and play a background pad in any key — no instruments, no arranging.")), /*#__PURE__*/React.createElement("div", {
-    className: "welcome-use"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "welcome-use",
+    onClick: welcomePadOnly
   }, /*#__PURE__*/React.createElement("div", {
     className: "welcome-use-h"
-  }, "🎹 Sketch progressions"), /*#__PURE__*/React.createElement("div", {
+  }, "Just a pad →"), /*#__PURE__*/React.createElement("div", {
     className: "welcome-use-b"
-  }, "Use the chord pads to try out and write progressions by ear before building a song.")), /*#__PURE__*/React.createElement("div", {
-    className: "welcome-use"
+  }, "A single section with one chord — play a background pad in any key, no arranging.")), /*#__PURE__*/React.createElement("button", {
+    className: "welcome-use",
+    onClick: welcomeSketch
   }, /*#__PURE__*/React.createElement("div", {
     className: "welcome-use-h"
-  }, "🎵 Full songs & setlists"), /*#__PURE__*/React.createElement("div", {
+  }, "Sketch progressions →"), /*#__PURE__*/React.createElement("div", {
     className: "welcome-use-b"
-  }, "Arrange sections into complete songs, then line them up into a setlist for a service."))), /*#__PURE__*/React.createElement("p", {
+  }, "Open the chord pads to try out and write progressions by ear.")), /*#__PURE__*/React.createElement("button", {
+    className: "welcome-use",
+    onClick: welcomeSetlist
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "welcome-use-h"
+  }, "Songs & setlists →"), /*#__PURE__*/React.createElement("div", {
+    className: "welcome-use-b"
+  }, "Browse the library and line up full songs into a setlist."))), /*#__PURE__*/React.createElement("p", {
     className: "welcome-hint"
-  }, "Tip: press play to hear the demo song — each section adds an instrument."), /*#__PURE__*/React.createElement("button", {
+  }, "Or press play to hear the demo song — each section adds an instrument."), /*#__PURE__*/React.createElement("button", {
     className: "welcome-btn",
     onClick: dismissWelcome
-  }, "Get started"))), /*#__PURE__*/React.createElement("div", {
+  }, "Start exploring"))), /*#__PURE__*/React.createElement("div", {
     className: "app",
     onClick: () => {
       addMenuOpen && setAddMenuOpen(false);
@@ -2852,6 +2944,7 @@ function App() {
     sec: sec,
     si: si,
     timeSig: timeSig,
+    capo: capo,
     playing: playing,
     beatPulse: beatPulse,
     isCur: playing && si === curSec,
@@ -3295,7 +3388,9 @@ function App() {
     className: "bar-chord-sub"
   }, resolved ? `${key} · pad` : `${key} · ${curSecObj?.name}${looping ? " · loop" : queued !== null ? ` · next: ${sections[queued]?.name}` : ""}`)) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "bar-chord-name"
-  }, key), /*#__PURE__*/React.createElement("div", {
+  }, key, !playing && capo > 0 && /*#__PURE__*/React.createElement("span", {
+    className: "capo-tag"
+  }, "capo ", capo)), /*#__PURE__*/React.createElement("div", {
     className: "bar-chord-sub"
   }, "key · tap"))), (() => {
     // Previous / next setlist neighbours (by setlist order). Buttons are
@@ -3569,6 +3664,8 @@ function App() {
     setKey: setKey,
     scale: scale,
     setScale: setScale,
+    capo: capo,
+    setCapo: setCapo,
     bpm: bpm,
     setBpm: setBpm,
     tap: tap,
@@ -3834,6 +3931,8 @@ function SettingsSheet({
   setKey,
   scale,
   setScale,
+  capo,
+  setCapo,
   bpm,
   setBpm,
   tap,
@@ -3893,14 +3992,22 @@ function SettingsSheet({
     className: "bpm-big",
     style: {
       marginBottom: 6,
-      padding: "8px 8px"
+      padding: "8px 8px",
+      display: "flex",
+      alignItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      borderRight: capo ? `1px solid ${C.screenBot}` : "none",
+      paddingRight: capo ? 8 : 0
     }
   }, /*#__PURE__*/React.createElement("select", {
     style: {
       background: "none",
       border: "none",
       color: C.lcd,
-      fontSize: 38,
+      fontSize: capo ? 30 : 38,
       fontFamily: "'Doto','Space Mono',monospace",
       fontWeight: 900,
       outline: "none",
@@ -3921,15 +4028,131 @@ function SettingsSheet({
       fontSize: 16,
       fontFamily: "'Space Mono',monospace"
     }
-  }, n)))), /*#__PURE__*/React.createElement("div", {
+  }, n))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Space Mono',monospace",
+      fontSize: 7,
+      color: C.lcd,
+      opacity: .5,
+      textAlign: "center",
+      letterSpacing: ".1em",
+      marginTop: 2
+    }
+  }, "KEY")), capo > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      paddingLeft: 8
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: C.lcd,
+      fontSize: 30,
+      fontFamily: "'Doto','Space Mono',monospace",
+      fontWeight: 900,
+      lineHeight: 1,
+      textAlign: "center",
+      textShadow: `0 0 12px ${C.acc}44`
+    }
+  }, NOTES[((noteIdx(keyN) - capo) % 12 + 12) % 12]), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Space Mono',monospace",
+      fontSize: 7,
+      color: C.lcd,
+      opacity: .5,
+      textAlign: "center",
+      letterSpacing: ".1em",
+      marginTop: 2
+    }
+  }, "CAPO ", capo))), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 9,
       color: C.textDim,
       letterSpacing: ".08em",
-      textAlign: "center"
+      textAlign: "center",
+      marginBottom: 10
     }
-  }, "MAJOR · for a minor song pick its relative major"))), isRight && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, "MAJOR · for a minor song pick its relative major"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Space Mono',monospace",
+      fontSize: 9,
+      color: C.textDim,
+      letterSpacing: ".06em",
+      marginBottom: 6
+    }
+  }, "CAPO · see easy shapes"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 5,
+      flexWrap: "wrap",
+      alignItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      display: "inline-block"
+    }
+  }, /*#__PURE__*/React.createElement("select", {
+    value: capo,
+    onChange: e => setCapo(Number(e.target.value)),
+    style: {
+      appearance: "none",
+      WebkitAppearance: "none",
+      background: C.screenBg,
+      color: C.lcd,
+      border: `1px solid ${C.screenTop}`,
+      borderBottomColor: C.screenBot,
+      borderRadius: 5,
+      fontFamily: "'Doto','Space Mono',monospace",
+      fontWeight: 900,
+      fontSize: 18,
+      padding: "5px 22px 5px 12px",
+      outline: "none",
+      cursor: "pointer",
+      textShadow: `0 0 8px ${C.acc}44`,
+      boxShadow: `inset 0 1px 4px #000a`
+    }
+  }, [0, 1, 2, 3, 4, 5, 6, 7].map(n => /*#__PURE__*/React.createElement("option", {
+    key: n,
+    value: n,
+    style: {
+      background: C.surf,
+      color: C.text,
+      fontFamily: "'Space Mono',monospace",
+      fontSize: 14
+    }
+  }, n))), /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      right: 7,
+      top: "50%",
+      transform: "translateY(-50%)",
+      pointerEvents: "none",
+      color: C.lcd,
+      opacity: .5,
+      fontSize: 9
+    }
+  }, "▾")), /*#__PURE__*/React.createElement("button", {
+    className: `ts-btn${capo === 0 ? " on" : ""}`,
+    style: {
+      padding: "7px 10px",
+      fontSize: 12
+    },
+    onClick: () => setCapo(0)
+  }, "Off"), capoOptions(keyN).map(o => /*#__PURE__*/React.createElement("button", {
+    key: o.shape,
+    className: `ts-btn${capo === o.fret ? " on" : ""}`,
+    style: {
+      padding: "7px 10px",
+      fontSize: 12
+    },
+    onClick: () => setCapo(o.fret)
+  }, o.shape, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 8,
+      opacity: .6
+    }
+  }, " · ", o.fret)))))), isRight && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "spine-card"
   }, /*#__PURE__*/React.createElement("div", {
     className: "spine"
@@ -4255,6 +4478,7 @@ function SecCard({
   sec,
   si,
   timeSig,
+  capo = 0,
   playing,
   beatPulse,
   isCur,
@@ -4317,7 +4541,7 @@ function SecCard({
           boxShadow: "none",
           transition: isPulse ? "filter 0s" : "all .15s"
         }
-      }, chordDisplay(ch)));
+      }, chordDisplay(ch, capo)));
       acc += ch.beats;
     });
     return els;
@@ -4613,7 +4837,7 @@ function BeatGrid({
       }
     }, slot.isFirst && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       className: "cell-name"
-    }, chordDisplay(ch)), /*#__PURE__*/React.createElement("div", {
+    }, chordDisplay(ch, capo)), /*#__PURE__*/React.createElement("div", {
       className: "cell-roman"
     }, ch.roman, ch.inversion !== "root" ? ` /${{
       root: ch.root,
