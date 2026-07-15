@@ -6,9 +6,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
   <meta name="theme-color" content="#EDEAE0"/>
-  <title>Tinuë &mdash; the quick way to a fuller sound</title>
+  <title>Tinue &mdash; the quick way to a fuller sound</title>
   <meta name="description" content="The quick way to a fuller sound. Pick a key, set a tempo, and organize chord progressions into sections &mdash; about 80% of a band, fast."/>
-  <meta name="apple-mobile-web-app-title" content="Tinuë"/>
+  <meta name="apple-mobile-web-app-title" content="Tinue"/>
   <link rel="manifest" href="manifest.webmanifest"/>
   <link rel="apple-touch-icon" href="icons/tinue-180.png"/>
   <link rel="icon" type="image/png" sizes="192x192" href="icons/tinue-192.png"/>
@@ -917,6 +917,10 @@ const C = {
   acc: "#E0902A",
   accDim: "#B0701E",
   accLo: "#E0902A22",
+  accLit: "#EAC062",
+  // top of the one "on" gradient (accLit → acc)
+  accLip: "#6e5220",
+  // the 3D lip under an amber button
   text: "#2A2824",
   textMid: "#5A564C",
   textDim: "#8C8678",
@@ -942,67 +946,88 @@ const C = {
 };
 const G = `
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Doto:wght@500;700;900&display=swap');
+/* ─── Design tokens ───────────────────────────────────────────────────────────
+   Pick the nearest step. Do not invent in-between values — that drift is what
+   makes an interface feel subtly off. Space Mono is set on <body> and inherited;
+   never re-declare it inline.
+
+   TYPE      8 micro · 10 label · 12 body/buttons · 15 emphasis
+             22 display · 30 hero · 44 section screen
+   TRACKING  .04em tight · .1em labels · .2em wide
+   RADIUS    2 chip · 6 button/screen · 10 pad/card · 14 sheet · 50% circle
+   GAP       2 tight · 6 default · 10 loose
+   OPACITY   .3 faint · .5 half · .7 muted · .85 near · 1
+   MOTION    .08s press · .15s quick · .25s smooth  (1s+ = deliberate fades)
+   LAYERS    3 in-card · 40 menus · 45/46 live cards · 70 backdrop · 80 sheet
+             90 bar · 120 sheet-menu · 200 notch · 300 welcome
+   DEPTH     lip 1px pressed · 2px · 4px · 5px raised
+             blur 3 tight · 4 · 6 soft · 8 wide  (22+ = floating cards)
+             white highlight  0a faintest · 14 faint · 22 subtle · 66 bright
+             dark shadow      18 faint · 22 subtle · 2e medium · 88 strong
+             inset screen     #0009 medium · #000c deep
+   ─────────────────────────────────────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{background-color:${C.bg};background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");color:${C.text};font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;-webkit-font-smoothing:antialiased;}
 input,select,button{font-family:inherit;}
 html,body,#root{min-height:100%;background-color:${C.bg};}
 .app{max-width:680px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top)) 14px calc(var(--bar-h,150px) + 20px);min-height:100vh;overscroll-behavior:none;background-color:${C.bg};background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");}
+/* Live key/tempo card horizontal anchors (centred column) */
+:root{--cardKeyL:max(12px, calc(50% - 328px));--cardTempoR:max(12px, calc(50% - 328px));}
 .notch-bar{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:${C.bg};z-index:200;}
 
-.bar{position:fixed;bottom:0;left:0;right:0;z-index:90;background:#CFCCBF;border-top:1px solid #B4AF9E;box-shadow:0 -2px 12px #00000018;}
+.bar{position:fixed;bottom:0;left:0;right:0;z-index:90;background:${C.empty};border-top:1px solid ${C.barLine};box-shadow:0 -2px 12px #00000018;}
 .bar-inner{max-width:680px;margin:0 auto;}
 .bar-main{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;gap:6px;}
-.bar-left{width:104px;flex-shrink:0;min-width:0;cursor:pointer;background:#23211C;border:1px solid #141310;border-top-color:#0C0B08;border-bottom-color:#3A362C;border-radius:6px;padding:7px 10px;box-shadow:inset 0 2px 6px #000c,inset 0 -1px 0 #ffffff08;}
+.bar-left{width:104px;flex-shrink:0;min-width:0;cursor:pointer;background:${C.screenBg};border:1px solid ${C.screenTop};border-top-color:#0C0B08;border-bottom-color:${C.screenBot};border-radius:6px;padding:7px 10px;box-shadow:inset 0 2px 6px #000c,inset 0 -1px 0 #ffffff0a;}
 .bar-left:active{border-color:${C.acc};}
 .capo-tag{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:8px;font-weight:700;color:${C.opRed};letter-spacing:.04em;margin-left:5px;vertical-align:middle;text-shadow:0 0 5px ${C.opRed}66;}
-.bar-right{width:104px;flex-shrink:0;text-align:right;cursor:pointer;background:#23211C;border:1px solid #141310;border-top-color:#0C0B08;border-bottom-color:#3A362C;border-radius:6px;padding:7px 10px;box-shadow:inset 0 2px 6px #000c,inset 0 -1px 0 #ffffff08;}
+.bar-right{width:104px;flex-shrink:0;text-align:right;cursor:pointer;background:${C.screenBg};border:1px solid ${C.screenTop};border-top-color:#0C0B08;border-bottom-color:${C.screenBot};border-radius:6px;padding:7px 10px;box-shadow:inset 0 2px 6px #000c,inset 0 -1px 0 #ffffff0a;}
 .bar-right:active{border-color:${C.acc};}
-.bar-chord-name{font-size:26px;font-family:'Doto','Space Mono',monospace;font-weight:900;color:${C.lcd};line-height:1;letter-spacing:.02em;text-shadow:0 0 10px ${C.acc}55;}
-.bar-chord-sub{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;color:${C.textDim};letter-spacing:.06em;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;}
-.bar-bpm-num{font-size:26px;font-family:'Doto','Space Mono',monospace;font-weight:900;color:${C.lcd};line-height:1;text-shadow:0 0 10px ${C.acc}55;}
-.bar-bpm-lbl{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:8px;color:${C.textDim};letter-spacing:.14em;text-transform:uppercase;margin-top:3px;}
-.pbtn{width:50px;height:50px;border-radius:50%;background:linear-gradient(180deg,#E6BC60,${C.acc});border:none;color:#0E1014;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .08s;box-shadow:0 0 16px ${C.acc}55,inset 0 2px 0 #ffffff66,0 5px 0 #6e5220,0 7px 8px #0000002e;}
-.pbtn:active{transform:translateY(4px);box-shadow:0 0 16px ${C.acc}55,inset 0 2px 0 #ffffff66,0 1px 0 #6e5220,0 2px 4px #0000001e;}
-.pbtn.idle{background:linear-gradient(180deg,#FBFAF6,#E4E1D6);color:#2A2824;box-shadow:inset 0 2px 0 #ffffff22,0 5px 0 #A49E8C,0 7px 8px #0000002e;}
+.bar-chord-name{font-size:22px;font-family:'Doto','Space Mono',monospace;font-weight:900;color:${C.lcd};line-height:1;letter-spacing:.04em;text-shadow:0 0 10px ${C.acc}55;}
+.bar-chord-sub{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:${C.textDim};letter-spacing:.04em;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;}
+.bar-bpm-num{font-size:22px;font-family:'Doto','Space Mono',monospace;font-weight:900;color:${C.lcd};line-height:1;text-shadow:0 0 10px ${C.acc}55;}
+.bar-bpm-lbl{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:8px;color:${C.textDim};letter-spacing:.1em;text-transform:uppercase;margin-top:3px;}
+.pbtn{width:50px;height:50px;border-radius:50%;background:linear-gradient(180deg,${C.accLit},${C.acc});border:none;color:#0E1014;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .08s;box-shadow:0 0 16px ${C.acc}55,inset 0 2px 0 #ffffff66,0 5px 0 ${C.accLip},0 7px 8px #0000002e;}
+.pbtn:active{transform:translateY(4px);box-shadow:0 0 16px ${C.acc}55,inset 0 2px 0 #ffffff66,0 1px 0 ${C.accLip},0 2px 4px #00000022;}
+.pbtn.idle{background:linear-gradient(180deg,#FBFAF6,#E4E1D6);color:${C.text};box-shadow:inset 0 2px 0 #ffffff22,0 5px 0 #A49E8C,0 7px 8px #0000002e;}
 .pbtn.fading{animation:fadepulse 1s ease-in-out infinite;}
-@keyframes fadepulse{0%,100%{box-shadow:0 0 16px ${C.acc}55,inset 0 2px 0 #ffffff66,0 5px 0 #6e5220,0 7px 8px #0000002e;}50%{box-shadow:0 0 6px ${C.acc}22,inset 0 2px 0 #ffffff44,0 5px 0 #6e5220,0 7px 8px #0000002e;opacity:.7;}}
-.pbtn.idle:active{transform:translateY(4px);box-shadow:inset 0 1px 0 #ffffff14,0 1px 0 #A49E8C,0 2px 4px #0000001e;}
+@keyframes fadepulse{0%,100%{box-shadow:0 0 16px ${C.acc}55,inset 0 2px 0 #ffffff66,0 5px 0 ${C.accLip},0 7px 8px #0000002e;}50%{box-shadow:0 0 6px ${C.acc}22,inset 0 2px 0 #ffffff66,0 5px 0 ${C.accLip},0 7px 8px #0000002e;opacity:.7;}}
+.pbtn.idle:active{transform:translateY(4px);box-shadow:inset 0 1px 0 #ffffff14,0 1px 0 #A49E8C,0 2px 4px #00000022;}
 
-.song-header{display:flex;align-items:center;gap:8px;padding:12px 0 14px;border-bottom:1px solid ${C.border};margin-bottom:14px;}
-.qw-logo{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:${C.textDim};flex-shrink:0;}
-.song-title-inp{background:#23211C;border:1px solid #141310;border-top-color:#0C0B08;border-bottom-color:#3A362C;color:${C.lcd};font-size:17px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;font-family:'Doto','Space Mono',monospace;outline:none;flex:1;min-width:0;border-radius:6px;transition:box-shadow .15s;padding:8px 12px;box-shadow:inset 0 2px 6px #000c,inset 0 -1px 0 #ffffff08;text-shadow:0 0 8px ${C.acc}33;}
+.song-header{display:flex;align-items:center;gap:10px;padding:12px 0 14px;border-bottom:1px solid ${C.border};margin-bottom:14px;}
+.song-title-inp{background:${C.screenBg};border:1px solid ${C.screenTop};border-top-color:#0C0B08;border-bottom-color:${C.screenBot};color:${C.lcd};font-size:15px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;font-family:'Doto','Space Mono',monospace;outline:none;flex:1;min-width:0;border-radius:6px;transition:box-shadow .15s;padding:8px 12px;box-shadow:inset 0 2px 6px #000c,inset 0 -1px 0 #ffffff0a;text-shadow:0 0 8px ${C.acc}33;}
 .song-title-inp:focus{box-shadow:inset 0 2px 6px #000c,0 0 0 1px ${C.acc}66;}
 .song-title-inp::placeholder{color:${C.textDim};}
-.hdr-btn{background:${C.bg};border:1px solid ${C.border};color:${C.textMid};padding:7px 13px;border-radius:14px;cursor:pointer;font-size:11px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;letter-spacing:.06em;text-transform:uppercase;transition:all .12s;white-space:nowrap;flex-shrink:0;box-shadow:inset 0 1px 3px #00000018;}
-.mini-menu{position:absolute;top:calc(100% + 5px);right:0;z-index:120;background:${C.surf3};border:1px solid ${C.borderHi};border-radius:9px;padding:4px;box-shadow:0 8px 22px #0006;display:flex;flex-direction:column;gap:2px;min-width:150px;}
-.mini-item{display:block;width:100%;text-align:left;background:none;border:none;cursor:pointer;padding:9px 12px;border-radius:6px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:${C.text};letter-spacing:.02em;white-space:nowrap;transition:background .1s;}
+.hdr-btn{background:${C.bg};border:1px solid ${C.border};color:${C.textMid};padding:7px 13px;border-radius:14px;cursor:pointer;font-size:12px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;letter-spacing:.04em;text-transform:uppercase;transition:all .15s;white-space:nowrap;flex-shrink:0;box-shadow:inset 0 1px 3px #00000018;}
+.mini-menu{position:absolute;top:calc(100% + 5px);right:0;z-index:120;background:${C.surf3};border:1px solid ${C.borderHi};border-radius:10px;padding:4px;box-shadow:0 8px 22px #0009;display:flex;flex-direction:column;gap:2px;min-width:150px;}
+.mini-item{display:block;width:100%;text-align:left;background:none;border:none;cursor:pointer;padding:9px 12px;border-radius:6px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;color:${C.text};letter-spacing:.04em;white-space:nowrap;transition:background .08s;}
 .mini-item:active{background:${C.acc}22;}
 .mini-item:hover{background:${C.surf2};}
 .mini-div{height:1px;background:${C.border};margin:3px 6px;}
-.hdr-btn:active{color:${C.text};border-color:${C.borderHi};box-shadow:inset 0 1px 4px #00000028;}
+.hdr-btn:active{color:${C.text};border-color:${C.borderHi};box-shadow:inset 0 1px 4px #0000002e;}
 .hdr-btn:hover{color:${C.text};}
-.hdr-btn.saved{border-color:${C.green}66;color:${C.green};box-shadow:inset 0 1px 3px #00000014;}
+.hdr-btn.saved{border-color:${C.green}66;color:${C.green};box-shadow:inset 0 1px 3px #00000018;}
 .hdr-btn.unsaved{position:relative;}
 .hdr-btn.unsaved::after{content:'';position:absolute;top:5px;right:7px;width:5px;height:5px;border-radius:50%;background:${C.acc};box-shadow:0 0 5px ${C.acc}aa;}
 .mute-section{padding:6px 16px 8px;border-top:1px solid ${C.border};}
-.mute-label{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:${C.textDim};margin-bottom:5px;}
-.mute-btns{display:flex;gap:5px;}
+.mute-label{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:${C.textDim};margin-bottom:5px;}
+.mute-btns{display:flex;gap:6px;}
 .mute-btn{flex:1;background:linear-gradient(180deg,#FBFAF6,#E4E1D6);border:none;color:${C.textMid};padding:9px 4px;border-radius:6px;cursor:pointer;font-size:10px;letter-spacing:.04em;text-transform:uppercase;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;transition:all .08s;text-align:center;box-shadow:inset 0 2px 0 #ffffff22,0 5px 0 #A49E8C,0 7px 8px #0000002e;}
-.mute-btn:active{transform:translateY(4px);box-shadow:inset 0 2px 0 #ffffff1a,0 1px 0 #A49E8C,0 2px 4px #0000001e;}
+.mute-btn:active{transform:translateY(4px);box-shadow:inset 0 2px 0 #ffffff14,0 1px 0 #A49E8C,0 2px 4px #00000022;}
 .mute-btn.on{border-color:${C.acc}55;color:${C.acc};background:${C.accLo};}
 .mute-btn.off{border-color:${C.red}66;color:${C.red};background:${C.redLo};}
 .mix-slider{-webkit-appearance:none;flex:1;height:3px;border-radius:2px;background:${C.border};outline:none;cursor:pointer;}
 .mix-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:${C.acc};cursor:pointer;}
 .badge.pulse{filter:brightness(1.5);}
 .beat-cell.pulse-beat{filter:brightness(1.55);}
-.beat-cell.selected{box-shadow:0 -2px 0 ${C.acc} inset,0 2px 0 ${C.acc} inset,0 5px 0 #00000022,0 7px 9px #0000002e,0 0 12px ${C.acc}55 !important;transform:translateY(-3px);z-index:3;}
-.beat-cell.selected.chord-first{box-shadow:2px 0 0 ${C.acc} inset,0 -2px 0 ${C.acc} inset,0 2px 0 ${C.acc} inset,0 5px 0 #00000022,0 7px 9px #0000002e,0 0 12px ${C.acc}55 !important;}
-.beat-cell.selected.chord-last{box-shadow:-2px 0 0 ${C.acc} inset,0 -2px 0 ${C.acc} inset,0 2px 0 ${C.acc} inset,0 5px 0 #00000022,0 7px 9px #0000002e,0 0 12px ${C.acc}55 !important;}
-.beat-cell.selected.chord-solo{box-shadow:inset 0 0 0 2px ${C.acc},0 5px 0 #00000022,0 7px 9px #0000002e,0 0 12px ${C.acc}55 !important;}
+.beat-cell.selected{box-shadow:0 -2px 0 ${C.acc} inset,0 2px 0 ${C.acc} inset,0 5px 0 #00000022,0 7px 8px #0000002e,0 0 12px ${C.acc}55 !important;transform:translateY(-3px);z-index:3;}
+.beat-cell.selected.chord-first{box-shadow:2px 0 0 ${C.acc} inset,0 -2px 0 ${C.acc} inset,0 2px 0 ${C.acc} inset,0 5px 0 #00000022,0 7px 8px #0000002e,0 0 12px ${C.acc}55 !important;}
+.beat-cell.selected.chord-last{box-shadow:-2px 0 0 ${C.acc} inset,0 -2px 0 ${C.acc} inset,0 2px 0 ${C.acc} inset,0 5px 0 #00000022,0 7px 8px #0000002e,0 0 12px ${C.acc}55 !important;}
+.beat-cell.selected.chord-solo{box-shadow:inset 0 0 0 2px ${C.acc},0 5px 0 #00000022,0 7px 8px #0000002e,0 0 12px ${C.acc}55 !important;}
 
 /* Chord action bar */
 .chord-action-bar{display:flex;gap:6px;padding:6px 0 4px;align-items:center;}
-.cab-btn{background:${C.surf2};border:1px solid ${C.border};color:${C.textMid};padding:6px 14px;border-radius:4px;cursor:pointer;font-size:13px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:600;transition:all .15s;flex:1;text-align:center;}
+.cab-btn{background:${C.surf2};border:1px solid ${C.border};color:${C.textMid};padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;transition:all .15s;flex:1;text-align:center;}
 .cab-btn:hover{border-color:${C.borderHi};color:${C.text};}
 .cab-btn:disabled{opacity:.3;cursor:default;pointer-events:none;}
 .cab-btn.del{border-color:${C.red}44;color:${C.red};}
@@ -1010,74 +1035,73 @@ html,body,#root{min-height:100%;background-color:${C.bg};}
 
 /* Section wrapper with reorder column */
 .sec-wrap{display:flex;align-items:stretch;gap:6px;margin-bottom:10px;}
-.sec{background:${C.surf};border:1px solid ${C.borderHi};border-left:3px solid transparent;border-radius:6px;flex:1;min-width:0;transition:border-color .25s,border-left-color .25s;}
-.sec-reorder{display:flex;flex-direction:column;gap:4px;justify-content:center;flex-shrink:0;}
-.reorder-btn{background:linear-gradient(180deg,#F4F2EA,#DAD7CA);border:none;color:${C.textDim};width:28px;height:28px;border-radius:4px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .08s;box-shadow:inset 0 1px 0 #ffffff1e,0 3px 0 #ADA795,0 4px 5px #00000022;}
-.reorder-btn:active{transform:translateY(2px);box-shadow:inset 0 1px 0 #ffffff10,0 0 0 #A49E8C,0 1px 2px #0009;}
+.sec-reorder{display:flex;flex-direction:column;gap:6px;justify-content:center;flex-shrink:0;}
+.reorder-btn{background:linear-gradient(180deg,#F4F2EA,#DAD7CA);border:none;color:${C.textDim};width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all .08s;box-shadow:inset 0 1px 0 #ffffff22,0 3px 0 #ADA795,0 4px 6px #00000022;}
+.reorder-btn:active{transform:translateY(2px);box-shadow:inset 0 1px 0 #ffffff14,0 0 0 #A49E8C,0 1px 3px #0009;}
 .reorder-btn:hover{border-color:${C.borderHi};color:${C.text};}
-.reorder-btn:disabled{opacity:.2;cursor:default;pointer-events:none;}
+.reorder-btn:disabled{opacity:.3;cursor:default;pointer-events:none;}
 
 .backdrop{position:fixed;inset:0;bottom:var(--bar-h,110px);background:#00000088;z-index:70;opacity:0;transition:opacity .25s;pointer-events:none;}
 .welcome-backdrop{position:fixed;inset:0;background:#000;z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;padding-top:max(20px,env(safe-area-inset-top));padding-bottom:max(20px,env(safe-area-inset-bottom));overflow-y:auto;}
-.welcome-card{background:${C.surf};border:1px solid ${C.borderHi};border-radius:16px;max-width:400px;width:100%;padding:22px 20px;box-shadow:0 20px 60px #000a;margin:auto;}
-.welcome-title{font-family:'Doto','Space Mono',monospace;font-weight:900;font-size:22px;color:${C.text};letter-spacing:.02em;margin-bottom:12px;}
-.welcome-p{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:12.5px;line-height:1.6;color:${C.textMid};margin-bottom:16px;}
+.welcome-card{background:${C.surf};border:1px solid ${C.borderHi};border-radius:14px;max-width:400px;width:100%;padding:22px 20px;box-shadow:0 20px 60px #000c;margin:auto;}
+.welcome-title{font-family:'Doto','Space Mono',monospace;font-weight:900;font-size:22px;color:${C.text};letter-spacing:.04em;margin-bottom:12px;}
+.welcome-p{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;line-height:1.6;color:${C.textMid};margin-bottom:16px;}
 .welcome-p b{color:${C.text};}
 .welcome-uses{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
-.welcome-use{display:block;width:100%;text-align:left;background:${C.surf2};border:1px solid ${C.border};border-radius:9px;padding:11px 12px;cursor:pointer;transition:all .1s;box-shadow:inset 0 1px 0 #ffffff10,0 2px 0 ${C.border};}
-.welcome-use:active{transform:translateY(2px);box-shadow:inset 0 1px 0 #ffffff10,0 0 0 ${C.border};}
+.welcome-use{display:block;width:100%;text-align:left;background:${C.surf2};border:1px solid ${C.border};border-radius:10px;padding:11px 12px;cursor:pointer;transition:all .08s;box-shadow:inset 0 1px 0 #ffffff14,0 2px 0 ${C.border};}
+.welcome-use:active{transform:translateY(2px);box-shadow:inset 0 1px 0 #ffffff14,0 0 0 ${C.border};}
 .welcome-use:hover{border-color:${C.acc}88;}
-.welcome-use-h{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;font-size:12.5px;color:${C.acc};margin-bottom:3px;}
-.welcome-use-b{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;line-height:1.5;color:${C.textDim};}
-.welcome-hint{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;line-height:1.5;color:${C.textDim};font-style:italic;margin-bottom:18px;}
-.welcome-btn{width:100%;background:linear-gradient(180deg,#E6BC60,${C.acc});border:none;color:#2A2824;padding:13px;border-radius:9px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;font-size:14px;letter-spacing:.04em;cursor:pointer;box-shadow:inset 0 2px 0 #ffffff66,0 5px 0 #6e5220,0 7px 8px #0000002e;transition:all .08s;}
-.welcome-btn:active{transform:translateY(4px);box-shadow:inset 0 2px 0 #ffffff66,0 1px 0 #6e5220,0 2px 4px #0000001e;}
+.welcome-use-h{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;font-size:12px;color:${C.acc};margin-bottom:3px;}
+.welcome-use-b{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;line-height:1.5;color:${C.textDim};}
+.welcome-hint{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;line-height:1.5;color:${C.textDim};font-style:italic;margin-bottom:18px;}
+.welcome-btn{width:100%;background:linear-gradient(180deg,${C.accLit},${C.acc});border:none;color:${C.text};padding:13px;border-radius:10px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;font-size:15px;letter-spacing:.04em;cursor:pointer;box-shadow:inset 0 2px 0 #ffffff66,0 5px 0 ${C.accLip},0 7px 8px #0000002e;transition:all .08s;}
+.welcome-btn:active{transform:translateY(4px);box-shadow:inset 0 2px 0 #ffffff66,0 1px 0 ${C.accLip},0 2px 4px #00000022;}
 .backdrop.open{opacity:1;pointer-events:all;}
-.sheet{position:fixed;bottom:var(--bar-h,110px);left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:680px;z-index:80;background:${C.surf};border-top:1px solid ${C.border};border-radius:14px 14px 0 0;max-height:calc(100vh - var(--bar-h,110px) - env(safe-area-inset-top) - 8px);overflow-y:auto;transition:transform .28s cubic-bezier(.32,0,.18,1);}
+.sheet{position:fixed;bottom:var(--bar-h,110px);left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:680px;z-index:80;background:${C.surf};border-top:1px solid ${C.border};border-radius:14px 14px 0 0;max-height:calc(100vh - var(--bar-h,110px) - env(safe-area-inset-top) - 8px);overflow-y:auto;transition:transform .25s cubic-bezier(.32,0,.18,1);}
 .sheet.open{transform:translateX(-50%) translateY(0);}
 .library-sheet{min-height:56vh;}
 .sheet-handle{width:36px;height:4px;background:${C.border};border-radius:2px;margin:10px auto 14px;}
 .sheet-inner{padding:0 16px 24px;}
 
-.sec{background:${C.surf};border:1px solid ${C.border};border-radius:6px;margin-bottom:8px;transition:border-color .2s;}
+.sec{background:${C.surf};border:1px solid ${C.border};border-radius:6px;flex:1;min-width:0;margin-bottom:8px;transition:border-color .25s;}
 .sec.s-open{border-color:${C.acc}88;}
 .sec.s-cur{border-color:${C.acc};}
 .sec.s-loop{border-color:${C.green};}
 .sec.s-queued{border-color:${C.accDim};}
 
 .sec-hdr{display:flex;align-items:center;padding:10px 10px 6px;gap:0;}
-.rep-screen{background:${C.screenBg};border:1px solid ${C.screenTop};border-bottom-color:${C.screenBot};border-radius:5px;padding:4px 12px;min-width:48px;text-align:center;font-family:'Doto','Space Mono',monospace;font-weight:900;font-size:16px;color:${C.lcd};box-shadow:inset 0 1px 4px #000a;text-shadow:0 0 6px ${C.acc}33;}
-.rep-pm{background:linear-gradient(180deg,#FBFAF6,#E4E1D6);border:none;color:${C.text};width:34px;height:32px;border-radius:5px;font-size:18px;cursor:pointer;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;flex-shrink:0;box-shadow:inset 0 1px 0 #ffffff1e,0 3px 0 #A49E8C,0 4px 5px #00000022;transition:all .08s;}
-.rep-pm:active{transform:translateY(2px);box-shadow:inset 0 1px 0 #ffffff10,0 1px 0 #A49E8C,0 1px 2px #00000018;}
-.sec-name-inp{background:#23211C;border:1px solid #141310;border-top-color:#0C0B08;border-bottom-color:#3A362C;color:${C.lcd};font-size:13px;font-weight:700;font-family:'Doto','Space Mono',monospace;text-transform:uppercase;letter-spacing:.02em;padding:5px 9px;outline:none;width:104px;flex-shrink:0;border-radius:5px;box-shadow:inset 0 1px 4px #000a;text-shadow:0 0 6px ${C.acc}22;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:28px;}
-.sec-name-inp:focus{box-shadow:inset 0 1px 4px #000a,0 0 0 1px ${C.acc}66;}
+.rep-screen{background:${C.screenBg};border:1px solid ${C.screenTop};border-bottom-color:${C.screenBot};border-radius:6px;padding:4px 12px;min-width:48px;text-align:center;font-family:'Doto','Space Mono',monospace;font-weight:900;font-size:15px;color:${C.lcd};box-shadow:inset 0 1px 4px #000c;text-shadow:0 0 6px ${C.acc}33;}
+.rep-pm{background:linear-gradient(180deg,#FBFAF6,#E4E1D6);border:none;color:${C.text};width:34px;height:32px;border-radius:6px;font-size:22px;cursor:pointer;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;flex-shrink:0;box-shadow:inset 0 1px 0 #ffffff22,0 3px 0 #A49E8C,0 4px 6px #00000022;transition:all .08s;}
+.rep-pm:active{transform:translateY(2px);box-shadow:inset 0 1px 0 #ffffff14,0 1px 0 #A49E8C,0 1px 3px #00000018;}
+.sec-name-inp{background:${C.screenBg};border:1px solid ${C.screenTop};border-top-color:#0C0B08;border-bottom-color:${C.screenBot};color:${C.lcd};font-size:12px;font-weight:700;font-family:'Doto','Space Mono',monospace;text-transform:uppercase;letter-spacing:.04em;padding:5px 9px;outline:none;width:104px;flex-shrink:0;border-radius:6px;box-shadow:inset 0 1px 4px #000c;text-shadow:0 0 6px ${C.acc}22;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:28px;}
+.sec-name-inp:focus{box-shadow:inset 0 1px 4px #000c,0 0 0 1px ${C.acc}66;}
 .sec-toggle{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:4px 8px;gap:6px;user-select:none;}
 .sec-toggle-line{height:1px;background:${C.border};flex:1;}
 /* Small 3D tab for the section accordion trigger */
-.tab3d{display:inline-flex;align-items:center;justify-content:center;gap:4px;flex-shrink:0;
-  background:linear-gradient(180deg,#FBFAF6,#E4E1D6);border:none;border-radius:12px;
+.tab3d{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex-shrink:0;
+  background:linear-gradient(180deg,#FBFAF6,#E4E1D6);border:none;border-radius:14px;
   padding:4px 12px;cursor:pointer;
-  box-shadow:inset 0 1px 0 #ffffff1e,0 3px 0 #A49E8C,0 4px 5px #00000022;transition:all .08s;}
-.tab3d:active{transform:translateY(2px);box-shadow:inset 0 1px 0 #ffffff10,0 1px 0 #A49E8C,0 1px 2px #00000018;}
-.tab3d.open{background:linear-gradient(180deg,#F4D48A,#E8C067);box-shadow:inset 0 1px 0 #ffffff55,0 3px 0 #B89340,0 4px 5px #00000022;}
-.tab3d .chevron{font-size:8px;transition:transform .18s;color:${C.textMid};}
-.tab3d.open .chevron{transform:rotate(180deg);color:#2A2824;}
-.tab3d .tab-lbl{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:${C.textMid};}
-.tab3d.open .tab-lbl{color:#2A2824;font-weight:700;}
+  box-shadow:inset 0 1px 0 #ffffff22,0 3px 0 #A49E8C,0 4px 6px #00000022;transition:all .08s;}
+.tab3d:active{transform:translateY(2px);box-shadow:inset 0 1px 0 #ffffff14,0 1px 0 #A49E8C,0 1px 3px #00000018;}
+.tab3d.open{background:linear-gradient(180deg,${C.accLit},${C.acc});box-shadow:inset 0 1px 0 #ffffff66,0 3px 0 ${C.accLip},0 4px 6px #00000022;}
+.tab3d .chevron{font-size:8px;transition:transform .15s;color:${C.textMid};}
+.tab3d.open .chevron{transform:rotate(180deg);color:${C.text};}
+.tab3d .tab-lbl{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:${C.textMid};}
+.tab3d.open .tab-lbl{color:${C.text};font-weight:700;}
 /* Full-width 3D bar button for the Chords/Mixer mode divider */
-.barbtn3d{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
-  background:linear-gradient(180deg,#FBFAF6,#E4E1D6);border:none;border-radius:8px;
+.barbtn3d{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+  background:linear-gradient(180deg,#FBFAF6,#E4E1D6);border:none;border-radius:10px;
   padding:8px 12px;margin:2px 0 10px;cursor:pointer;
-  box-shadow:inset 0 2px 0 #ffffff22,0 4px 0 #A49E8C,0 6px 7px #0000002a;transition:all .08s;}
-.barbtn3d:active{transform:translateY(3px);box-shadow:inset 0 2px 0 #ffffff14,0 1px 0 #A49E8C,0 2px 3px #0000001e;}
-.barbtn3d.open{background:linear-gradient(180deg,#F4D48A,#E8C067);box-shadow:inset 0 2px 0 #ffffff55,0 4px 0 #B89340,0 6px 7px #0000002a;}
-.barbtn3d .bb-lbl{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:${C.textMid};}
-.barbtn3d.open .bb-lbl{color:#2A2824;font-weight:700;}
-.barbtn3d .chevron{font-size:9px;color:${C.textMid};transition:transform .18s;}
-.barbtn3d.open .chevron{transform:rotate(180deg);color:#2A2824;}
-.chevron{font-size:9px;color:${C.textDim};transition:transform .2s;flex-shrink:0;}
+  box-shadow:inset 0 2px 0 #ffffff22,0 4px 0 #A49E8C,0 6px 6px #0000002e;transition:all .08s;}
+.barbtn3d:active{transform:translateY(3px);box-shadow:inset 0 2px 0 #ffffff14,0 1px 0 #A49E8C,0 2px 3px #00000022;}
+.barbtn3d.open{background:linear-gradient(180deg,${C.accLit},${C.acc});box-shadow:inset 0 2px 0 #ffffff66,0 4px 0 ${C.accLip},0 6px 6px #0000002e;}
+.barbtn3d .bb-lbl{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:${C.textMid};}
+.barbtn3d.open .bb-lbl{color:${C.text};font-weight:700;}
+.barbtn3d .chevron{font-size:10px;color:${C.textMid};transition:transform .15s;}
+.barbtn3d.open .chevron{transform:rotate(180deg);color:${C.text};}
+.chevron{font-size:10px;color:${C.textDim};transition:transform .25s;flex-shrink:0;}
 .chevron.open{transform:rotate(180deg);}
-.sec-status{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:11px;letter-spacing:.06em;color:${C.textMid};white-space:nowrap;flex-shrink:0;}
+.sec-status{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;letter-spacing:.04em;color:${C.textMid};white-space:nowrap;flex-shrink:0;}
 .sec-status.cur{color:${C.acc};}
 .sec-status.loop{color:${C.green};}
 .sec-status.queued{color:${C.accDim};}
@@ -1086,37 +1110,37 @@ html,body,#root{min-height:100%;background-color:${C.bg};}
 .grid-wrap{padding:0 10px 8px;overflow-x:auto;scrollbar-width:none;}
 .grid-wrap::-webkit-scrollbar{display:none;}
 .grid-line{display:flex;margin-bottom:3px;gap:0;}
-.beat-cell{flex-shrink:0;height:50px;position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:0 5px;cursor:default;transition:filter .12s,transform .08s;box-sizing:border-box;}
+.beat-cell{flex-shrink:0;height:50px;position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:0 5px;cursor:default;transition:filter .15s,transform .08s;box-sizing:border-box;}
 .beat-cell.empty{background:${C.empty};cursor:pointer;}
 .beat-cell.empty:hover{filter:brightness(1.3);}
-.beat-cell.chord-first{border-radius:5px 0 0 5px;cursor:pointer;}
+.beat-cell.chord-first{border-radius:6px 0 0 5px;cursor:pointer;}
 .beat-cell.chord-first:active,.beat-cell.chord-solo:active{transform:translateY(2px);filter:brightness(1.08);}
 .beat-cell.chord-first:hover{filter:brightness(1.15);}
 .beat-cell.chord-mid{border-radius:0;cursor:pointer;}
 .beat-cell.chord-mid:hover{filter:brightness(1.1);}
 .beat-cell.chord-last{border-radius:0 5px 5px 0;}
-.beat-cell.chord-solo{border-radius:5px;}
+.beat-cell.chord-solo{border-radius:6px;}
 .beat-cell.bar-right{border:none !important;box-shadow:none !important;border-radius:0 6px 6px 0 !important;background-image:none;margin-right:6px;position:relative;}
 /* A solo or first-beat chord that lands on a bar boundary keeps its left
    rounding and raised button look instead of the plain bar-right treatment. */
-.beat-cell.chord-solo.bar-right{border-radius:5px !important;box-shadow:inset 0 2px 0 #ffffff33,inset 0 -2px 4px #00000018,0 1px 0 #ffffff10 !important;}
-.beat-cell.chord-first.bar-right{border-radius:5px 0 0 5px !important;box-shadow:inset 0 2px 0 #ffffff33,inset 0 -2px 4px #00000018,0 1px 0 #ffffff10 !important;}
-.beat-cell.bar-right::after{content:'';position:absolute;top:8px;bottom:8px;right:-4px;width:2px;background:${C.borderHi};border-radius:1px;}
+.beat-cell.chord-solo.bar-right{border-radius:6px !important;box-shadow:inset 0 2px 0 #ffffff22,inset 0 -2px 4px #00000018,0 1px 0 #ffffff14 !important;}
+.beat-cell.chord-first.bar-right{border-radius:6px 0 0 5px !important;box-shadow:inset 0 2px 0 #ffffff22,inset 0 -2px 4px #00000018,0 1px 0 #ffffff14 !important;}
+.beat-cell.bar-right::after{content:'';position:absolute;top:8px;bottom:8px;right:-4px;width:2px;background:${C.borderHi};border-radius:2px;}
 .grid-line .beat-cell.bar-right+.beat-cell{border-radius:6px 0 0 6px;}
 .beat-cell.playing{box-shadow:inset 0 0 0 2px rgba(255,255,255,0.5);}
-.cell-name{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;font-size:14px;line-height:1;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
-.cell-roman{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;color:rgba(255,255,255,0.75);margin-top:5px;}
+.cell-name{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;font-size:15px;line-height:1;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.cell-roman{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:rgba(255,255,255,0.75);margin-top:5px;}
 
 /* Compact badge row (collapsed) */
-.sec-l2{display:flex;align-items:center;gap:4px;padding:0 10px 6px;overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap;}
+.sec-l2{display:flex;align-items:center;gap:6px;padding:0 10px 6px;overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap;}
 .sec-l2::-webkit-scrollbar{display:none;}
-.badge{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;font-size:13px;padding:5px 11px;border-radius:10px;border:none;color:#fff;white-space:nowrap;flex-shrink:0;transition:all .15s;}
+.badge{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;font-size:12px;padding:5px 11px;border-radius:10px;border:none;color:#fff;white-space:nowrap;flex-shrink:0;transition:all .15s;}
 .badge.cur{background:${C.acc};border-color:${C.acc};color:#0E1014;}
 .badge-div{width:1px;height:14px;background:${C.barLine};flex-shrink:0;margin:0 2px;}
 .badge-empty{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;color:${C.textDim};padding:3px 0;}
 
 /* Intensity */
-.sec-l3{padding:2px 10px 10px;display:flex;align-items:center;gap:8px;}
+.sec-l3{padding:2px 10px 10px;display:flex;align-items:center;gap:10px;}
 .int-label{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:${C.textMid};white-space:nowrap;width:56px;}
 .int-track{flex:1;height:4px;background:${C.border};border-radius:2px;position:relative;cursor:pointer;}
 .int-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,${C.accDim},${C.acc});}
@@ -1126,86 +1150,106 @@ html,body,#root{min-height:100%;background-color:${C.bg};}
 .sec-body{padding:0 10px 14px;border-top:1px solid ${C.border};}
 
 /* Palette */
-.pal-btn{background:${C.bg};border:1px solid ${C.border};color:${C.textMid};padding:9px 12px;border-radius:14px;cursor:pointer;font-size:13px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;transition:all .12s;min-width:42px;text-align:center;box-shadow:inset 0 1px 3px #00000018;}
-.pal-btn:active{color:${C.text};border-color:${C.borderHi};box-shadow:inset 0 1px 4px #00000028;}
+.pal-btn{background:${C.bg};border:1px solid ${C.border};color:${C.textMid};padding:9px 12px;border-radius:14px;cursor:pointer;font-size:12px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;transition:all .15s;min-width:42px;text-align:center;box-shadow:inset 0 1px 3px #00000018;}
+.pal-btn:active{color:${C.text};border-color:${C.borderHi};box-shadow:inset 0 1px 4px #0000002e;}
 /* Add-chord buttons: raised 3D pads (these are pressed to add a chord) */
-.pal-btn-add{background:linear-gradient(180deg,${CHORD_COLOR},#5A554C);border:none;color:#fff;padding:10px 13px;border-radius:7px;cursor:pointer;font-size:14px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;min-width:44px;text-align:center;transition:all .08s;box-shadow:inset 0 2px 0 #ffffff22,0 4px 0 #3A362E,0 6px 7px #0000002e;}
-.pal-btn-add:active{transform:translateY(3px);box-shadow:inset 0 2px 0 #ffffff22,0 1px 0 #3A362E,0 2px 3px #0000001e;}
+.pal-btn-add{background:linear-gradient(180deg,${CHORD_COLOR},#5A554C);border:none;color:#fff;padding:10px 13px;border-radius:6px;cursor:pointer;font-size:15px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;min-width:44px;text-align:center;transition:all .08s;box-shadow:inset 0 2px 0 #ffffff22,0 4px 0 #3A362E,0 6px 6px #0000002e;}
+.pal-btn-add:active{transform:translateY(3px);box-shadow:inset 0 2px 0 #ffffff22,0 1px 0 #3A362E,0 2px 3px #00000022;}
 .pal-btn:hover{background:${C.acc};color:#0E1014;}
 .pal-btn.extra{border-color:${C.border};color:${C.textMid};background:${C.surf2};}
 .pal-btn.extra.on{border-color:${C.acc}44;color:${C.acc};background:${C.accLo};}
 
 /* Context menu */
-.ctx-menu{position:fixed;background:${C.surf};border:1px solid ${C.border};border-radius:5px;padding:4px;z-index:200;box-shadow:0 8px 24px #00000088;min-width:150px;display:flex;flex-direction:column;gap:2px;}
-.cmi{background:none;border:none;color:${C.text};padding:8px 14px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;cursor:pointer;border-radius:3px;text-align:left;transition:background .1s;white-space:nowrap;}
-.cmi:hover{background:${C.surf2};}
 .cmi.del{color:${C.red};}
 .cmi.disabled{color:${C.textDim};cursor:default;pointer-events:none;}
 
-.sel{background:${C.surf2};border:1px solid ${C.border};color:${C.text};padding:5px 8px;border-radius:3px;font-size:13px;outline:none;cursor:pointer;}
+.sel{background:${C.surf2};border:1px solid ${C.border};color:${C.text};padding:5px 8px;border-radius:2px;font-size:12px;outline:none;cursor:pointer;}
 .sel:focus{border-color:${C.acc};}
-.btn{background:linear-gradient(180deg,#F4F2EA,#DAD7CA);border:none;color:${C.textMid};padding:7px 13px;border-radius:5px;cursor:pointer;font-size:12px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;letter-spacing:.05em;transition:all .08s;white-space:nowrap;box-shadow:inset 0 1px 0 #ffffff1e,0 4px 0 #A49E8C,0 5px 6px #00000026;}
-.btn:active{transform:translateY(3px);box-shadow:inset 0 1px 0 #ffffff10,0 0 0 #A49E8C,0 1px 2px #0009;}
+.btn{background:linear-gradient(180deg,#F4F2EA,#DAD7CA);border:none;color:${C.textMid};padding:7px 13px;border-radius:6px;cursor:pointer;font-size:12px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;letter-spacing:.04em;transition:all .08s;white-space:nowrap;box-shadow:inset 0 1px 0 #ffffff22,0 4px 0 #A49E8C,0 5px 6px #00000022;}
+.btn:active{transform:translateY(3px);box-shadow:inset 0 1px 0 #ffffff14,0 0 0 #A49E8C,0 1px 3px #0009;}
 /* Reusable 3D pad look for inline-styled buttons (live cards, setlist) */
-.pad3d{border:none;cursor:pointer;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;transition:all .08s;background:linear-gradient(180deg,#FBFAF6,#E4E1D6);color:#2A2824;box-shadow:inset 0 2px 0 #ffffff22,0 4px 0 #A49E8C,0 6px 7px #0000002a;}
-.pad3d:active{transform:translateY(3px);box-shadow:inset 0 2px 0 #ffffff14,0 1px 0 #A49E8C,0 2px 3px #0000001e;}
-.pad3d-on{border:none;cursor:pointer;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;transition:all .08s;background:linear-gradient(180deg,#EAC062,${C.acc});color:#0E1014;box-shadow:0 0 12px ${C.acc}66,inset 0 2px 0 #ffffff66,0 4px 0 #6e5220,0 6px 7px #0000002a;}
-.pad3d-on:active{transform:translateY(3px);box-shadow:0 0 12px ${C.acc}66,inset 0 2px 0 #ffffff66,0 1px 0 #6e5220,0 2px 3px #0000001e;}
+.pad3d{border:none;cursor:pointer;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;transition:all .08s;background:linear-gradient(180deg,#FBFAF6,#E4E1D6);color:${C.text};box-shadow:inset 0 2px 0 #ffffff22,0 4px 0 #A49E8C,0 6px 6px #0000002e;}
+.pad3d:active{transform:translateY(3px);box-shadow:inset 0 2px 0 #ffffff14,0 1px 0 #A49E8C,0 2px 3px #00000022;}
+.pad3d-on{border:none;cursor:pointer;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;transition:all .08s;background:linear-gradient(180deg,${C.accLit},${C.acc});color:#0E1014;box-shadow:0 0 12px ${C.acc}66,inset 0 2px 0 #ffffff66,0 4px 0 ${C.accLip},0 6px 6px #0000002e;}
+.pad3d-on:active{transform:translateY(3px);box-shadow:0 0 12px ${C.acc}66,inset 0 2px 0 #ffffff66,0 1px 0 ${C.accLip},0 2px 3px #00000022;}
 /* Recessed display screen — dark inset with light bezel, calculator/synth vibe */
-.screen{background:#23211C;border:1px solid #141310;border-top-color:#0C0B08;border-bottom-color:#3A362C;border-radius:6px;box-shadow:inset 0 2px 6px #000c,inset 0 -1px 0 #ffffff08,0 1px 0 #ffffff0a;}
-.dispfont{font-family:'Doto','Space Mono',ui-monospace,monospace;font-weight:900;font-variation-settings:'ROND' 0;}
+.screen{background:${C.screenBg};border:1px solid ${C.screenTop};border-top-color:#0C0B08;border-bottom-color:${C.screenBot};border-radius:6px;box-shadow:inset 0 2px 6px #000c,inset 0 -1px 0 #ffffff0a,0 1px 0 #ffffff0a;}
+/* Screen padding/size modifiers — the recipe lives in .screen, these only vary
+   the box. Use these instead of re-declaring background/border/shadow inline. */
+.screen-pad{padding:5px 14px;}
+.screen-wide{padding:6px 4px;text-align:center;width:100%;}
+/* Small dim labels (MUTE, PROGRESSION, CAPO · see easy shapes, …). */
+.label{font-size:10px;color:${C.textDim};letter-spacing:.1em;}
+.label-mic{font-size:8px;color:${C.textDim};letter-spacing:.1em;}
+/* Caption under a screen readout (KEY, CAPO 5). */
+.screen-cap{font-size:8px;color:${C.lcd};opacity:.5;text-align:center;letter-spacing:.1em;margin-top:2px;}
+/* Sketchpad chord pads. The lit/flash state is applied via .chord-pad.flash;
+   only the per-chord colour stays inline (it genuinely varies). */
+.chord-pad{border:none;cursor:pointer;border-radius:10px;font-weight:700;color:#fff;transition:all .08s;background:linear-gradient(180deg,${CHORD_COLOR},#5A554C);box-shadow:inset 0 2px 0 #ffffff22,0 4px 0 #3A362E,0 6px 6px #0000002e;}
+.chord-pad-lg{padding:14px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.chord-pad-sm{padding:10px 4px;font-size:12px;}
+.chord-pad.flash{color:#0E1014;background:linear-gradient(180deg,${C.accLit},${C.acc});box-shadow:0 0 14px ${C.acc}88,inset 0 2px 0 #ffffff66,0 3px 0 ${C.accLip},0 5px 6px #0000002e;transform:translateY(2px);}
+/* Action buttons inside cards/sheets (Done, Remove capo, Clear setlist, …).
+   Pair with .pad3d / .pad3d-on for the tactile surface; this sets the type. */
+.act-btn{border-radius:6px;font-weight:700;font-size:12px;letter-spacing:.1em;padding:9px 6px;}
+.act-btn-full{width:100%;}
+/* Small layout utilities — replace repeated inline flex/position objects. */
+.rel-block{position:relative;display:inline-block;}
+.hr-line{flex:1;height:1px;background:${C.border};}
+.row-center{display:flex;justify-content:center;margin-bottom:10px;}
+/* Floating live cards (key / tempo) that hover above the bar during playback. */
+.live-card{background:${C.surf2};border:1px solid ${C.borderHi};border-radius:10px;box-shadow:0 10px 34px #000c;}
+/* Doto amber readout text. .lcd is the base recipe; sizes are modifiers. */
+.lcd-text{font-family:'Doto','Space Mono',monospace;font-weight:900;color:${C.lcd};line-height:1;text-shadow:0 0 8px ${C.acc}44;}
+.lcd-sm{font-size:12px;letter-spacing:.1em;}
+.lcd-lg{font-size:30px;text-shadow:0 0 12px ${C.acc}44;}
+/* A <select> styled as a Doto screen (form elements need their own resets). */
+.screen-select{appearance:none;-webkit-appearance:none;background:${C.screenBg};color:${C.lcd};border:1px solid ${C.screenTop};border-bottom-color:${C.screenBot};border-radius:6px;font-family:'Doto','Space Mono',monospace;font-weight:900;font-size:22px;padding:5px 22px 5px 12px;outline:none;cursor:pointer;text-shadow:0 0 8px ${C.acc}44;box-shadow:inset 0 1px 4px #000c;}
 .btn:hover{border-color:${C.borderHi};color:${C.text};}
 .btn.on{border-color:${C.acc}88;color:${C.acc};background:${C.accLo};}
 .btn.acc{background:${C.acc};border-color:${C.acc};color:#0A0D12;font-weight:700;}
-.btn.danger{border-color:${C.red}88;color:${C.red};}
 .btn.muted{background:${C.redLo};border-color:${C.red}66;color:${C.red};}
-.btn.sm{padding:4px 10px;font-size:11px;}
-.btn-done{display:block;width:100%;background:${C.acc};border:none;color:#0A0D12;font-weight:700;padding:13px;border-radius:5px;cursor:pointer;font-size:15px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;letter-spacing:.04em;transition:filter .15s;margin-top:4px;}
-.btn-done:hover{filter:brightness(1.12);}
-.tp{background:linear-gradient(180deg,#FBFAF6,#E4E1D6);border:none;color:${C.textMid};padding:9px 13px;border-radius:5px;cursor:pointer;font-size:13px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;transition:all .08s;box-shadow:inset 0 2px 0 #ffffff14,0 4px 0 #A49E8C,0 6px 7px #0000002a;}
-.tp:active{transform:translateY(3px);box-shadow:inset 0 2px 0 #ffffff14,0 1px 0 #A49E8C,0 2px 3px #0000001e;}
+.btn.sm{padding:4px 10px;font-size:12px;}
+.tp{background:linear-gradient(180deg,#FBFAF6,#E4E1D6);border:none;color:${C.textMid};padding:9px 13px;border-radius:6px;cursor:pointer;font-size:12px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;transition:all .08s;box-shadow:inset 0 2px 0 #ffffff14,0 4px 0 #A49E8C,0 6px 6px #0000002e;}
+.tp:active{transform:translateY(3px);box-shadow:inset 0 2px 0 #ffffff14,0 1px 0 #A49E8C,0 2px 3px #00000022;}
 .tp:hover{border-color:${C.acc}88;color:${C.acc};}
-.tp.on{background:linear-gradient(180deg,#F4D48A,#E8C067);color:#2A2824;font-weight:700;box-shadow:inset 0 2px 0 #ffffff55,0 4px 0 #B89340,0 6px 7px #0000002a;}
-.tap-btn{background:linear-gradient(180deg,#FBFAF6,#E4E1D6);border:none;color:${C.text};padding:12px 22px;border-radius:6px;font-size:14px;cursor:pointer;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;letter-spacing:.08em;text-transform:uppercase;transition:all .08s;box-shadow:inset 0 2px 0 #ffffff22,0 5px 0 #A49E8C,0 7px 8px #0000002e;}
+.tp.on{background:linear-gradient(180deg,${C.accLit},${C.acc});color:${C.text};font-weight:700;box-shadow:inset 0 2px 0 #ffffff66,0 4px 0 ${C.accLip},0 6px 6px #0000002e;}
+.tap-btn{background:linear-gradient(180deg,#FBFAF6,#E4E1D6);border:none;color:${C.text};padding:12px 22px;border-radius:6px;font-size:15px;cursor:pointer;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;letter-spacing:.1em;text-transform:uppercase;transition:all .08s;box-shadow:inset 0 2px 0 #ffffff22,0 5px 0 #A49E8C,0 7px 8px #0000002e;}
 .tempo-pm{background:linear-gradient(180deg,#FBFAF6,#E4E1D6);border:none;color:${C.text};width:44px;height:44px;border-radius:6px;font-size:22px;cursor:pointer;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;flex-shrink:0;transition:all .08s;box-shadow:inset 0 2px 0 #ffffff22,0 5px 0 #A49E8C,0 7px 8px #0000002e;}
-.tempo-pm:active{transform:translateY(4px);box-shadow:inset 0 2px 0 #ffffff14,0 1px 0 #A49E8C,0 2px 4px #0000001e;}
-.tap-btn:active{transform:translateY(4px);box-shadow:inset 0 2px 0 #ffffff1a,0 1px 0 #A49E8C,0 2px 4px #0000001e;}
-.tap-btn:active{border-color:${C.acc};background:${C.accLo};transform:scale(.97);}
-.bpm-big{font-size:44px;font-family:'Doto','Space Mono',monospace;font-weight:900;color:${C.lcd};line-height:1;text-align:center;background:#23211C;border:1px solid #141310;border-top-color:#0C0B08;border-bottom-color:#3A362C;border-radius:8px;box-shadow:inset 0 2px 8px #000c,inset 0 -1px 0 #ffffff08;padding:12px 8px;text-shadow:0 0 12px ${C.acc}44;}
+.tempo-pm:active{transform:translateY(4px);box-shadow:inset 0 2px 0 #ffffff14,0 1px 0 #A49E8C,0 2px 4px #00000022;}
+
+.tap-btn:active{box-shadow:inset 0 2px 0 #ffffff14,0 1px 0 #A49E8C,0 2px 4px #00000022;border-color:${C.acc};background:${C.accLo};transform:scale(.97);}
+.bpm-big{font-size:44px;font-family:'Doto','Space Mono',monospace;font-weight:900;color:${C.lcd};line-height:1;text-align:center;background:${C.screenBg};border:1px solid ${C.screenTop};border-top-color:#0C0B08;border-bottom-color:${C.screenBot};border-radius:10px;box-shadow:inset 0 2px 8px #000c,inset 0 -1px 0 #ffffff0a;padding:12px 8px;text-shadow:0 0 12px ${C.acc}44;}
 .slider{-webkit-appearance:none;width:100%;height:3px;border-radius:2px;background:${C.border};outline:none;cursor:pointer;}
 .slider::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:${C.acc};cursor:pointer;}
 /* Vertical mixer fader */
-.vfader{-webkit-appearance:none;appearance:none;writing-mode:vertical-lr;direction:rtl;width:10px;height:140px;border-radius:5px;background:${C.border};outline:none;cursor:pointer;}
-.vfader::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:18px;border-radius:3px;background:${C.acc};cursor:pointer;border:1px solid #0A0D12;}
-.vfader::-moz-range-thumb{width:28px;height:18px;border-radius:3px;background:${C.acc};cursor:pointer;border:1px solid #0A0D12;}
-.steps{display:flex;gap:4px;flex-wrap:wrap;}
+.vfader{-webkit-appearance:none;appearance:none;writing-mode:vertical-lr;direction:rtl;width:10px;height:140px;border-radius:6px;background:${C.border};outline:none;cursor:pointer;}
+.vfader::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:18px;border-radius:2px;background:${C.acc};cursor:pointer;border:1px solid #0A0D12;}
+.vfader::-moz-range-thumb{width:28px;height:18px;border-radius:2px;background:${C.acc};cursor:pointer;border:1px solid #0A0D12;}
+.steps{display:flex;gap:6px;flex-wrap:wrap;}
 .step{width:30px;height:30px;border-radius:6px;border:none;background:linear-gradient(180deg,#FBFAF6,#E4E1D6);cursor:pointer;transition:all .08s;box-shadow:inset 0 2px 0 #ffffff22,0 5px 0 #A49E8C,0 7px 8px #0000002e;}
-.step.on{background:linear-gradient(180deg,#EAC062,${C.acc});box-shadow:0 0 12px ${C.acc}77,inset 0 2px 0 #ffffff66,0 5px 0 #6e5220,0 7px 8px #0000002e;}
-.step:active{transform:translateY(4px);box-shadow:inset 0 2px 0 #ffffff1a,0 1px 0 #A49E8C,0 2px 4px #0000001e;}
-.step.on:active{transform:translateY(4px);box-shadow:0 0 12px ${C.acc}77,inset 0 2px 0 #ffffff66,0 1px 0 #6e5220,0 2px 4px #0000001e;}
+.step.on{background:linear-gradient(180deg,${C.accLit},${C.acc});box-shadow:0 0 12px ${C.acc}77,inset 0 2px 0 #ffffff66,0 5px 0 ${C.accLip},0 7px 8px #0000002e;}
+.step:active{transform:translateY(4px);box-shadow:inset 0 2px 0 #ffffff14,0 1px 0 #A49E8C,0 2px 4px #00000022;}
+.step.on:active{transform:translateY(4px);box-shadow:0 0 12px ${C.acc}77,inset 0 2px 0 #ffffff66,0 1px 0 ${C.accLip},0 2px 4px #00000022;}
 .step.grp-sep{margin-left:6px;}
-.dyn-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
-.dyn-lbl{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:${C.textMid};width:56px;flex-shrink:0;}
+.dyn-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
 .card{background:${C.surf};border:1px solid ${C.borderHi};border-radius:6px;padding:14px;margin-bottom:10px;}
-.card-title{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:${C.textMid};margin-bottom:10px;}
+.card-title{font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:${C.textMid};margin-bottom:10px;}
 /* Rack-unit card: vertical spine label on the left, content fills the rest */
 .spine-card{background:${C.surf};border:1px solid ${C.borderHi};border-radius:6px;margin-bottom:10px;display:flex;overflow:hidden;}
 .spine{flex-shrink:0;width:26px;display:flex;align-items:center;justify-content:center;background:${C.bg};border-right:1px solid ${C.border};}
-.spine span{writing-mode:vertical-rl;transform:rotate(180deg);font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:${C.textMid};white-space:nowrap;}
+.spine span{writing-mode:vertical-rl;transform:rotate(180deg);font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:${C.textMid};white-space:nowrap;}
 .spine-body{flex:1;min-width:0;padding:10px 12px;}
-.inst-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
-.add-menu{position:absolute;bottom:calc(100% + 4px);left:0;background:${C.surf};border:1px solid ${C.borderHi};border-radius:5px;z-index:80;min-width:200px;max-height:60vh;overflow-y:auto;padding:4px;box-shadow:0 10px 34px #000b;}
-.ami{display:block;width:100%;background:none;border:none;color:${C.text};padding:8px 12px;cursor:pointer;text-align:left;font-size:12px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;border-radius:3px;transition:background .1s;}
+.add-menu{position:absolute;bottom:calc(100% + 4px);left:0;background:${C.surf};border:1px solid ${C.borderHi};border-radius:6px;z-index:40;min-width:200px;max-height:60vh;overflow-y:auto;padding:4px;box-shadow:0 10px 34px #000c;}
+.ami{display:block;width:100%;background:none;border:none;color:${C.text};padding:8px 12px;cursor:pointer;text-align:left;font-size:12px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;border-radius:2px;transition:background .08s;}
 .ami:hover{background:${C.surf2};}
-.ami.sub{color:${C.textMid};font-size:11px;}
-.divider{border:none;border-top:1px solid ${C.border};margin:3px 0;}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ami.sub{color:${C.textMid};font-size:12px;}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
 .ts-row{display:flex;gap:6px;}
-.ts-btn{background:linear-gradient(180deg,#F4F2EA,#DAD7CA);border:none;color:${C.textMid};padding:14px 16px;border-radius:5px;cursor:pointer;font-size:14px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:600;transition:all .08s;box-shadow:inset 0 1px 0 #ffffff1e,0 4px 0 #A49E8C,0 5px 6px #00000026;}
-.ts-btn:active{transform:translateY(3px);box-shadow:inset 0 1px 0 #ffffff10,0 0 0 #A49E8C,0 1px 2px #0009;}
+.ts-btn{background:linear-gradient(180deg,#F4F2EA,#DAD7CA);border:none;color:${C.textMid};padding:14px 16px;border-radius:6px;cursor:pointer;font-size:15px;font-family:'Space Mono',ui-monospace,'SF Mono',Menlo,monospace;font-weight:700;transition:all .08s;box-shadow:inset 0 1px 0 #ffffff22,0 4px 0 #A49E8C,0 5px 6px #00000022;}
+.ts-btn:active{transform:translateY(3px);box-shadow:inset 0 1px 0 #ffffff14,0 0 0 #A49E8C,0 1px 3px #0009;}
 .ts-btn:hover{border-color:${C.borderHi};color:${C.text};}
-.ts-btn.on{background:linear-gradient(180deg,#F4D48A,#E8C067);color:#2A2824;font-weight:700;box-shadow:inset 0 1px 0 #ffffff55,0 4px 0 #B89340,0 5px 6px #00000026;}
+.ts-btn.on{background:linear-gradient(180deg,${C.accLit},${C.acc});color:${C.text};font-weight:700;box-shadow:inset 0 1px 0 #ffffff66,0 4px 0 ${C.accLip},0 5px 6px #00000022;}
 @media(max-width:500px){.two{grid-template-columns:1fr;}}
 `;
 
@@ -1338,16 +1382,32 @@ function App() {
   };
   const welcomeSketch = () => {
     dismissWelcome();
+    closeAll();
     setLivePadsOpen(true);
   };
   const welcomeSetlist = () => {
     dismissWelcome();
+    closeAll();
     setLibraryOpen(true);
   };
   const [library, setLibrary] = useState(() => loadLibrary());
   const [setlistIds, setSetlistIds] = useState(() => loadSetlist());
   const [libView, setLibView] = useState("library"); // "library" | "setlist"
   const [impMenuOpen, setImpMenuOpen] = useState(false);
+  // ── Mutual exclusion: only ONE card/menu/list may be open at a time. Every
+  // open-action calls closeAll() first, then opens its own surface.
+  const closeAll = () => {
+    setLibraryOpen(false);
+    setOpenSecId(null);
+    setAddMenuOpen(false);
+    setChooseMenuOpen(false);
+    setSettingsOpen(null);
+    setLivePadsOpen(false);
+    setLiveKeyOpen(false);
+    setLiveMixerOpen(false);
+    setLiveTempoOpen(false);
+    setImpMenuOpen(false);
+  };
   const [expMenuOpen, setExpMenuOpen] = useState(false);
   const [saveFlash, setSaveFlash] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -1547,7 +1607,7 @@ function App() {
     if (e.piano) e.piano.volume.value = db(m.piano, -6);
     if (e.bassSynth) e.bassSynth.volume.value = db(m.bass, -8);
     if (e.kickPlayer) e.kickPlayer.volume.value = db(m.kick, -2);
-    if (e.shakerPlayer) e.shakerPlayer.volume.value = db(m.shaker, -6);
+    if (e.shakerPlayer) e.shakerPlayer.volume.value = db(m.shaker, -16);
     if (e.tambPlayer) e.tambPlayer.volume.value = db(m.tamb, -8);
   }, [mix]);
 
@@ -1852,7 +1912,7 @@ function App() {
       saveLibrary(n);
       return n;
     });
-    setImportMsg(`Imported "${migrated.title}".`);
+    setImportMsg(`Imported ${migrated.title}.`);
     setTimeout(() => setImportMsg(""), 2200);
   };
   const newSong = () => {
@@ -2043,8 +2103,8 @@ function App() {
       chords: [],
       dyn: defaultDyn(timeSig)
     }]);
+    closeAll();
     setOpenSecId(id);
-    setAddMenuOpen(false);
   };
   const addProgression = tmpl => {
     const id = uid();
@@ -2056,8 +2116,8 @@ function App() {
       chords,
       dyn: defaultDyn(timeSig)
     }]);
+    closeAll();
     setOpenSecId(id);
-    setChooseMenuOpen(false);
   };
   const dupSec = srcId => {
     const src = sections.find(x => x.id === srcId);
@@ -2068,8 +2128,8 @@ function App() {
       id,
       name: src.name + " (copy)"
     }]);
+    closeAll();
     setOpenSecId(id);
-    setAddMenuOpen(false);
   };
 
   // Add chord — appended, eats from empty space or last chord if full
@@ -2409,7 +2469,7 @@ function App() {
       url: `${BASE}shaker.wav`,
       autostart: false
     }).toDestination();
-    shakerPlayer.volume.value = db(m.shaker, -6);
+    shakerPlayer.volume.value = db(m.shaker, -16);
     const tambPlayer = new Tone.Player({
       url: `${BASE}tamb.wav`,
       autostart: false
@@ -2657,6 +2717,10 @@ function App() {
     }
     setPlaying(true);
     setOpenSecId(null);
+    setSettingsOpen(null);
+    setLivePadsOpen(false);
+    setAddMenuOpen(false);
+    setChooseMenuOpen(false);
   }, [bpm, timeSig]);
   useEffect(() => () => stopPlayback(), []);
 
@@ -2917,7 +2981,8 @@ function App() {
   }, "Start exploring"))), /*#__PURE__*/React.createElement("div", {
     className: "app",
     onClick: () => {
-      addMenuOpen && setAddMenuOpen(false);
+      if (addMenuOpen) setAddMenuOpen(false);
+      if (chooseMenuOpen) setChooseMenuOpen(false);
     }
   }, /*#__PURE__*/React.createElement("div", {
     className: "notch-bar"
@@ -2936,7 +3001,10 @@ function App() {
     onClick: saveSong
   }, !dirty && saveFlash ? "Saved ✓" : "Save"), /*#__PURE__*/React.createElement("button", {
     className: "hdr-btn",
-    onClick: () => setLibraryOpen(true)
+    onClick: () => {
+      closeAll();
+      setLibraryOpen(true);
+    }
   }, "Setlist"))), sections.map((sec, si) => /*#__PURE__*/React.createElement("div", {
     key: sec.id,
     className: "sec-wrap"
@@ -2956,7 +3024,15 @@ function App() {
     secIdx: si,
     secCount: sections.length,
     instruments: instruments,
-    onToggle: () => playing ? onSecClick(si) : setOpenSecId(id => id === sec.id ? null : sec.id),
+    onToggle: () => {
+      if (playing) {
+        onSecClick(si);
+      } else {
+        const was = openSecId === sec.id;
+        closeAll();
+        if (!was) setOpenSecId(sec.id);
+      }
+    },
     onUpdate: p => updSec(sec.id, p),
     onRemove: () => remSec(sec.id),
     onMoveUp: () => moveSec(sec.id, -1),
@@ -3002,29 +3078,20 @@ function App() {
       style: {
         display: "flex",
         alignItems: "center",
-        gap: 8,
+        gap: 10,
         margin: "0 0 8px"
       }
     }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1,
-        height: 1,
-        background: C.border
-      }
+      className: "hr-line"
     }), /*#__PURE__*/React.createElement("div", {
       style: {
-        fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-        fontSize: 9,
-        letterSpacing: ".14em",
+        fontSize: 10,
+        letterSpacing: ".1em",
         color: C.textDim,
         textTransform: "uppercase"
       }
     }, "Up Next"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1,
-        height: 1,
-        background: C.border
-      }
+      className: "hr-line"
     })), setSongs.map(s => /*#__PURE__*/React.createElement("div", {
       key: s.id,
       style: {
@@ -3036,7 +3103,7 @@ function App() {
         border: `1px solid ${C.border}`,
         borderRadius: 6,
         marginBottom: 6,
-        opacity: .72
+        opacity: .7
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -3045,7 +3112,7 @@ function App() {
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 14,
+        fontSize: 15,
         color: C.textMid,
         whiteSpace: "nowrap",
         overflow: "hidden",
@@ -3054,16 +3121,14 @@ function App() {
     }, s.title || "Untitled", /*#__PURE__*/React.createElement("span", {
       style: {
         color: C.acc,
-        fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
         marginLeft: 8
       }
     }, s.key)), /*#__PURE__*/React.createElement("div", {
       style: {
-        fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
         fontSize: 10,
         color: C.textDim,
         marginTop: 3,
-        letterSpacing: ".08em"
+        letterSpacing: ".1em"
       }
     }, (s.sections || []).map(sec => (sec.name || "?").trim().charAt(0).toUpperCase()).join(" "))), /*#__PURE__*/React.createElement("button", {
       className: "pad3d",
@@ -3071,8 +3136,8 @@ function App() {
         color: C.acc,
         width: 38,
         height: 38,
-        borderRadius: 19,
-        fontSize: 14,
+        borderRadius: "50%",
+        fontSize: 15,
         flexShrink: 0
       },
       onClick: () => playSetlistSong(s)
@@ -3080,7 +3145,7 @@ function App() {
   })(), !playing && /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
-      gap: 8,
+      gap: 10,
       marginBottom: 16,
       flexWrap: "wrap"
     }
@@ -3091,20 +3156,18 @@ function App() {
       addSec();
     }
   }, "+ Add"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: "relative",
-      display: "inline-block"
-    }
+    className: "rel-block"
   }, /*#__PURE__*/React.createElement("button", {
     className: "btn",
     onClick: e => {
       e.stopPropagation();
-      setAddMenuOpen(o => !o);
-      setChooseMenuOpen(false);
+      const was = addMenuOpen;
+      closeAll();
+      if (!was) setAddMenuOpen(true);
     },
     disabled: sections.length === 0,
     style: sections.length === 0 ? {
-      opacity: .4
+      opacity: .5
     } : undefined
   }, "Copy ▴"), addMenuOpen && sections.length > 0 && /*#__PURE__*/React.createElement("div", {
     className: "add-menu",
@@ -3117,27 +3180,24 @@ function App() {
       setAddMenuOpen(false);
     }
   }, "Copy \"", s.name, "\"")))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: "relative",
-      display: "inline-block"
-    }
+    className: "rel-block"
   }, /*#__PURE__*/React.createElement("button", {
     className: "btn",
     onClick: e => {
       e.stopPropagation();
-      setChooseMenuOpen(o => !o);
-      setAddMenuOpen(false);
+      const was = chooseMenuOpen;
+      closeAll();
+      if (!was) setChooseMenuOpen(true);
     }
   }, "Choose ▴"), chooseMenuOpen && /*#__PURE__*/React.createElement("div", {
     className: "add-menu",
     onClick: e => e.stopPropagation()
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-      fontSize: 9,
+      fontSize: 10,
       color: C.textDim,
       padding: "4px 10px 6px",
-      letterSpacing: ".06em"
+      letterSpacing: ".1em"
     }
   }, "PROGRESSION"), PROGRESSIONS.map((p, i) => /*#__PURE__*/React.createElement("button", {
     key: i,
@@ -3154,30 +3214,11 @@ function App() {
       borderBottom: `1px solid ${C.border}`
     }
   }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      justifyContent: "center",
-      marginBottom: 10
-    }
+    className: "row-center"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "screen",
-    style: {
-      background: C.screenBg,
-      border: `1px solid ${C.screenTop}`,
-      borderBottomColor: C.screenBot,
-      borderRadius: 5,
-      padding: "5px 14px",
-      boxShadow: "inset 0 2px 5px #000c"
-    }
+    className: "screen screen-pad"
   }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: "'Doto','Space Mono',monospace",
-      fontWeight: 900,
-      fontSize: 13,
-      color: C.lcd,
-      letterSpacing: ".08em",
-      textShadow: `0 0 8px ${C.acc}55`
-    }
+    className: "lcd-text lcd-sm"
   }, "MIXER"))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
@@ -3201,7 +3242,6 @@ function App() {
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 10,
       color: C.textMid
     }
@@ -3220,7 +3260,6 @@ function App() {
     }
   }), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 10,
       color: INST_COLORS[k],
       fontWeight: 700
@@ -3231,34 +3270,15 @@ function App() {
       borderBottom: `1px solid ${C.border}`
     }
   }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      justifyContent: "center",
-      marginBottom: 10
-    }
+    className: "row-center"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "screen",
-    style: {
-      background: C.screenBg,
-      border: `1px solid ${C.screenTop}`,
-      borderBottomColor: C.screenBot,
-      borderRadius: 5,
-      padding: "5px 14px",
-      boxShadow: "inset 0 2px 5px #000c"
-    }
+    className: "screen screen-pad"
   }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: "'Doto','Space Mono',monospace",
-      fontWeight: 900,
-      fontSize: 13,
-      color: C.lcd,
-      letterSpacing: ".08em",
-      textShadow: `0 0 8px ${C.acc}55`
-    }
+    className: "lcd-text lcd-sm"
   }, key, " · TAP TO HEAR"))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
-      gap: 8,
+      gap: 10,
       alignItems: "flex-start"
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -3273,23 +3293,7 @@ function App() {
     return /*#__PURE__*/React.createElement("button", {
       key: p.id,
       onClick: () => auditionChord(p),
-      style: {
-        border: "none",
-        cursor: "pointer",
-        borderRadius: 8,
-        padding: "14px 6px",
-        fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-        fontWeight: 700,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: 2,
-        color: flash ? "#0E1014" : "#fff",
-        background: flash ? `linear-gradient(180deg,#EAC062,${C.acc})` : `linear-gradient(180deg,${CHORD_COLOR},#5A554C)`,
-        boxShadow: flash ? `0 0 14px ${C.acc}88,inset 0 2px 0 #ffffff66,0 3px 0 #6e5220,0 5px 6px #0000002e` : "inset 0 2px 0 #ffffff22,0 4px 0 #3A362E,0 6px 7px #0000002e",
-        transform: flash ? "translateY(2px)" : "none",
-        transition: "all .06s"
-      }
+      className: `chord-pad chord-pad-lg${flash ? " flash" : ""}`
     }, /*#__PURE__*/React.createElement("span", {
       style: {
         fontSize: 15
@@ -3297,14 +3301,14 @@ function App() {
     }, p.label), /*#__PURE__*/React.createElement("span", {
       style: {
         fontSize: 8,
-        opacity: .8
+        opacity: .85
       }
     }, p.roman));
   })), palette.filter(p => p.degIdx < 0).length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       flexDirection: "column",
-      gap: 5,
+      gap: 6,
       width: 64,
       flexShrink: 0
     }
@@ -3313,20 +3317,7 @@ function App() {
     return /*#__PURE__*/React.createElement("button", {
       key: p.id,
       onClick: () => auditionChord(p),
-      style: {
-        border: "none",
-        cursor: "pointer",
-        borderRadius: 8,
-        padding: "10px 4px",
-        fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-        fontWeight: 700,
-        fontSize: 12,
-        color: flash ? "#0E1014" : "#fff",
-        background: flash ? `linear-gradient(180deg,#EAC062,${C.acc})` : `linear-gradient(180deg,${CHORD_COLOR},#5A554C)`,
-        boxShadow: flash ? `0 0 14px ${C.acc}88,inset 0 2px 0 #ffffff66,0 3px 0 #6e5220,0 5px 6px #0000002e` : "inset 0 2px 0 #ffffff22,0 3px 0 #3A362E,0 5px 6px #0000002e",
-        transform: flash ? "translateY(2px)" : "none",
-        transition: "all .06s"
-      }
+      className: `chord-pad chord-pad-sm${flash ? " flash" : ""}`
     }, p.label);
   })))), /*#__PURE__*/React.createElement("div", {
     className: "mute-section"
@@ -3334,11 +3325,13 @@ function App() {
     className: `barbtn3d${(playing ? liveMixerOpen : livePadsOpen) ? " open" : ""}`,
     onClick: () => {
       if (playing) {
-        setLiveMixerOpen(o => !o);
-        setLivePadsOpen(false);
+        const was = liveMixerOpen;
+        closeAll();
+        if (!was) setLiveMixerOpen(true);
       } else {
-        setLivePadsOpen(o => !o);
-        setLiveMixerOpen(false);
+        const was = livePadsOpen;
+        closeAll();
+        if (!was) setLivePadsOpen(true);
       }
       setLiveKeyOpen(false);
       setLiveTempoOpen(false);
@@ -3365,12 +3358,12 @@ function App() {
         background: "linear-gradient(180deg,#FBFAF6,#E4E1D6)",
         color: C.textDim,
         fontWeight: 700,
-        boxShadow: "inset 0 2px 0 #ffffff10,0 5px 0 #A49E8C,0 7px 8px #0000002e"
+        boxShadow: "inset 0 2px 0 #ffffff14,0 5px 0 #A49E8C,0 7px 8px #0000002e"
       } : {
         background: `linear-gradient(180deg,${ic}E6,${ic})`,
         color: "#fff",
         fontWeight: 700,
-        boxShadow: `0 0 10px ${ic}55,inset 0 2px 0 #ffffff44,0 5px 0 ${ic}66,0 7px 8px #0000002e`
+        boxShadow: `0 0 10px ${ic}55,inset 0 2px 0 #ffffff66,0 5px 0 ${ic}66,0 7px 8px #0000002e`
       },
       onClick: () => setLiveMute(m => ({
         ...m,
@@ -3381,14 +3374,26 @@ function App() {
     className: "bar-main"
   }, /*#__PURE__*/React.createElement("div", {
     className: "bar-left",
-    onClick: () => playing ? (setLiveKeyOpen(o => !o), setLiveMixerOpen(false), setLiveTempoOpen(false)) : setSettingsOpen(s => s === "left" ? null : "left")
+    onClick: () => {
+      if (playing) {
+        const was = liveKeyOpen;
+        closeAll();
+        if (!was) setLiveKeyOpen(true);
+      } else {
+        const was = settingsOpen === "left";
+        closeAll();
+        if (!was) setSettingsOpen("left");
+      }
+    }
   }, playing ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "bar-chord-name"
-  }, resolved ? "—" : curChordObj ? chordDisplay(curChordObj) : "—"), /*#__PURE__*/React.createElement("div", {
+  }, resolved ? "—" : curChordObj ? chordDisplay(curChordObj) : "—", capo > 0 && /*#__PURE__*/React.createElement("span", {
+    className: "capo-tag"
+  }, "capo ", capo)), /*#__PURE__*/React.createElement("div", {
     className: "bar-chord-sub"
   }, resolved ? `${key} · pad` : `${key} · ${curSecObj?.name}${looping ? " · loop" : queued !== null ? ` · next: ${sections[queued]?.name}` : ""}`)) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "bar-chord-name"
-  }, key, !playing && capo > 0 && /*#__PURE__*/React.createElement("span", {
+  }, key, capo > 0 && /*#__PURE__*/React.createElement("span", {
     className: "capo-tag"
   }, "capo ", capo)), /*#__PURE__*/React.createElement("div", {
     className: "bar-chord-sub"
@@ -3414,7 +3419,7 @@ function App() {
       return /*#__PURE__*/React.createElement("span", {
         style: {
           display: "inline-flex",
-          gap: 1,
+          gap: 2,
           alignItems: "center"
         }
       }, /*#__PURE__*/React.createElement("span", {
@@ -3440,7 +3445,7 @@ function App() {
       style: {
         width: 40,
         height: 40,
-        borderRadius: 20,
+        borderRadius: "50%",
         flexShrink: 0,
         opacity: song ? 1 : .35,
         display: "flex",
@@ -3457,13 +3462,23 @@ function App() {
       onClick: samplesLoading ? undefined : fading ? stopPlayback : playing ? fadeOutStop : startPlayback,
       disabled: samplesLoading,
       style: samplesLoading ? {
-        opacity: .6,
+        opacity: .7,
         cursor: "wait"
       } : undefined
     }, samplesLoading ? "⋯" : fading ? "■" : playing ? "❚❚" : "▶"), navBtn(nextSong, "next", "Next song"));
   })(), /*#__PURE__*/React.createElement("div", {
     className: "bar-right",
-    onClick: () => playing ? (setLiveTempoOpen(o => !o), setLiveMixerOpen(false), setLiveKeyOpen(false)) : setSettingsOpen(s => s === "right" ? null : "right")
+    onClick: () => {
+      if (playing) {
+        const was = liveTempoOpen;
+        closeAll();
+        if (!was) setLiveTempoOpen(true);
+      } else {
+        const was = settingsOpen === "right";
+        closeAll();
+        if (!was) setSettingsOpen("right");
+      }
+    }
   }, settingsOpen === "right" && !playing ? /*#__PURE__*/React.createElement("div", {
     style: {
       textAlign: "right"
@@ -3472,14 +3487,12 @@ function App() {
     style: {
       fontSize: 15,
       color: C.acc,
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontWeight: 700,
-      letterSpacing: ".04em"
+      letterSpacing: ".1em"
     }
   }, "Done"), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-      fontSize: 9,
+      fontSize: 10,
       color: C.green,
       letterSpacing: ".1em",
       marginTop: 1
@@ -3500,7 +3513,7 @@ function App() {
       background: C.acc,
       opacity: beatPulse ? 1 : 0.18,
       boxShadow: beatPulse ? `0 0 6px ${C.acc}` : "none",
-      transition: beatPulse ? "none" : "opacity .12s"
+      transition: beatPulse ? "none" : "opacity .15s"
     }
   })), /*#__PURE__*/React.createElement("div", {
     className: "bar-bpm-lbl"
@@ -3519,25 +3532,21 @@ function App() {
   }), playing && liveKeyOpen && /*#__PURE__*/React.createElement("div", {
     style: {
       position: "fixed",
-      left: "max(12px, calc(50% - 328px))",
+      left: "var(--cardKeyL)",
       bottom: "calc(var(--bar-h,110px) + 8px)",
       zIndex: 46,
       width: 220,
       pointerEvents: "auto"
     }
   }, /*#__PURE__*/React.createElement("div", {
+    className: "live-card",
     style: {
-      background: C.surf2,
-      border: `1px solid ${C.borderHi}`,
-      borderRadius: 10,
-      padding: 8,
-      boxShadow: "0 10px 34px #000b"
+      padding: 8
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-      fontSize: 9,
-      letterSpacing: ".14em",
+      fontSize: 10,
+      letterSpacing: ".1em",
       color: C.textDim,
       textTransform: "uppercase",
       textAlign: "center",
@@ -3547,7 +3556,7 @@ function App() {
     style: {
       display: "grid",
       gridTemplateColumns: "repeat(3,1fr)",
-      gap: 5
+      gap: 6
     }
   }, NOTES.map(n => /*#__PURE__*/React.createElement("button", {
     key: n,
@@ -3562,36 +3571,28 @@ function App() {
   }, n))), capo > 0 && /*#__PURE__*/React.createElement("button", {
     className: "pad3d",
     onClick: () => setCapo(0),
+    className: "pad3d act-btn act-btn-full",
     style: {
-      width: "100%",
       marginTop: 6,
-      padding: "9px 0",
-      borderRadius: 6,
-      fontWeight: 700,
-      fontSize: 12,
-      letterSpacing: ".04em",
       color: C.opRed
     }
   }, "Remove capo (", capo, ")"))), playing && liveTempoOpen && /*#__PURE__*/React.createElement("div", {
     style: {
       position: "fixed",
-      right: "max(12px, calc(50% - 328px))",
+      right: "var(--cardTempoR)",
       bottom: "calc(var(--bar-h,110px) + 8px)",
       zIndex: 46,
       width: 84,
       pointerEvents: "auto"
     }
   }, /*#__PURE__*/React.createElement("div", {
+    className: "live-card",
     style: {
-      background: C.surf2,
-      border: `1px solid ${C.borderHi}`,
-      borderRadius: 10,
       padding: 10,
-      boxShadow: "0 10px 34px #000b",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      gap: 8
+      gap: 10
     }
   }, /*#__PURE__*/React.createElement("button", {
     className: "pad3d",
@@ -3599,37 +3600,19 @@ function App() {
       borderRadius: 6,
       width: 58,
       height: 44,
-      fontSize: 24,
+      fontSize: 22,
       color: C.text
     },
     onClick: () => nudgeBpm(1)
   }, "+"), /*#__PURE__*/React.createElement("div", {
-    className: "screen",
-    style: {
-      background: C.screenBg,
-      border: `1px solid ${C.screenTop}`,
-      borderBottomColor: C.screenBot,
-      borderRadius: 6,
-      padding: "6px 4px",
-      textAlign: "center",
-      width: "100%",
-      boxShadow: "inset 0 2px 5px #000c"
-    }
+    className: "screen screen-wide"
   }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 30,
-      color: C.lcd,
-      fontFamily: "'Doto','Space Mono',monospace",
-      fontWeight: 900,
-      lineHeight: 1,
-      textShadow: `0 0 12px ${C.acc}44`
-    }
+    className: "lcd-text lcd-lg"
   }, bpm), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
       fontSize: 8,
       color: C.textDim,
-      letterSpacing: ".14em",
+      letterSpacing: ".1em",
       marginTop: 2
     }
   }, "BPM")), /*#__PURE__*/React.createElement("button", {
@@ -3638,12 +3621,12 @@ function App() {
       borderRadius: 6,
       width: 58,
       height: 44,
-      fontSize: 24,
+      fontSize: 22,
       color: C.text
     },
     onClick: () => nudgeBpm(-1)
   }, "−")), /*#__PURE__*/React.createElement("button", {
-    className: "pad3d",
+    className: "pad3d act-btn",
     onClick: () => setMetroOn(o => !o),
     style: {
       width: "100%",
@@ -3651,20 +3634,20 @@ function App() {
       padding: "8px 6px",
       borderRadius: 6,
       fontWeight: 700,
-      fontSize: 11,
-      letterSpacing: ".08em",
+      fontSize: 12,
+      letterSpacing: ".1em",
       textTransform: "uppercase",
       ...(metroOn ? {
-        background: "linear-gradient(180deg,#EAC062," + C.acc + ")",
-        color: "#2A2824",
-        boxShadow: "inset 0 2px 0 #ffffff66,0 4px 0 #6e5220,0 6px 7px #0000002a"
+        background: `linear-gradient(180deg,${C.accLit},${C.acc})`,
+        color: C.text,
+        boxShadow: `inset 0 2px 0 #ffffff66,0 4px 0 ${C.accLip},0 6px 6px #0000002e`
       } : {
         color: C.textMid
       })
     }
   }, "Metronome ", metroOn ? "On" : "Off")), /*#__PURE__*/React.createElement("div", {
     className: `backdrop${settingsOpen ? " open" : ""}`,
-    onClick: () => setSettingsOpen(null)
+    onClick: closeAll
   }), /*#__PURE__*/React.createElement("div", {
     className: `sheet${settingsOpen ? " open" : ""}`
   }, /*#__PURE__*/React.createElement("div", {
@@ -3703,7 +3686,7 @@ function App() {
     audChord: audChord
   }))), /*#__PURE__*/React.createElement("div", {
     className: `backdrop${libraryOpen ? " open" : ""}`,
-    onClick: () => setLibraryOpen(false)
+    onClick: closeAll
   }), /*#__PURE__*/React.createElement("div", {
     className: `sheet library-sheet${libraryOpen ? " open" : ""}`
   }, /*#__PURE__*/React.createElement("div", {
@@ -3729,14 +3712,14 @@ function App() {
       className: "pad3d",
       style: {
         padding: "7px 14px",
-        borderRadius: 5,
+        borderRadius: 6,
         fontSize: 12,
-        letterSpacing: ".04em",
+        letterSpacing: ".1em",
         textTransform: "capitalize",
         fontWeight: on ? 700 : 400,
-        color: on ? "#2A2824" : C.textMid,
-        background: on ? "linear-gradient(180deg,#F4D48A,#E8C067)" : undefined,
-        boxShadow: on ? "inset 0 1px 0 #ffffff55,0 4px 0 #B89340,0 5px 6px #00000026" : undefined
+        color: on ? C.text : C.textMid,
+        background: on ? `linear-gradient(180deg,${C.accLit},${C.acc})` : undefined,
+        boxShadow: on ? `inset 0 1px 0 #ffffff66,0 4px 0 ${C.accLip},0 5px 6px #00000022` : undefined
       },
       onClick: () => setLibView(v)
     }, v);
@@ -3798,12 +3781,11 @@ function App() {
     onClick: clearSetlist
   }, "Clear setlist")), importMsg && /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-      fontSize: 11,
+      fontSize: 12,
       color: importMsg.startsWith("Imported") ? C.green : C.textMid,
       background: C.surf2,
       border: `1px solid ${C.border}`,
-      borderRadius: 5,
+      borderRadius: 6,
       padding: "8px 10px",
       marginBottom: 10,
       whiteSpace: "pre-wrap",
@@ -3822,8 +3804,7 @@ function App() {
     if (rows.length === 0) {
       return /*#__PURE__*/React.createElement("div", {
         style: {
-          fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-          fontSize: 13,
+          fontSize: 12,
           color: C.textDim,
           textAlign: "center",
           padding: "32px 0"
@@ -3835,11 +3816,11 @@ function App() {
       style: {
         display: "flex",
         alignItems: "center",
-        gap: 8,
+        gap: 10,
         padding: "12px 14px",
         background: C.surf2,
         border: `1px solid ${C.border}`,
-        borderRadius: 5,
+        borderRadius: 6,
         marginBottom: 7
       }
     }, /*#__PURE__*/React.createElement("button", {
@@ -3848,8 +3829,8 @@ function App() {
         color: inSet(s.id) ? "#0E1014" : C.acc,
         width: 34,
         height: 34,
-        borderRadius: 5,
-        fontSize: 18,
+        borderRadius: 6,
+        fontSize: 22,
         fontWeight: 700,
         flexShrink: 0,
         lineHeight: 1
@@ -3859,7 +3840,7 @@ function App() {
       style: {
         display: "flex",
         flexDirection: "column",
-        gap: 3,
+        gap: 2,
         flexShrink: 0
       }
     }, /*#__PURE__*/React.createElement("button", {
@@ -3868,8 +3849,8 @@ function App() {
         color: C.textDim,
         width: 26,
         height: 20,
-        borderRadius: 4,
-        fontSize: 11,
+        borderRadius: 6,
+        fontSize: 12,
         opacity: idx === 0 ? .3 : 1
       },
       disabled: idx === 0,
@@ -3880,8 +3861,8 @@ function App() {
         color: C.textDim,
         width: 26,
         height: 20,
-        borderRadius: 4,
-        fontSize: 11,
+        borderRadius: 6,
+        fontSize: 12,
         opacity: idx === rows.length - 1 ? .3 : 1
       },
       disabled: idx === rows.length - 1,
@@ -3903,8 +3884,7 @@ function App() {
       }
     }, s.title || "Untitled"), /*#__PURE__*/React.createElement("div", {
       style: {
-        fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-        fontSize: 11,
+        fontSize: 12,
         color: C.textDim,
         marginTop: 2
       }
@@ -3913,8 +3893,8 @@ function App() {
       style: {
         color: copiedId === s.id ? "#0E1014" : C.acc,
         padding: "6px 10px",
-        borderRadius: 5,
-        fontSize: 11,
+        borderRadius: 6,
+        fontSize: 12,
         fontWeight: copiedId === s.id ? 700 : 400,
         flexShrink: 0
       },
@@ -3924,9 +3904,9 @@ function App() {
       style: {
         color: C.textDim,
         padding: "6px 9px",
-        borderRadius: 5,
+        borderRadius: 6,
         fontSize: 10,
-        letterSpacing: ".05em",
+        letterSpacing: ".1em",
         flexShrink: 0
       },
       onClick: e => {
@@ -4038,101 +4018,57 @@ function SettingsSheet({
     key: n,
     style: {
       background: C.surf,
-      fontSize: 16,
-      fontFamily: "'Space Mono',monospace"
+      fontSize: 15
     }
   }, n))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: "'Space Mono',monospace",
-      fontSize: 7,
-      color: C.lcd,
-      opacity: .5,
-      textAlign: "center",
-      letterSpacing: ".1em",
-      marginTop: 2
-    }
+    className: "screen-cap"
   }, "KEY")), capo > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       paddingLeft: 8
     }
   }, /*#__PURE__*/React.createElement("div", {
+    className: "lcd-text lcd-lg",
     style: {
-      color: C.lcd,
-      fontSize: 30,
-      fontFamily: "'Doto','Space Mono',monospace",
-      fontWeight: 900,
-      lineHeight: 1,
-      textAlign: "center",
-      textShadow: `0 0 12px ${C.acc}44`
+      textAlign: "center"
     }
   }, NOTES[((noteIdx(keyN) - capo) % 12 + 12) % 12]), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: "'Space Mono',monospace",
-      fontSize: 7,
-      color: C.lcd,
-      opacity: .5,
-      textAlign: "center",
-      letterSpacing: ".1em",
-      marginTop: 2
-    }
+    className: "screen-cap"
   }, "CAPO ", capo))), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-      fontSize: 9,
+      fontSize: 10,
       color: C.textDim,
-      letterSpacing: ".08em",
+      letterSpacing: ".1em",
       textAlign: "center",
       marginBottom: 10
     }
   }, "MAJOR · for a minor song pick its relative major"), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "'Space Mono',monospace",
-      fontSize: 9,
+      fontSize: 10,
       color: C.textDim,
-      letterSpacing: ".06em",
+      letterSpacing: ".1em",
       marginBottom: 6
     }
   }, "CAPO · see easy shapes"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
-      gap: 5,
+      gap: 6,
       flexWrap: "wrap",
       alignItems: "center"
     }
   }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: "relative",
-      display: "inline-block"
-    }
+    className: "rel-block"
   }, /*#__PURE__*/React.createElement("select", {
+    className: "screen-select",
     value: capo,
-    onChange: e => setCapo(Number(e.target.value)),
-    style: {
-      appearance: "none",
-      WebkitAppearance: "none",
-      background: C.screenBg,
-      color: C.lcd,
-      border: `1px solid ${C.screenTop}`,
-      borderBottomColor: C.screenBot,
-      borderRadius: 5,
-      fontFamily: "'Doto','Space Mono',monospace",
-      fontWeight: 900,
-      fontSize: 18,
-      padding: "5px 22px 5px 12px",
-      outline: "none",
-      cursor: "pointer",
-      textShadow: `0 0 8px ${C.acc}44`,
-      boxShadow: `inset 0 1px 4px #000a`
-    }
+    onChange: e => setCapo(Number(e.target.value))
   }, [0, 1, 2, 3, 4, 5, 6, 7].map(n => /*#__PURE__*/React.createElement("option", {
     key: n,
     value: n,
     style: {
       background: C.surf,
       color: C.text,
-      fontFamily: "'Space Mono',monospace",
-      fontSize: 14
+      fontSize: 15
     }
   }, n))), /*#__PURE__*/React.createElement("span", {
     style: {
@@ -4143,7 +4079,7 @@ function SettingsSheet({
       pointerEvents: "none",
       color: C.lcd,
       opacity: .5,
-      fontSize: 9
+      fontSize: 10
     }
   }, "▾")), /*#__PURE__*/React.createElement("button", {
     className: `ts-btn${capo === 0 ? " on" : ""}`,
@@ -4163,7 +4099,7 @@ function SettingsSheet({
   }, o.shape, /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 8,
-      opacity: .6
+      opacity: .7
     }
   }, " · ", o.fret)))))), isRight && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "spine-card"
@@ -4178,10 +4114,9 @@ function SettingsSheet({
     className: "bpm-big"
   }, bpm), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-      fontSize: 9,
+      fontSize: 10,
       color: C.textDim,
-      letterSpacing: ".12em",
+      letterSpacing: ".1em",
       marginBottom: 8
     }
   }, "BPM"), /*#__PURE__*/React.createElement("div", {
@@ -4189,7 +4124,7 @@ function SettingsSheet({
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      gap: 8
+      gap: 10
     }
   }, /*#__PURE__*/React.createElement("button", {
     className: "tempo-pm",
@@ -4217,7 +4152,7 @@ function SettingsSheet({
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
-      gap: 4,
+      gap: 6,
       flexWrap: "wrap",
       justifyContent: "center"
     }
@@ -4235,11 +4170,11 @@ function SettingsSheet({
       borderRadius: 6,
       fontWeight: 700,
       fontSize: 12,
-      letterSpacing: ".04em",
+      letterSpacing: ".1em",
       ...(countIn ? {
-        background: "linear-gradient(180deg,#EAC062," + C.acc + ")",
-        color: "#2A2824",
-        boxShadow: "inset 0 2px 0 #ffffff66,0 4px 0 #6e5220,0 6px 7px #0000002a"
+        background: `linear-gradient(180deg,${C.accLit},${C.acc})`,
+        color: C.text,
+        boxShadow: `inset 0 2px 0 #ffffff66,0 4px 0 ${C.accLip},0 6px 6px #0000002e`
       } : {
         color: C.textMid
       })
@@ -4265,23 +4200,18 @@ function SettingsSheet({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
-      gap: 8,
+      gap: 10,
       marginBottom: 12
     }
   }, /*#__PURE__*/React.createElement("button", {
-    className: "pad3d",
+    className: "pad3d act-btn",
     onClick: () => setMetroOn(o => !o),
     style: {
       flex: 1,
-      padding: "9px 6px",
-      borderRadius: 6,
-      fontWeight: 700,
-      fontSize: 12,
-      letterSpacing: ".04em",
       ...(metroOn ? {
-        background: "linear-gradient(180deg,#EAC062," + C.acc + ")",
-        color: "#2A2824",
-        boxShadow: "inset 0 2px 0 #ffffff66,0 4px 0 #6e5220,0 6px 7px #0000002a"
+        background: `linear-gradient(180deg,${C.accLit},${C.acc})`,
+        color: C.text,
+        boxShadow: `inset 0 2px 0 #ffffff66,0 4px 0 ${C.accLip},0 6px 6px #0000002e`
       } : {
         color: C.textMid
       })
@@ -4296,19 +4226,14 @@ function SettingsSheet({
     const on = metroPan === val;
     return /*#__PURE__*/React.createElement("button", {
       key: val,
-      className: "pad3d",
+      className: "pad3d act-btn",
       onClick: () => setMetroPan(val),
       style: {
         flex: 1,
-        padding: "9px 6px",
-        borderRadius: 6,
-        fontWeight: 700,
-        fontSize: 12,
-        letterSpacing: ".04em",
         ...(on ? {
-          background: "linear-gradient(180deg,#EAC062," + C.acc + ")",
-          color: "#2A2824",
-          boxShadow: "inset 0 2px 0 #ffffff66,0 4px 0 #6e5220,0 6px 7px #0000002a"
+          background: `linear-gradient(180deg,${C.accLit},${C.acc})`,
+          color: C.text,
+          boxShadow: `inset 0 2px 0 #ffffff66,0 4px 0 ${C.accLip},0 6px 6px #0000002e`
         } : {
           color: C.textMid
         })
@@ -4322,8 +4247,7 @@ function SettingsSheet({
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-      fontSize: 9,
+      fontSize: 10,
       color: C.textDim,
       letterSpacing: ".1em",
       width: 34,
@@ -4341,8 +4265,7 @@ function SettingsSheet({
     onChange: e => setMetroVol(Number(e.target.value))
   }), /*#__PURE__*/React.createElement("span", {
     style: {
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-      fontSize: 11,
+      fontSize: 12,
       color: C.textMid,
       width: 24,
       textAlign: "right",
@@ -4350,8 +4273,7 @@ function SettingsSheet({
     }
   }, metroVol)), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-      fontSize: 9,
+      fontSize: 10,
       color: C.textDim,
       marginTop: 10,
       lineHeight: 1.5
@@ -4372,7 +4294,7 @@ function SettingsSheet({
       style: {
         display: "flex",
         alignItems: "center",
-        gap: 9,
+        gap: 10,
         marginBottom: 6
       }
     }, /*#__PURE__*/React.createElement("button", {
@@ -4385,7 +4307,7 @@ function SettingsSheet({
         ...(on ? {
           background: `linear-gradient(180deg,${INST_COLORS[k]}E6,${INST_COLORS[k]})`,
           color: "#fff",
-          boxShadow: `0 0 8px ${INST_COLORS[k]}44,inset 0 1px 0 #ffffff44,0 3px 0 ${INST_COLORS[k]}66,0 4px 5px #0000002a`
+          boxShadow: `0 0 8px ${INST_COLORS[k]}44,inset 0 1px 0 #ffffff66,0 3px 0 ${INST_COLORS[k]}66,0 4px 6px #0000002e`
         } : {})
       },
       onClick: () => setInstruments(i => ({
@@ -4409,8 +4331,7 @@ function SettingsSheet({
       }))
     }), /*#__PURE__*/React.createElement("div", {
       style: {
-        fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-        fontSize: 11,
+        fontSize: 12,
         color: on ? C.textMid : C.textDim,
         width: 24,
         textAlign: "right",
@@ -4426,7 +4347,7 @@ function SettingsSheet({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
-      gap: 5,
+      gap: 6,
       flexWrap: "wrap",
       marginBottom: 8
     }
@@ -4436,7 +4357,7 @@ function SettingsSheet({
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      gap: 5
+      gap: 6
     }
   }, /*#__PURE__*/React.createElement("button", {
     className: "pal-btn",
@@ -4448,11 +4369,7 @@ function SettingsSheet({
       color: CHORD_COLOR
     }
   }, p.label), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-      fontSize: 8,
-      color: C.textDim
-    }
+    className: "label-mic"
   }, p.roman))), /*#__PURE__*/React.createElement("div", {
     style: {
       width: 1,
@@ -4472,17 +4389,9 @@ function SettingsSheet({
     className: `pal-btn extra${extraOn.includes(ex.label) ? " on" : ""}`,
     onClick: () => toggleExtra(ex)
   }, extraOn.includes(ex.label) ? chordLabel(NOTES[(noteIdx(keyN) + ex.semis) % 12], ex.quality || "major") : ex.label), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-      fontSize: 8,
-      color: C.textDim
-    }
+    className: "label-mic"
   }, ex.label)))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-      fontSize: 10,
-      color: C.textDim
-    }
+    className: "label"
   }, "Diatonic always included · tap extras to add")))));
 }
 
@@ -4589,7 +4498,7 @@ function SecCard({
       justifyContent: "center",
       cursor: "pointer",
       padding: "4px 8px",
-      gap: 8,
+      gap: 10,
       userSelect: "none"
     },
     onClick: onToggle
@@ -4639,11 +4548,7 @@ function SecCard({
       paddingTop: 10
     }
   }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-      fontSize: 10,
-      color: C.textDim
-    }
+    className: "label"
   }, "Repeats"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
@@ -4667,9 +4572,17 @@ function SecCard({
       flex: 1
     }
   }), /*#__PURE__*/React.createElement("button", {
-    className: "btn danger sm",
+    className: "pad3d",
+    style: {
+      color: C.textDim,
+      padding: "6px 9px",
+      borderRadius: 6,
+      fontSize: 10,
+      letterSpacing: ".1em",
+      flexShrink: 0
+    },
     onClick: onRemove
-  }, "Remove section")), selChord !== null && (() => {
+  }, "DELETE")), selChord !== null && (() => {
     const ch = sec.chords[selChord];
     const canExpand = ch && (!sec.chords[selChord + 1] || sec.chords[selChord + 1]?.beats > 1);
     const canShrink = ch && (ch.beats || 4) > 1;
@@ -4715,11 +4628,10 @@ function SecCard({
     onBgClick: onClearSel
   }), /*#__PURE__*/React.createElement("div", {
     style: {
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-      fontSize: 9,
+      fontSize: 10,
       color: C.textDim,
       marginBottom: 10,
-      letterSpacing: ".04em",
+      letterSpacing: ".1em",
       lineHeight: 1.5
     }
   }, "Tap a chord to edit beat length ", /*#__PURE__*/React.createElement("span", {
@@ -4743,7 +4655,7 @@ function SecCard({
   }, "Add chord"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
-      gap: 5,
+      gap: 6,
       flexWrap: "wrap"
     }
   }, palette.map(p => /*#__PURE__*/React.createElement("div", {
@@ -4752,17 +4664,13 @@ function SecCard({
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      gap: 5
+      gap: 6
     }
   }, /*#__PURE__*/React.createElement("button", {
     className: "pal-btn-add",
     onClick: () => onAddChord(p)
   }, p.label), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-      fontSize: 8,
-      color: C.textDim
-    }
+    className: "label-mic"
   }, p.roman))))), /*#__PURE__*/React.createElement(DynPanel, {
     dyn: sec.dyn,
     timeSig: timeSig,
@@ -4842,8 +4750,8 @@ function BeatGrid({
         minWidth: 0,
         background: colorWithAlpha(chordCol, alpha),
         borderRight: isBarRight ? "none" : slot.isLast ? "none" : `1px solid #00000018`,
-        boxShadow: slot.isFirst ? "inset 0 2px 0 #ffffff33,inset 0 -2px 4px #00000018,0 1px 0 #ffffff10" : "none",
-        transition: isPulse ? "filter 0s" : "filter .12s",
+        boxShadow: slot.isFirst ? "inset 0 2px 0 #ffffff22,inset 0 -2px 4px #00000018,0 1px 0 #ffffff14" : "none",
+        transition: isPulse ? "filter 0s" : "filter .15s",
         position: "relative"
       },
       onClick: e => {
@@ -4964,16 +4872,16 @@ function DynPanel({
       className: "pad3d",
       style: {
         fontWeight: 700,
-        fontSize: 11,
+        fontSize: 12,
         padding: "7px 10px",
-        borderRadius: 5,
+        borderRadius: 6,
         width: 62,
         flexShrink: 0,
         textAlign: "center",
-        letterSpacing: ".04em",
+        letterSpacing: ".1em",
         color: muted ? C.textDim : "#fff",
         background: muted ? undefined : `linear-gradient(180deg,${ic}E6,${ic})`,
-        boxShadow: muted ? undefined : `0 0 8px ${ic}44,inset 0 2px 0 #ffffff44,0 4px 0 ${ic}66,0 6px 7px #0000002a`
+        boxShadow: muted ? undefined : `0 0 8px ${ic}44,inset 0 2px 0 #ffffff66,0 4px 0 ${ic}66,0 6px 6px #0000002e`
       },
       onClick: onTog
     }, label);
@@ -5017,17 +4925,9 @@ function DynPanel({
       marginTop: 3
     }
   }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-      fontSize: 9,
-      color: C.textDim
-    }
+    className: "label"
   }, "subtle"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-      fontSize: 9,
-      color: C.textDim
-    }
+    className: "label"
   }, "full")))), inst.piano && /*#__PURE__*/React.createElement("div", {
     className: "dyn-row"
   }, /*#__PURE__*/React.createElement(NameToggle, {
@@ -5060,17 +4960,9 @@ function DynPanel({
       marginTop: 3
     }
   }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-      fontSize: 9,
-      color: C.textDim
-    }
+    className: "label"
   }, "warm"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: "'Space Mono',ui-monospace,'SF Mono',Menlo,monospace",
-      fontSize: 9,
-      color: C.textDim
-    }
+    className: "label"
   }, "bright")))), [["Bass", "bassMuted", "bassSteps", "bass"], ["Kick", "kickMuted", "kickSteps", "kick"], ["Shaker", "shakerMuted", "shakerSteps", "shaker"], ["Tamb", "tambMuted", "tambSteps", "tamb"]].map(([lbl, mk, sk, ik]) => inst[ik] ? /*#__PURE__*/React.createElement("div", {
     key: sk,
     className: "dyn-row"
@@ -5094,7 +4986,7 @@ function DynPanel({
     onClick: () => onTogStep(sk, i),
     style: on ? {
       background: `linear-gradient(180deg,${INST_COLORS[ik]}E6,${INST_COLORS[ik]})`,
-      boxShadow: `0 0 8px ${INST_COLORS[ik]}66,inset 0 2px 0 #ffffff44,0 5px 0 ${INST_COLORS[ik]}66,0 7px 8px #0000002e`
+      boxShadow: `0 0 8px ${INST_COLORS[ik]}66,inset 0 2px 0 #ffffff66,0 5px 0 ${INST_COLORS[ik]}66,0 7px 8px #0000002e`
     } : undefined
   })))) : null));
 }
