@@ -1,0 +1,451 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Tinue Developer Manual</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* Layout: fixed left contents rail on wide screens, single column on phone.
+     Palette and type borrowed from the app itself — warm aluminium body,
+     dark amber-LCD screens, Space Mono for the machine voice. */
+  :root{
+    --bg:#EDEAE0;            /* app body off-white */
+    --surf:#F6F4EC;          /* raised card */
+    --surf2:#FBFAF4;
+    --ink:#2A2824;           /* near-black text */
+    --ink-mid:#5A564C;
+    --ink-dim:#8C8678;
+    --rule:#D4CFC0;
+    --rule-strong:#B7B1A0;
+    --accent:#C77F1E;        /* amber, a touch deeper than the app's #E0902A for text contrast */
+    --accent-soft:#E0902A22;
+    --screen:#23211C;        /* dark LCD */
+    --screen-ink:#F0C255;    /* amber glow */
+    --code-bg:#262320;
+    --code-ink:#E8E2D4;
+    --code-kw:#E0902A;       /* keyword amber */
+    --code-str:#8FB25A;      /* string green */
+    --code-com:#857E6E;      /* comment grey */
+    --code-fn:#6FA8C7;       /* function blue */
+    --warn:#C7412F;
+    --ok:#1E9E63;
+    --maxw:62rem;
+    color-scheme:light;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --bg:#1A1815;--surf:#232019;--surf2:#2A2620;--ink:#ECE7DA;--ink-mid:#B8B1A1;--ink-dim:#857E6E;
+    --rule:#38332A;--rule-strong:#4A4336;--accent:#E8A94A;--accent-soft:#E0902A22;
+    --screen:#120F0B;--screen-ink:#F0C255;--code-bg:#120F0B;--code-ink:#E8E2D4;--warn:#E66552;--ok:#43B47F;
+    color-scheme:dark;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#1A1815;--surf:#232019;--surf2:#2A2620;--ink:#ECE7DA;--ink-mid:#B8B1A1;--ink-dim:#857E6E;
+    --rule:#38332A;--rule-strong:#4A4336;--accent:#E8A94A;--accent-soft:#E0902A22;
+    --screen:#120F0B;--screen-ink:#F0C255;--code-bg:#120F0B;--code-ink:#E8E2D4;--warn:#E66552;--ok:#43B47F;
+    color-scheme:dark;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Space Grotesk","Helvetica Neue",Arial,sans-serif;
+    font-size:15px;line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 clamp(16px,4vw,40px);}
+
+  /* ── Masthead ───────────────────────────────── */
+  header.mast{
+    border-bottom:2px solid var(--rule-strong);
+    padding-block:clamp(28px,6vw,56px) clamp(20px,4vw,32px);
+  }
+  .mast .eyebrow{
+    font-family:"Space Mono",ui-monospace,monospace;
+    font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--accent);
+    margin:0 0 14px;
+  }
+  .mast h1{
+    font-family:"Space Mono",ui-monospace,monospace;
+    font-weight:700;font-size:clamp(34px,8vw,60px);line-height:1;letter-spacing:-.01em;
+    margin:0;text-wrap:balance;
+  }
+  .mast h1 .dots{color:var(--accent);}
+  .mast .sub{font-size:clamp(15px,2.4vw,19px);color:var(--ink-mid);margin:16px 0 0;max-width:44ch;text-wrap:balance;}
+  .mast .meta{
+    font-family:"Space Mono",ui-monospace,monospace;font-size:12px;color:var(--ink-dim);
+    margin-top:22px;display:flex;flex-wrap:wrap;gap:6px 20px;
+  }
+  .mast .meta b{color:var(--ink-mid);font-weight:400;}
+
+  /* ── Layout with contents rail ──────────────── */
+  .shell{display:grid;grid-template-columns:1fr;gap:0;}
+  @media(min-width:60rem){
+    .shell{grid-template-columns:15rem 1fr;align-items:start;gap:clamp(24px,3vw,44px);}
+    nav.toc{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;max-height:100vh;overflow-y:auto;padding-block:36px;}
+  }
+  nav.toc{font-family:"Space Mono",ui-monospace,monospace;font-size:12.5px;line-height:1.5;}
+  nav.toc .toc-h{letter-spacing:.2em;text-transform:uppercase;color:var(--ink-dim);font-size:11px;margin:0 0 12px;}
+  nav.toc ol{list-style:none;margin:0;padding:0;counter-reset:toc;}
+  nav.toc li{margin:0 0 3px;counter-increment:toc;}
+  nav.toc a{display:block;padding:4px 10px 4px 0;color:var(--ink-mid);text-decoration:none;border-left:2px solid transparent;padding-left:12px;transition:color .12s,border-color .12s;}
+  nav.toc a::before{content:counter(toc,decimal-leading-zero);color:var(--ink-dim);margin-right:9px;}
+  nav.toc a:hover{color:var(--accent);border-left-color:var(--accent);}
+  nav.toc .sub a{padding-left:34px;font-size:12px;}
+  nav.toc .sub a::before{content:"";margin:0;}
+
+  main{padding-block:28px 72px;min-width:0;}
+
+  /* ── Section rhythm ─────────────────────────── */
+  section.sec{padding-block:clamp(26px,4vw,40px);border-top:1px solid var(--rule);}
+  section.sec:first-child{border-top:none;}
+  .sec-num{
+    font-family:"Space Mono",ui-monospace,monospace;font-size:12px;letter-spacing:.2em;
+    color:var(--accent);text-transform:uppercase;margin:0 0 8px;
+  }
+  h2{font-family:"Space Mono",ui-monospace,monospace;font-weight:700;font-size:clamp(22px,4vw,30px);line-height:1.15;margin:0 0 6px;letter-spacing:-.01em;text-wrap:balance;scroll-margin-top:1.5rem;}
+  h3{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:18px;margin:30px 0 8px;letter-spacing:-.01em;scroll-margin-top:1.5rem;}
+  h4{font-family:"Space Mono",ui-monospace,monospace;font-weight:700;font-size:13px;letter-spacing:.04em;margin:22px 0 6px;color:var(--ink-mid);text-transform:uppercase;}
+  p{margin:0 0 14px;max-width:68ch;}
+  .lede{font-size:17px;color:var(--ink-mid);max-width:66ch;}
+  ul,ol.list{margin:0 0 16px;padding-left:1.3em;max-width:68ch;}
+  li{margin:0 0 7px;}
+  strong{font-weight:600;}
+  a{color:var(--accent);text-underline-offset:2px;}
+  code{font-family:"Space Mono",ui-monospace,monospace;font-size:.87em;background:var(--accent-soft);color:var(--accent);padding:.08em .38em;border-radius:4px;word-break:break-word;}
+  :root[data-theme="dark"] code, :root:not([data-theme="light"]) code{color:var(--screen-ink);}
+  @media (prefers-color-scheme:light){:root:not([data-theme="dark"]) code{color:var(--accent);}}
+
+  /* ── Code blocks ────────────────────────────── */
+  pre{
+    background:var(--code-bg);color:var(--code-ink);
+    font-family:"Space Mono",ui-monospace,monospace;font-size:12.5px;line-height:1.65;
+    padding:16px 18px;border-radius:8px;overflow-x:auto;margin:0 0 16px;
+    border:1px solid #0000;box-shadow:inset 0 1px 0 #ffffff0c;
+  }
+  pre code{background:none;color:inherit;padding:0;font-size:inherit;}
+  .k{color:var(--code-kw);}
+  .s{color:var(--code-str);}
+  .c{color:var(--code-com);font-style:italic;}
+  .fn{color:var(--code-fn);}
+  .dim{color:var(--code-com);}
+
+  /* ── Callouts ───────────────────────────────── */
+  .note{
+    border-left:3px solid var(--accent);background:var(--surf);
+    padding:13px 16px;border-radius:0 8px 8px 0;margin:0 0 16px;font-size:14px;
+  }
+  .note.warn{border-left-color:var(--warn);}
+  .note.gotcha{border-left-color:var(--warn);}
+  .note .tag{
+    font-family:"Space Mono",ui-monospace,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--accent);display:block;margin-bottom:4px;
+  }
+  .note.warn .tag,.note.gotcha .tag{color:var(--warn);}
+  .note p:last-child{margin-bottom:0;}
+
+  /* ── LCD screen panel (for the hero fact strip) ─ */
+  .screen-panel{
+    background:var(--screen);border-radius:12px;padding:20px 22px;margin:4px 0 8px;
+    box-shadow:inset 0 2px 12px #000a, inset 0 -1px 0 #ffffff10;
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:18px 26px;
+  }
+  .screen-panel .cell .lbl{font-family:"Space Mono",ui-monospace,monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#C9A24E;margin:0 0 4px;}
+  .screen-panel .cell .val{font-family:"Space Mono",ui-monospace,monospace;font-size:15px;color:var(--screen-ink);text-shadow:0 0 10px #E0902A55;line-height:1.3;}
+
+  /* ── Tables ─────────────────────────────────── */
+  .tbl-wrap{overflow-x:auto;margin:0 0 18px;border:1px solid var(--rule);border-radius:8px;}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:30rem;}
+  th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--rule);vertical-align:top;}
+  th{font-family:"Space Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim);background:var(--surf);font-weight:700;}
+  tr:last-child td{border-bottom:none;}
+  td code{white-space:nowrap;}
+  table .mono{font-family:"Space Mono",ui-monospace,monospace;font-size:12.5px;color:var(--ink-mid);}
+
+  /* ── Pipeline / flow row ────────────────────── */
+  .flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:10px;margin:6px 0 18px;}
+  .flow .node{
+    background:var(--surf);border:1px solid var(--rule-strong);border-radius:8px;
+    padding:11px 14px;flex:1 1 9rem;min-width:0;
+  }
+  .flow .node .n-h{font-family:"Space Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0 0 3px;}
+  .flow .node .n-b{font-size:12.5px;color:var(--ink-mid);}
+
+  .filebar{font-family:"Space Mono",ui-monospace,monospace;font-size:12px;color:var(--ink-dim);margin:-4px 0 14px;}
+  hr.soft{border:none;border-top:1px dashed var(--rule-strong);margin:26px 0;}
+  .pill{display:inline-block;font-family:"Space Mono",ui-monospace,monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:20px;border:1px solid var(--rule-strong);color:var(--ink-mid);}
+  .pill.warn{color:var(--warn);border-color:var(--warn);}
+  .pill.ok{color:var(--ok);border-color:var(--ok);}
+
+  footer.foot{border-top:2px solid var(--rule-strong);padding-block:28px 48px;color:var(--ink-dim);font-family:"Space Mono",ui-monospace,monospace;font-size:12px;}
+
+  a.anchor{color:inherit;text-decoration:none;}
+  a.anchor:hover::after{content:" ¶";color:var(--accent);font-weight:400;}
+
+  @media print{
+    nav.toc{display:none;}
+    .shell{grid-template-columns:1fr;}
+    body{font-size:11pt;background:#fff;color:#000;}
+    pre{border:1px solid #ccc;}
+    section.sec{break-inside:avoid-page;}
+  }
+</style>
+
+<header class="mast">
+  <div class="wrap">
+    <p class="eyebrow">Handoff Guide · built for vibe coding</p>
+    <h1>Tinu<span class="dots">ë</span></h1>
+    <p class="sub">A browser app that plays a full backing band from chords you arrange. This guide gets you productive fast — what the pieces are, how to change things, and the handful of spots where you should look before you leap.</p>
+    <div class="meta">
+      <span><b>Repo</b> &nbsp;github.com/philthemoser/qw-app</span>
+      <span><b>Live</b> &nbsp;philthemoser.github.io/qw-app</span>
+      <span><b>Stack</b> &nbsp;React + Tone.js, one file</span>
+      <span><b>Updated</b> &nbsp;Oct 2026</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="shell">
+
+  <nav class="toc" aria-label="Contents">
+    <p class="toc-h">Contents</p>
+    <ol>
+      <li><a href="#overview">What it is</a></li>
+      <li><a href="#howitworks">How it's built</a></li>
+      <li><a href="#change">How to change it</a></li>
+      <li><a href="#parts">The parts, in plain terms</a></li>
+      <li><a href="#careful">Where to be careful</a></li>
+      <li><a href="#easy">Easy wins &amp; safe swaps</a></li>
+      <li><a href="#deploy">Putting it live</a></li>
+      <li><a href="#roadmap">What's next</a></li>
+      <li><a href="#rules">Rules of thumb</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- 1 -->
+    <section class="sec" id="overview">
+      <p class="sec-num">01 — Start here</p>
+      <h2><a class="anchor" href="#overview">What it is</a></h2>
+      <p class="lede">Tinuë plays a full backing band — pad, piano, bass, and three percussion voices — from chord progressions the user arranges into sections. They build a song, hit play, and the app performs it like a band following the chart.</p>
+
+      <p>One idea runs through everything: <strong>opinionated and fast.</strong> The app makes the musical choices so the user doesn't have to fiddle. That's why there's no sound browser, no deep mixer, no note editing. Its value is in what it leaves out. When you add things, keep that in mind — the easy move is always to pile on options, and that's usually the wrong one.</p>
+
+      <div class="screen-panel">
+        <div class="cell"><p class="lbl">Instruments</p><p class="val">pad · piano · bass<br>kick · shaker · tamb</p></div>
+        <div class="cell"><p class="lbl">Sound engine</p><p class="val">Tone.js (audio library)</p></div>
+        <div class="cell"><p class="lbl">Interface</p><p class="val">React, one file</p></div>
+        <div class="cell"><p class="lbl">Saving</p><p class="val">in the browser only</p></div>
+        <div class="cell"><p class="lbl">Server</p><p class="val">none — just static files</p></div>
+        <div class="cell"><p class="lbl">Look</p><p class="val">warm vintage synth</p></div>
+      </div>
+
+      <p>No backend, no database, no accounts. It's a single web page plus audio files, hosted for free on GitHub Pages. That simplicity is a feature — there's very little that can go wrong operationally.</p>
+    </section>
+
+    <!-- 2 -->
+    <section class="sec" id="howitworks">
+      <p class="sec-num">02 — The setup</p>
+      <h2><a class="anchor" href="#howitworks">How it's built</a></h2>
+
+      <p>Everything lives in <strong>one GitHub repo</strong>: <a href="https://github.com/philthemoser/qw-app">github.com/philthemoser/qw-app</a>. Here's what's in it:</p>
+
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>In the repo</th><th>What it is</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">index.html</td><td>The whole app, in one file. This is what actually runs in the browser.</td></tr>
+          <tr><td class="mono">samples/</td><td>All the audio — piano, pad loops, percussion. Organised in folders.</td></tr>
+          <tr><td class="mono">manifest.webmanifest</td><td>The "Add to Home Screen" name and settings.</td></tr>
+          <tr><td class="mono">icons/</td><td>The app icon in a few sizes.</td></tr>
+        </tbody>
+      </table></div>
+
+      <p>There's also the <strong>source file</strong>, <code>chord-groove-v21.jsx</code>. This is the human-friendly version of the code — it's where all the real work happens. Think of it as the editable original; <code>index.html</code> is the packaged-up copy that browsers can run.</p>
+
+      <div class="note warn">
+        <span class="tag">The one thing to internalise</span>
+        <p>You edit the <strong>.jsx file</strong>, then "build" it into <code>index.html</code>. Never edit <code>index.html</code> by hand — your next build wipes it out. If you're vibe coding, tell your AI: <em>"the source is chord-groove-v21.jsx; index.html is generated from it."</em></p>
+      </div>
+
+      <h3>What "building" means</h3>
+      <p>The <code>.jsx</code> file uses modern React syntax browsers can't run directly, so a tool called <strong>Babel</strong> translates it into plain code and wraps it in the <code>index.html</code> shell. It's a small, mechanical step — translate, wrap, done. When you work with an AI assistant, it handles this for you; just ask it to "compile the jsx to index.html" when you're ready to ship.</p>
+
+      <p>If that manual step ever annoys you, the cleanest upgrade is to switch the project to <strong>Vite</strong> (a standard build tool) — it does the translating automatically every time you save. See <a href="#roadmap">What's next</a>.</p>
+    </section>
+
+    <!-- 3 -->
+    <section class="sec" id="change">
+      <p class="sec-num">03 — Workflow</p>
+      <h2><a class="anchor" href="#change">How to change it</a></h2>
+      <p>The loop for any change is the same four steps:</p>
+      <div class="flow">
+        <div class="node"><p class="n-h">1 · Edit</p><p class="n-b">Change the <code>.jsx</code> source — yourself or by asking an AI.</p></div>
+        <div class="node"><p class="n-h">2 · Build</p><p class="n-b">Compile the <code>.jsx</code> into <code>index.html</code>.</p></div>
+        <div class="node"><p class="n-h">3 · Check</p><p class="n-b">Open the HTML and make sure it loads and plays.</p></div>
+        <div class="node"><p class="n-h">4 · Ship</p><p class="n-b">Commit <code>index.html</code> to the repo; the live site updates itself.</p></div>
+      </div>
+
+      <div class="note">
+        <span class="tag">The check in step 3 matters</span>
+        <p>This app has one failure mode worth knowing: if the code has a certain kind of mistake, the whole screen goes <strong>blank beige</strong> instead of showing an error. So always open the built file and confirm it actually appears before you ship. If it's blank, the last change broke something — undo it and try again, or ask the AI to look at the browser console for the error.</p>
+      </div>
+
+      <h3>Vibe-coding this app well</h3>
+      <p>It responds well to describe-what-you-want coding, with two habits that save pain:</p>
+      <ul>
+        <li><strong>Give the AI the whole <code>.jsx</code> file as context,</strong> and tell it to return the edited file or a specific edit. It's one file, so there's no hunting across a codebase.</li>
+        <li><strong>Change one thing at a time and check it.</strong> Because a bad change blanks the screen, small steps make it obvious which change caused a problem. Big multi-feature rewrites are where this app bites.</li>
+      </ul>
+    </section>
+
+    <!-- 4 -->
+    <section class="sec" id="parts">
+      <p class="sec-num">04 — The map</p>
+      <h2><a class="anchor" href="#parts">The parts, in plain terms</a></h2>
+      <p>You don't need to understand the internals to work on it, but knowing what the main pieces <em>are</em> helps you describe changes clearly. Here's the whole app in six boxes.</p>
+
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Part</th><th>What it does</th><th>Where it is</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Music theory</strong></td><td>Figures out which chords belong to a key, builds progressions, handles the capo. Pure logic, no audio.</td><td class="mono">top of the file</td></tr>
+          <tr><td><strong>The song</strong></td><td>One big object holding the key, tempo, and the list of sections with their chords and groove. This is also what gets saved and exported.</td><td class="mono">the data shape</td></tr>
+          <tr><td><strong>The sound engine</strong></td><td>Builds the instruments (using Tone.js) when you press play, tears them down on stop.</td><td class="mono">startPlayback</td></tr>
+          <tr><td><strong>The player</strong></td><td>A clock that fires on every beat, deciding what each instrument plays and when to move to the next chord/section.</td><td class="mono">scheduleRepeat</td></tr>
+          <tr><td><strong>The interface</strong></td><td>The section cards, the bottom control bar, and the pop-up panels (key, tempo, mixer, sketchpad, library).</td><td class="mono">the JSX / render</td></tr>
+          <tr><td><strong>The look</strong></td><td>All the styling, as one block of CSS with a defined set of colours, sizes and spacings.</td><td class="mono">the style block</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>One genuinely clever bit worth knowing</h3>
+      <p>Each section has a single <strong>Intensity</strong> slider. Behind it, the app auto-generates the whole groove — how busy the drums are, how open the filters sit — from that one number. That's why a section can go from sparse to full with one control. If you ever want to change how "busy" feels at a given intensity, that's the <code>applyIntensity</code> logic.</p>
+
+      <h3>The song, concretely</h3>
+      <p>If you want to generate songs (say, to pre-load a chart library), this is the shape to produce. A real example is on disk as exported JSON — point your AI at one and ask it to match the format.</p>
+      <pre><code>{
+  title, key, scale, bpm, timeSig,     <span class="c">// "Holy Forever", "C", "major", 70, "4/4"</span>
+  sections: [
+    {
+      name, repeats,                   <span class="c">// "Chorus", 2</span>
+      chords: [ { label, root, beats, … } ],   <span class="c">// each chord carries its own info</span>
+      dyn: { intensity, …groove… }     <span class="c">// the section's feel</span>
+    }
+  ],
+  mix, instruments                     <span class="c">// fader levels &amp; which voices are on</span>
+}</code></pre>
+    </section>
+
+    <!-- 5 -->
+    <section class="sec" id="careful">
+      <p class="sec-num">05 — Look before you leap</p>
+      <h2><a class="anchor" href="#careful">Where to be careful</a></h2>
+      <p>Most of the app is safe to change freely. A few areas are delicate — not off-limits, just worth a careful look (and a careful prompt to your AI) rather than a blind rewrite.</p>
+
+      <h4>The sound engine and the player</h4>
+      <p>The code that builds the instruments and the clock that drives them is the subtle heart of the app. It works, but it's easy to break in ways that only show up <em>while a song is playing</em> — like a change you make mid-song not taking effect. If you're asking an AI to touch this, tell it to be surgical and explain what it's changing, rather than rewriting the whole engine.</p>
+
+      <h4>Changing key while a song plays</h4>
+      <p>There's a known rough edge: the piano uses two sets of samples (one anchored around C, one around G) and picks which to use when you press play. If the user changes key <em>mid-song</em> across the boundary between them, it can sound wrong. The real fix is loading both sets at once — it's on the roadmap. Just know this is a known issue, not something you broke.</p>
+
+      <h4>Instrument levels</h4>
+      <p>Each instrument has a built-in level adjustment so the mix sits balanced. If you swap a sample and it's suddenly too loud or quiet, there's a small number to tweak — but it appears in <strong>two places</strong> for each instrument, and both must match. If you change one, change both, or ask your AI to "update the trim in both the engine and the live mixer."</p>
+
+      <h4>The iOS silent switch</h4>
+      <p>On iPhones, flipping the physical silent switch mutes the app's sound, and <strong>there's no way around it from a web app</strong> — it's an Apple rule, not a bug. The accepted answer is: tell users to turn off silent mode. The only real fix would be turning this into a true native app (a bigger project).</p>
+
+      <h4>The design scale</h4>
+      <p>The styling uses a deliberately small set of sizes, spacings and colours — it was cleaned up specifically so everything feels consistent. When adding UI, reuse the existing values rather than inventing new ones. Your AI will do this if you tell it "stick to the existing design tokens / sizes."</p>
+    </section>
+
+    <!-- 6 -->
+    <section class="sec" id="easy">
+      <p class="sec-num">06 — The fun stuff</p>
+      <h2><a class="anchor" href="#easy">Easy wins &amp; safe swaps</a></h2>
+      <p>These are the low-risk, high-reward changes — good places to start.</p>
+
+      <h4>Swap or improve the samples <span class="pill ok">no code</span></h4>
+      <p>The app finds audio by filename. Re-record a sound, keep the <strong>exact same filename</strong>, drop it in the <code>samples/</code> folder, and the app uses it — no code change at all. One catch: browsers cache audio aggressively, so after replacing a same-named file, check it in a private/incognito tab to be sure you're hearing the new version.</p>
+
+      <h4>Change wording, colours, labels <span class="pill ok">easy</span></h4>
+      <p>Text, the welcome message, button labels, the colour palette — all straightforward edits in the source. Low risk; just rebuild and check.</p>
+
+      <h4>Add chord progressions <span class="pill ok">easy</span></h4>
+      <p>The "Choose" menu offers ready-made progressions. Adding one is a small, self-contained edit to a list — a very safe first change to try.</p>
+
+      <h4>A chart library page <span class="pill">nice project</span></h4>
+      <p>A browsable page of pre-made songs, each with a "Copy" button that puts the song onto the clipboard so the user can paste it into the app's Import. The app already exports songs in the right format — so this is a separate little page, not a change to the app itself. Low risk because it can't break the main app.</p>
+
+      <h4>Alternate percussion sounds <span class="pill">nice project</span></h4>
+      <p>Give the three percussion slots a pool of sounds to choose from (hihat, snare, clap, rimshot, etc.). These are tiny one-shot files, so it's cheap. The trick is loading them all up front so switching is instant, and giving each a level adjustment so swapping doesn't jump in volume.</p>
+    </section>
+
+    <!-- 7 -->
+    <section class="sec" id="deploy">
+      <p class="sec-num">07 — Going live</p>
+      <h2><a class="anchor" href="#deploy">Putting it live</a></h2>
+      <div class="flow">
+        <div class="node"><p class="n-h">Where</p><p class="n-b">GitHub repo <code>philthemoser/qw-app</code>, hosted free on GitHub Pages.</p></div>
+        <div class="node"><p class="n-h">How</p><p class="n-b">Commit to the <code>main</code> branch. The site rebuilds itself automatically.</p></div>
+        <div class="node"><p class="n-h">Address</p><p class="n-b">philthemoser.github.io/qw-app</p></div>
+      </div>
+      <p>That's the whole deployment. Push your updated <code>index.html</code> (and any new samples) to <code>main</code>, wait a moment, refresh the live site.</p>
+
+      <div class="note">
+        <span class="tag">Two harmless quirks</span>
+        <p>GitHub sometimes says "Deployment failed, try again later" and then works on the next push — usually nothing's actually wrong. And it occasionally warns that an old Node version is deprecated; that's a maintenance note, not a problem today.</p>
+      </div>
+
+      <div class="note warn">
+        <span class="tag">Once it's live and people use it</span>
+        <p>Don't edit the live version directly to test ideas. Try risky changes on a copy first. GitHub keeps every old version, so if a bad change does go out, you can always roll back — but it's calmer not to need to.</p>
+      </div>
+
+      <p><strong>About "offline":</strong> the app can be added to a home screen and shows the Tinuë name and icon, but it still needs internet to run — there's no offline caching yet. Making it work fully offline is a roadmap item.</p>
+    </section>
+
+    <!-- 8 -->
+    <section class="sec" id="roadmap">
+      <p class="sec-num">08 — Next</p>
+      <h2><a class="anchor" href="#roadmap">What's next</a></h2>
+      <p>Where the project was heading, roughly most-useful first:</p>
+      <ol class="list">
+        <li><span class="pill warn">fix</span> &nbsp;<strong>Live key changes across the sample boundary</strong> — load both piano sample sets at once so changing key mid-song always sounds right.</li>
+        <li><span class="pill">big</span> &nbsp;<strong>Work offline</strong> — make it keep working without internet once loaded (a "service worker" and caching the audio). First decide: is a web app enough, or does the silent-switch issue push toward a real native app?</li>
+        <li><span class="pill">infra</span> &nbsp;<strong>Switch to Vite</strong> — removes the manual build step so editing is smoother. A good early investment if you'll work on this a lot.</li>
+        <li><span class="pill">content</span> &nbsp;<strong>The chart library page</strong> — pre-made songs ready to copy in.</li>
+        <li><span class="pill">feature</span> &nbsp;<strong>Alternate sounds</strong> — start with the percussion pool (cheap), then maybe an alternate bass tone. Keep each addition small so the app stays fast and focused.</li>
+      </ol>
+      <h4>Things that were deliberately left out</h4>
+      <p>Dark mode (it's intentionally light for bright rooms/stages), lots more instruments, cloud sync and accounts, lyrics, and a full sound browser. These were all considered and declined on purpose — they'd make the app slower to use and blur what it's for. If you're tempted by one, that's worth a second thought first.</p>
+    </section>
+
+    <!-- 9 -->
+    <section class="sec" id="rules">
+      <p class="sec-num">09 — Keep it sane</p>
+      <h2><a class="anchor" href="#rules">Rules of thumb</a></h2>
+      <ul>
+        <li><strong>One change at a time, then check it loads.</strong> The blank-beige failure makes small steps worth it.</li>
+        <li><strong>Edit the <code>.jsx</code>, build to <code>index.html</code>.</strong> Never hand-edit the built file.</li>
+        <li><strong>Swapping samples is free and safe.</strong> Same filename, drop it in, check in a private tab.</li>
+        <li><strong>Be gentle with the sound engine.</strong> Ask for surgical edits there, not rewrites.</li>
+        <li><strong>Reuse the existing design values.</strong> Don't invent new sizes and colours.</li>
+        <li><strong>Protect the feel: opinionated and fast.</strong> When in doubt, fewer options, not more.</li>
+      </ul>
+
+      <div class="note">
+        <span class="tag">Fastest way to get oriented</span>
+        <p>Open the live app, then open <code>chord-groove-v21.jsx</code> next to it. Press play in the app and skim the file top to bottom once — you don't need to understand every line, just get a feel for where the music theory, the instruments, and the screen layout each live. Then make one tiny change (a label or a colour), build, and ship it. Once you've done the full loop once, the rest is just more of that.</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+</div>
+
+<footer class="foot">
+  <div class="wrap">
+    Tinuë — the quick way to a fuller sound. &nbsp;·&nbsp; Handoff guide, October 2026. &nbsp;·&nbsp; Edit chord-groove-v21.jsx, build to index.html.
+  </div>
+</footer>
+
+</body></html>
